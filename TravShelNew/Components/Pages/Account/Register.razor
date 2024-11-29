@@ -1,0 +1,156 @@
+﻿@page "/register"
+
+@rendermode InteractiveServer
+
+@inject DataContext dataContext
+@inject NavigationManager navigationManager
+
+
+
+
+<div class="row">
+	<EditForm Model="@Model" OnValidSubmit="Registration" FormName="RegisterForm">
+		<DataAnnotationsValidator />
+		<div class="mb-3 text-center flex-column">
+			<h3>REGISTER</h3>
+		</div>
+		<div class="mb-3">
+			<label>Forename</label>
+			<InputText @bind-Value="Model.Forename" class="form-control" placeholder="John" />
+			<ValidationMessage For="() => Model.Forename" />
+		</div>
+		<div class="mb-3">
+			<label>Surename</label>
+			<InputText @bind-Value="Model.Surename" class="form-control" placeholder="Carmac" />
+			<ValidationMessage For="() => Model.Surename" />
+		</div>
+		<div class="mb-3">
+			<label>Date of birth</label>
+			<InputDate @bind-Value="Model.DOB" class="form-control" placeholder="@DateTime.Now" />
+			<ValidationMessage For="() => Model.DOB" />
+		</div>
+		<div class="mb-3">
+			<label>Email</label>
+			<InputText @bind-Value="Model.Email" class="form-control" placeholder="Email@Email.com" />
+			<ValidationMessage For="() => Model.Email" />
+		</div>
+
+		<div class="mb-3">
+			<label>Password</label>
+			<InputText @bind-Value="Model.Password" placeholder="Password" typeof="password" class="form-control" />
+			<ValidationMessage For="()=> Model.Password" />
+		</div>
+		<div class="mb-3 text-center">
+			<span class="text-danger">@errorMessage</span>
+		</div>
+		<div class="mb-3 d-grid gap-2">
+			<button type="submit" class="btn btn-primary">register</button>
+		</div>
+
+	</EditForm>
+
+</div>
+
+@code {
+
+	[Inject]
+	public required IUserService UserService { get; set; }
+
+	public string tmpPassword { get; set; } = string.Empty;
+	private string? errorMessage { get; set; } 
+	//zrób RegisterViewModel jak w Login i na podstawie tego zarejestruj i dodaj do bazy danych użytkownika!!!
+	[SupplyParameterFromForm]
+	public RegisterViewModel Model { get; set; } = new();
+
+	
+
+	private async Task Registration()
+	{
+
+		//NOWA IMPLEMENTACJA ZASTĘPUJĄCA PRZETESTUJ!!!
+		/*
+			* var user1 = await UserService.FindUserAsync(Model.Email);
+
+		if (user1 != null)
+		{
+			//throw error about email already being taken
+			errorMessage = "This email already has an account attached to it.";
+			return;
+		}
+
+		await UserService.RegisterUserAsync(Model);
+			*/
+
+		var user1 = await UserService.FindUserAsync(Model.Email);
+
+		if (user1 != null)
+		{
+			//throw error about email already being taken
+			errorMessage = "This email already has an account attached to it.";
+			return;
+		}
+
+		await UserService.RegisterUserAsync(Model);
+
+		navigationManager.NavigateTo("/login");
+
+
+		//Console.WriteLine(	"początek rejestracji");
+		// string passwordHash =BCrypt.HashPassword(Model.Password);
+		
+		// var user=  dataContext.Users.Where(x => x.Email == Model.Email).FirstOrDefault();
+
+		// Console.WriteLine(Model.Email+" email");
+		// Console.WriteLine(	Model.Password + "hasło" );
+
+		// if(user != null)
+		// {
+		// 	throw error about email already being taken
+		// 	errorMessage = "This email already has an account attached to it.";
+		// 	return;
+		// }
+		// User newUser = new();
+		// newUser.Forename = Model.Forename;
+		// newUser.Surename = Model.Surename;
+		// newUser.Email = Model.Email;
+		// newUser.DOB = Model.DOB;
+		// newUser.PasswordHash = passwordHash;
+	//	Console.WriteLine(	Model.ToString());
+		//Console.WriteLine(	newUser.ToString());
+
+		// await dataContext.Users.AddAsync(newUser);
+		// await dataContext.SaveChangesAsync();
+		// zrób migracje do localdb!!! i zrób jakiś test
+
+		
+	}
+
+	/*
+	*
+	<EditForm Model="@Model" OnValidSubmit="Registration" FormName="registerForm">
+		<DataAnnotationsValidator />
+
+			<CustomCssClassProvider ProviderType="BootstrapFieldCssClassProvider" />
+			<BlogNavigationLock @ref="NavigationLock" />
+
+			<InputText @bind-Value="Model.Forename"  placeholder="John" />
+			<ValidationMessage For="()=>Model.Forename" />
+
+			<InputText @bind-Value="Model.Surename"  placeholder="Carmac" />
+			<ValidationMessage For="()=>Model.Surename" />
+
+			<InputDate @bind-Value="Model.DOB"  placeholder="@DateTime.Now" />
+			<ValidationMessage For="()=>Model.DOB" />
+
+			<InputText @bind-Value="Model.Email" placeholder="Email@Email.com" />
+			<ValidationMessage For="()=>Model.Email" />
+
+			<InputText @bind-Value="Model.Password" placeholder="Password" typeof="password" />
+			<ValidationMessage For="()=>Model.Password" />
+
+
+			<button type="submit" class="btn btn-success">register</button>
+	</EditForm>
+		*
+	*/
+}

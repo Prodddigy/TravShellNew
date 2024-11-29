@@ -1,0 +1,121 @@
+﻿@page "/trips/{UserId:int}"
+@rendermode InteractiveServer
+
+@attribute [Authorize]
+
+@using Microsoft.AspNetCore.Authorization
+
+@using TravShell.App.Trips
+
+@inject DataContext dataContext
+@inject NavigationManager navigationManager
+
+
+
+
+<CascadingAuthenticationState>
+	<AuthorizeView>
+	<Authorized>
+		@if (Int32.Parse(context.User.Identity.Name) == UserId)
+		{
+<h3 class="align-content-center" > Here are your Trips! @UserId</h3>
+		
+			<button type="button" class="btn btn-outline-success" @onclick="navigateToCreateTrip">Create a new trip</button>
+			
+			
+			<p></p>
+
+ @*<Virtualize Items="@Trips" Context="trip" OverscanCount="50" SpacerElement="div">
+  	<div>
+
+  		<button type="button">@trip.Name</button>
+  	</div>
+  </Virtualize>
+  *@
+  @if(Trips != null)
+  {
+  @foreach(var trip in Trips)
+{
+	<div>
+		
+	<button type="button" class="btn btn-primary" @onclick="()=>EnterTrip(trip.Id)">@trip.Name, which is @trip.Days days long!</button>
+	
+<p></p>
+	</div>
+			}
+  }
+		}
+		else
+		{
+			<h3>This List is unavailable</h3>
+		}
+	</Authorized>
+	</AuthorizeView>
+</CascadingAuthenticationState>
+
+
+
+@code {
+	[Inject]
+	public required ITripService tripService { get; set; }
+
+	[Parameter]
+	public int UserId { get; set; } = default;
+
+	private int TotalTrips { get; set; }
+
+	private List<Trip> Trips { get; set; }
+
+	private void EnterTrip(int TripId)
+	{
+
+		string a = $"/trips/{UserId}/{TripId}";
+
+		navigationManager.NavigateTo(a);
+
+	}
+
+	private void navigateToCreateTrip()
+	{
+
+
+		string b = $"/createTrip/{UserId}/newTrip";
+
+		navigationManager.NavigateTo(b);
+	}
+
+
+
+	protected async override Task OnInitializedAsync()
+	{
+		//Console.WriteLine("auth");
+		TotalTrips =await  tripService.CountUserTrips(UserId);
+		//Console.WriteLine(TotalTrips + " total");
+		if (TotalTrips != 0)
+		{
+
+			Trips = await tripService.GetUserTrips(UserId);
+
+			//Console.WriteLine(Trips[0].Name + " trip");
+		}
+
+
+
+	}
+
+	private async ValueTask<ItemsProviderResult<Trip>> LoadTrips(ItemsProviderRequest request)
+	{
+		// if (TotalTrips == 0)
+		// {
+		// 	TotalTrips =  dataContext.Trips.Count(x => x.User.Id == UserId); await???
+		// }
+
+		// Console.WriteLine(TotalTrips+ " trips");
+
+		var numblogposts = Math.Min(request.Count, TotalTrips - request.StartIndex);
+
+		//List<Trip> trips =  dataContext.Trips.Where(x => x.User.Id == UserId).ToList();
+
+		return new ItemsProviderResult<Trip>(Trips, TotalTrips);
+	}
+}

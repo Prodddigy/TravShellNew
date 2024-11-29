@@ -1,0 +1,244 @@
+﻿@page "/createTrip/{UserId:int}/newTrip"
+@page "/createTrip/{UserId:int}/{TripId:int}"
+
+
+@rendermode InteractiveServer
+@using RazorComponents
+
+@using TravShell.App.GoogleAPI
+@using TravShell.App.Trips
+
+
+@inject DataContext dataContext
+@inject NavigationManager navigationManager
+
+
+@*
+
+@if(trip == null)
+{
+*@
+	<h3>NEW CREATION</h3>
+<EditForm Model="Model" OnValidSubmit="SaveTrip" FormName="InitialTripCreationForm">
+
+	<DataAnnotationsValidator />
+	<CustomCssClassProvider ProviderType="BootstrapFieldCssClassProvider" />
+	
+	@*
+	<InputText >
+		Auto Complete search for a city
+	</InputText>
+	*@
+	<span>Trip Name</span>
+	<InputText @bind-Value="Model.Name" />
+	<ValidationMessage For="()=>Model.Name" />
+	<span>Trip Starting Date</span>
+	<InputDate @bind-Value="Model.Firstdate" />
+	<ValidationMessage For="()=>Model.Firstdate" />
+	<span>Trip Ending Date</span>
+	<InputDate @bind-Value="Model.Lastdate" />
+	<ValidationMessage For="()=>Model.Lastdate" />
+	<span>Trip City</span>
+	<InputText @bind-Value="Model.City" />
+	<ValidationMessage For="()=>Model.City" />
+	<span>Make it public?</span>
+	<InputCheckbox @bind-Value="Model.IsPublic" />
+
+
+	<span class="text-danger">@errorMessage</span>
+	
+	<button type="submit" class="btn btn-success">Start Planning!</button>
+	</EditForm>
+
+	@*
+}
+else
+{
+	<h3>EDITION OF EXISITING TRIP</h3>
+	<EditForm Model="trip" OnValidSubmit="EditTrip">
+		<CustomCssClassProvider ProviderType="BootstrapFieldCssClassProvider" />
+
+
+		<InputText @bind-Value="trip.Name" />
+		<ValidationMessage For="()=>trip.Name" />
+
+		<InputDate @bind-Value="trip.Firstdate" />
+		<ValidationMessage For="()=>trip.Firstdate" />
+
+		<InputDate @bind-Value="trip.Lastdate" />
+		<ValidationMessage For="()=>trip.Lastdate" />
+
+		<span class="text-danger">@errorMessage</span>
+
+		<button type="submit" class="btn btn-success">Start Editing!</button>
+	</EditForm>
+}
+*@
+
+
+
+@code {
+	// [SupplyParameterFromForm]
+	// public Trip trip { get; set; }
+
+	[Inject]
+	public required IUserService UserService { get; set; }
+
+	[Inject]
+	public required ITripService TripsService { get; set; }
+
+	[Inject]
+	public required IGoogleService GoogleService { get; set; }
+
+	[SupplyParameterFromForm]
+	public TripViewModel Model { get; set; } = new();
+
+	[Parameter]
+	public int UserId { get; set; }
+
+	[Parameter]
+	public int TripId { get; set; } = -1;
+
+
+	public User user { get; set; }
+
+
+
+	public string? errorMessage { get; set; }
+
+	protected override async Task OnParametersSetAsync()
+	{
+		user = await UserService.FindUserByIdAsync(UserId+"");
+
+		//dataContext.Users.Where(x => x.Id == UserId).FirstOrDefault();
+
+
+		// if (TripId >= 0)
+		// {
+		// 	trip = dataContext.Trips.Where(x => x.Id == TripId).FirstOrDefault();
+
+		// }
+		//base.OnParametersSet();
+	}
+
+	public async Task SaveTrip()
+	{
+		if (Model.Firstdate >= DateTime.Now.Date && Model.Lastdate.Date >= Model.Firstdate.Date)
+		{
+
+			var trip_id = -1;
+
+			if (Model.Firstdate.Date < Model.Lastdate.Date)//Multiple day trip
+			{
+				Console.WriteLine(Model.Firstdate.Date + "<- first tutaj last ->" + Model.Lastdate.Date);
+				errorMessage = null;
+
+				var newModel = await GoogleService.GetCoordinates(Model);
+				//	Console.WriteLine("|" + coord + "|");
+				// Model.latitude = double.Parse(coord[0]);
+				// Model.longitude = double.Parse(coord[0]);
+
+				trip_id = await TripsService.CreateMultiDayTrip(newModel, user);
+				// Trip trip = new Trip
+				// 	{
+				// 		Name = Model.Name,
+				// 		Firstdate = Model.Firstdate.Date,
+				// 		Lastdate = Model.Lastdate.Date,
+				// 		Days = (Model.Lastdate.Date - Model.Firstdate.Date).Days + 1,
+				// 		City = Model.City,
+				// 		User = user
+				// 	};
+				// Console.WriteLine(trip.Id + " identyfiacja!!!!");
+				// await dataContext.Trips.AddAsync(trip);
+				// await dataContext.SaveChangesAsync();
+				navigationManager.NavigateTo($"/{UserId}/trip={trip_id}/createDay");
+
+			}
+			else if (Model.Firstdate.Date == Model.Lastdate.Date) //one day trip
+			{
+				Console.WriteLine("==");
+				errorMessage = null;
+
+				var newModel = (await GoogleService.GetCoordinates(Model));
+
+				// Console.WriteLine(coord[0].GetType);
+				// Console.WriteLine("|" + coord[0] + "|");
+				// Console.WriteLine("|" + coord[1] + "|");
+				
+
+				trip_id = await TripsService.CreateOneDayTrip(Model, user);
+
+
+
+
+				// Trip trip = new Trip
+				// 	{
+				// 		Name = Model.Name,
+				// 		Firstdate = Model.Firstdate.Date,
+				// 		Lastdate = Model.Lastdate.Date,
+				// 		Days = 1,
+				// 		City = Model.City,
+				// 		User = user
+				// 	};
+				// Console.WriteLine(trip.Id + " identyfiacja!!!!");
+				// await dataContext.Trips.AddAsync(trip);
+
+				// await dataContext.SaveChangesAsync();
+				// Console.WriteLine(trip.Id + " identyfiacja!!!!");
+				navigationManager.NavigateTo($"/{UserId}/trip={trip_id}/createDay");
+			}
+			else
+			{
+				errorMessage = "Dates are mixed up";
+			}
+		}
+		else
+		{
+			errorMessage = "dates are in the past first"+Model.Firstdate.ToString()+"  second: "+Model.Lastdate.ToString()+" now"+DateTime.Now;
+		}	
+	}
+
+	public async Task EditTrip()//nie działa jeszcez
+	{
+		if (Model.Firstdate >= DateTime.Now.Date && Model.Lastdate >= Model.Firstdate)
+		{
+
+			if (Model.Firstdate < Model.Lastdate)
+			{
+				errorMessage = null;
+				var t =	 dataContext.Trips.Where(x => x.Id == TripId).FirstOrDefault();
+
+				t.Name = Model.Name;
+				t.Firstdate = Model.Firstdate;
+				t.Lastdate = Model.Lastdate;
+				t.Days = (Model.Lastdate - Model.Firstdate).Days;
+
+				await dataContext.SaveChangesAsync();
+				navigationManager.NavigateTo($"/{UserId}/trip/{t.Id}/1");
+
+			}
+			else if (Model.Firstdate == Model.Lastdate)
+			{
+				errorMessage = null;
+				var t = dataContext.Trips.Where(x => x.Id == TripId).FirstOrDefault();
+
+				t.Name = Model.Name;
+				t.Firstdate = Model.Firstdate;
+				t.Lastdate = Model.Lastdate;
+				t.Days = 1;
+
+				await dataContext.SaveChangesAsync();
+				navigationManager.NavigateTo($"/{UserId}/trip/{t.Id}/1");
+			}
+			else
+			{
+				errorMessage = "Dates are mixed up";
+			}
+		}
+		else
+		{
+			errorMessage = "dates are in the past";
+		}
+
+	}
+}

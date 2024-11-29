@@ -1,0 +1,118 @@
+﻿@using Microsoft.AspNetCore.Components.Authorization
+
+@page "/"
+
+@rendermode InteractiveServer
+
+@inject AuthenticationStateProvider ASP
+
+
+<PageTitle>Home</PageTitle>
+
+<div class="row">
+	<div class="col-12">
+		<h2 class="fw-bolder"> Welcome to <span class="text-danger">TravShellPrototype</span></h2>
+	</div>
+	<div class="col-12">
+		<div class="card">
+			<AuthorizeView>
+				<NotAuthorized>
+					<span> You are not logged in. Please <a class="fw-bolder" href="/login">click here</a> to log in or <a class="fw-bolder" href="/register">click here</a> to register</span>
+				</NotAuthorized>
+				<Authorized>
+					
+
+					<span> Logged in as <b>@UserName</b>, <a class="fw-bolder" href="/logout">logout</a></span>
+					<span>Or see your <a class="fw-bolder" href="/trips/@context.User.Identity.Name">trips</a></span>
+
+					
+					<MudCarousel Class="mud-width-full" Style="height:200px;" ShowArrows="@arrows" ShowBullets="@bullets" EnableSwipeGesture="@enableSwipeGesture" AutoCycle="@autocycle" TData="object">
+						<MudCarouselItem Transition="transition" Color="@Color.Primary">
+							<div class="d-flex" style="height:100%">
+								<MudIcon Class="mx-auto my-auto" Icon="@Icons.Custom.Brands.MudBlazor" Size="@Size.Large" />
+							</div>
+						</MudCarouselItem>
+						<MudCarouselItem Transition="transition" Color="@Color.Secondary">
+							<div class="d-flex" style="height:100%">
+								<MudIcon Class="mx-auto my-auto" Icon="@Icons.Custom.Brands.MudBlazor" Size="@Size.Large" />
+							</div>
+						</MudCarouselItem>
+						<MudCarouselItem Transition="transition">
+							<div class="d-flex" style="height:100%">
+								<MudIcon Class="mx-auto my-auto" Icon="@Icons.Custom.Brands.MudBlazor" Color="@Color.Primary" Size="@Size.Large" />
+							</div>
+						</MudCarouselItem>
+					</MudCarousel>
+					<MudSelect @bind-Value="transition" Label="Transition" Class="ma-2">
+						<MudSelectItem Value="@Transition.Fade">Fade</MudSelectItem>
+						<MudSelectItem Value="@Transition.Slide">Slide</MudSelectItem>
+						<MudSelectItem Value="@Transition.None">None</MudSelectItem>
+					</MudSelect>
+					<MudSwitch @bind-Value="arrows" Color="Color.Primary">Show Arrows</MudSwitch>
+					<MudSwitch @bind-Value="bullets" Color="Color.Primary">Show Bullets</MudSwitch>
+					<MudSwitch @bind-Value="enableSwipeGesture" Color="Color.Primary">Enable Swipe Gesture</MudSwitch>
+					<MudSwitch @bind-Value="autocycle" Color="Color.Primary">Auto Cycle (Default: 5 secs)</MudSwitch>
+
+				</Authorized>
+			</AuthorizeView>
+		</div>
+	</div>
+
+</div>
+
+
+
+
+
+
+@code{
+
+	[Inject]
+	public required IUserService UserService { get; set; }
+
+	private bool arrows = true;
+	private bool bullets = true;
+	private bool enableSwipeGesture = true;
+	private bool autocycle = true;
+	private Transition transition = Transition.Slide;
+
+	// [CascadingParameter]
+	// private Task<AuthenticationState> authenticationStateTask { get; set; }
+
+	// [CascadingParameter]
+	// public HttpContext HttpContext { get; set; }
+
+
+
+
+
+
+	public string UserName { get; set; } = "Error";
+
+
+	public string UserId { get; set; }
+
+	protected override async Task OnInitializedAsync()
+	{
+
+		var authState = await ASP.GetAuthenticationStateAsync();
+			
+
+		if (authState.User.Identity.IsAuthenticated)
+		{
+
+			User user = await UserService.FindUserByIdAsync(authState.User.Identity.Name);
+
+			//User user = dataContext.Users.Where(x => x.Id == Int32.Parse(authState.User.Identity.Name)).FirstOrDefault();
+			if (user != null)
+			{
+				UserName = user.Surename + " " + user.Forename;
+			}
+		}
+
+
+		
+		
+	}
+
+}

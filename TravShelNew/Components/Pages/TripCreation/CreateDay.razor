@@ -1,0 +1,443 @@
+﻿@page "/{UserId:int}/trip={TripId:int}/createDay"
+
+@*@page "/{UserId:int}/trip/{TripName}/1"
+@page "/{UserId:int}/trip/{TripId:int}/{Date:DateTime}"
+*@
+@rendermode InteractiveServer
+@using RazorComponents
+
+@using Newtonsoft.Json.Linq;
+@using System.Globalization;
+@using TravShell.App.GoogleAPI
+@using TravShell.App.Trips;
+
+@using TravShell.App.Attractions;
+
+
+
+@inject DataContext dataContext
+@inject NavigationManager navigationManager
+
+
+<h3>Day: @currentDate.ToShortDateString()</h3>
+@if(trip ==null ||currentDate == trip.Lastdate)
+{
+    <h3>This is the last day!</h3>
+}
+
+
+<div class="top-column">
+    <span>Your selected activities</span>
+    @foreach(var att in selectedAttractions)
+    {
+        <div style="display:inline-flex">
+        <button class="btn btn-primary" style="width:60vw" @onclick="()=>removeAttraction(att)"> @att.Name
+            
+          
+        </button>
+            <InputNumber @bind-Value="att.step" style="justify-content:space-between" />
+            </div>
+    }
+</div>
+<EditForm Model="selectedAttractions" OnValidSubmit="SaveDayAttractions" FormName="DayTimetable">
+    <button type="submit" class="btn btn-primary">Go to next day/ finish trip</button>
+</EditForm>
+
+<div class="columns-container">
+    <div class="column">
+        <p>Attractions</p>
+        @foreach(var att in Tourist_Attractions)
+        {
+            <button class="btn btn-primary" @onclick="()=>addAttraction(att)">@att.Name</button>
+        }
+    </div>
+    <div class="column">
+        <p>Restaurants</p>
+        @foreach (var att in Restaurants)
+        {
+            <button class="btn btn-primary" @onclick="()=>addAttraction(att)">@att.Name</button>
+        }
+    </div>
+    <div class="column">
+        <p>Accommodations</p>
+        @foreach (var att in Accommodations)
+        {
+            <button class="btn btn-primary" @onclick="()=>addAttraction(att)">@att.Name</button>
+        }
+    </div>
+</div>
+
+@code {
+
+    [Inject]
+    public required IUserService UserService { get; set; }
+
+    [Inject]
+    public required ITripService TripsService { get; set; }
+
+    [Inject]
+    public required IAttractionService AttractionService { get; set; }
+
+    [Inject]
+    public required IGoogleService GoogleService { get; set; }
+
+    [Parameter]
+    public int UserId { get; set; }
+    [Parameter]
+    public int TripId { get; set; }
+    //[Parameter]
+    public string TripName { get; set; }
+    //  [Parameter]
+    public DateTime Date { get; set; }
+
+    public List<Attraction> selectedAttractions = new List<Attraction>();
+
+    public string CityName { get; set; } = "Czestochowa";
+
+    public Trip trip { get; set; }
+
+    public DateTime currentDate { get; set; }
+
+    public int pastDays { get; set; } = 0;
+
+    public string? coordinates { get; set; }
+
+
+    //    public int[] days { get; set; } 
+
+    //  public static string apiKey = "AIzaSyAflk4zf15LvxfHKOApNoFAbzUsTSaQjOY";
+
+
+    public static List<Attraction> Tourist_Attractions = new List<Attraction>();
+    public static List<Attraction> Restaurants = new List<Attraction>();
+    public static List<Attraction> Accommodations = new List<Attraction>();
+
+    /*
+    * google api
+    * 
+    * twórz po kolei atrakcje
+    * 
+    * 
+    * dodaj to każdego przycisku dolnych kolumn opcje dodania do kolumny górnej
+    * 
+    * kolumna górna ma za zadanie być podsumowaniem wycieczki danego dnia
+    * 
+    * po prawej stronie powinien znajdować się przycisk submit który przekieruje użytkownika do:
+    * A-> następnego dnia wycieczki
+    * 
+    * B-> wyświetlenia gotowej wycieczki w TripView w sytuacji kiedy obecny dzień jest ostatnim :)
+     * 
+     * 
+     */
+
+    protected override async Task OnParametersSetAsync()
+    {
+        selectedAttractions = new List<Attraction>();
+
+        if (trip == null)
+        {
+            Console.WriteLine("OPSA!!!");
+            trip = await TripsService.FindTripById(TripId);
+
+
+            //  dataContext.Trips.Where(x => x.Id == TripId).FirstOrDefault();
+
+            currentDate = trip.Firstdate;
+
+            CityName = trip.City;
+        }
+
+        //  currentDate = trip.Firstdate.AddDays( pastDays);
+
+        if (Tourist_Attractions.Count() == 0 || Restaurants.Count() == 0 || Accommodations.Count() == 0)
+        {
+            coordinates = $"{trip.latitude.ToString(CultureInfo.InvariantCulture)}%2C{trip.longitude.ToString(CultureInfo.InvariantCulture)}";
+
+
+            //await GetCoords();//testuj
+
+
+
+        }
+
+
+        if (Tourist_Attractions.Count() == 0)
+        {
+            await GetSetAttractions(coordinates, AttractionType.Attraction, Tourist_Attractions);
+        }
+
+        if (Restaurants.Count() == 0)
+        {
+            await GetSetAttractions(coordinates, AttractionType.Restaurant, Restaurants);
+        }
+
+        if (Accommodations.Count() == 0)
+        {
+            await GetSetAttractions(coordinates, AttractionType.Accommodation, Accommodations);
+        }
+        //   base.OnParametersSet();
+    }
+
+    public async Task SaveDayAttractions()
+    {
+        //  Console.WriteLine(selectedAttractions[0].Id + " name: " + selectedAttractions[0].Name);
+
+
+        await AttractionService.SaveAttractionList(selectedAttractions);
+        // await dataContext.Attractions.AddRangeAsync(selectedAttractions);
+        // await dataContext.SaveChangesAsync();
+        if(currentDate != trip.Lastdate)
+        {
+            selectedAttractions = new List<Attraction>();
+
+            currentDate = currentDate.AddDays(1);
+            //   Console.WriteLine("new current date: " +currentDate);
+
+        }
+        else
+        {
+            Tourist_Attractions = new List<Attraction>();
+            Restaurants = new List<Attraction>();
+            Accommodations = new List<Attraction>();
+            trip = null;
+            navigationManager.NavigateTo($"/trips/{UserId}");
+        }
+
+
+
+    }
+
+    public void addAttraction(Attraction att)
+    {
+        if(!selectedAttractions.Contains(att))
+        {
+
+            //  att.Trip = trip;
+            //att.StartDate = currentDate;
+            selectedAttractions.Add(new Attraction
+            {
+                PlaceCode = att.PlaceCode,
+                Name = att.Name,
+                Vicinity = att.Vicinity,
+                Rating = att.Rating,
+                Opening_Hours = att.Opening_Hours,
+                Website = att.Website,
+                Type = att.Type,
+                StartDate = currentDate,
+                step = att.step,
+                latitude = att.latitude,
+                longitude = att.longitude,
+                Trip = trip
+            });
+        }
+
+
+    }
+
+    public void removeAttraction(Attraction att)
+    {
+
+        selectedAttractions.Remove(att);
+
+    }
+
+
+    public async Task<string?> GetasfsdfsCoords()
+    {
+        return null;//await GoogleService.GetCoordinates(CityName);
+
+        // string placesApi = $"https:maps.googleapis.com/maps/api/place/textsearch/json?query={Uri.EscapeDataString(CityName)}&key={apiKey}";
+
+        // using (HttpClient client = new HttpClient())
+        // {
+        //     HttpResponseMessage response = await client.GetAsync(placesApi);
+
+        //     if (response.IsSuccessStatusCode)
+        //     {
+        //         string result = await response.Content.ReadAsStringAsync();
+
+        //         JObject a = JObject.Parse(result);
+
+        //         var coordsResult = a["results"]?.First;
+
+        //         if (coordsResult != null)
+        //         {
+        //             double latitude = coordsResult["geometry"]["location"]["lat"].ToObject<double>();
+        //             double longitude = coordsResult["geometry"]["location"]["lng"].ToObject<double>();
+
+        //             return $"{latitude.ToString(CultureInfo.InvariantCulture)}%2C{longitude.ToString(CultureInfo.InvariantCulture)}";
+        //         }
+        //     }
+        //     else
+        //     {
+        //         Console.WriteLine("Error" + response.StatusCode);
+        //     }
+        // }
+        // return null;
+    }
+
+    public async Task GetSetAttractions(string coords, AttractionType type,List<Attraction> list)
+    {
+
+            /*
+            string placesApi=null;
+
+            if(type == AttractionType.Attraction)
+            {
+            placesApi =   $"https://maps.googleapis.com/maps/api/place/nearbysearch/json?&location={coords}&radius=1500&rankby=prominence&type=tourist_attraction&key={apiKey}";
+            }
+
+            if(type == AttractionType.Restaurant)
+            {
+            placesApi =   $"https://maps.googleapis.com/maps/api/place/nearbysearch/json?&location={coords}&radius=1500&rankby=prominence&type=restaurant&key={apiKey}";
+            }
+
+            if (type == AttractionType.Accommodation)
+            {
+            placesApi = $"https://maps.googleapis.com/maps/api/place/nearbysearch/json?&location={coords}&radius=1500&rankby=prominence&type=lodging&key={apiKey}";
+            }
+
+            using (HttpClient client = new HttpClient())
+            {
+            HttpResponseMessage response = await client.GetAsync(placesApi);
+                if (response.IsSuccessStatusCode)
+                {
+                string result = await response.Content.ReadAsStringAsync();
+
+                JObject parsed = JObject.Parse(result);
+
+                  var attractions = parsed["results"];
+                Console.WriteLine("number of attractions"+ attractions.Count());
+
+                    for (int i = 0; i <  attractions.Count(); i++)
+                        {
+
+                            list.Add(new Attraction
+                            {
+                            PlaceCode = attractions[i]["place_id"].ToString(),
+                            Name = attractions[i]["name"].ToString(),
+                            Vicinity = attractions[i]["vicinity"].ToString(),
+                            Rating = attractions[i]["rating"] != null ? attractions[i]["rating"].ToString() : "No rating"
+                }
+            );
+            }
+
+            }
+                else
+                {
+                string result = await response.Content.ReadAsStringAsync();
+                Console.WriteLine("Error: " + response.StatusCode);
+                Console.WriteLine("Response content: " + result); 
+        }
+    }
+
+    */
+
+        var populatedList = await GoogleService.GetSetAttractions(coords, type, list);//test!!!
+
+        list = await GoogleService.GetSetAttractionsDetails(populatedList);
+                /*
+            foreach (var attraction in list)
+            {
+                string du = $"https://maps.googleapis.com/maps/api/place/details/json?fields=opening_hours%2Cwebsite&place_id={attraction.PlaceCode}&key={apiKey}";
+                using (HttpClient client = new HttpClient())
+                {
+
+                    HttpResponseMessage response = await client.GetAsync(du);
+
+                    if (response.IsSuccessStatusCode)
+                    {
+                        string result = await response.Content.ReadAsStringAsync();
+
+                        JObject details = JObject.Parse(result);
+                        var placeResult = details["result"];
+
+                        var openingHours = placeResult["opening_hours"];
+                        var website = placeResult["website"]?.ToString();
+                        string opening_hours = "Opening Hours:";
+                        if (openingHours != null)
+                        {
+                            int i = 1;
+                            // string opening_hours = "Opening Hours:";
+
+                            foreach (var period in openingHours["periods"])
+                            {
+                                string openTime = period["open"]?["time"]?.ToString();
+                                string closeTime = period["close"]?["time"]?.ToString();
+                                opening_hours += $"\n day {i++}/7 - {openTime} to {closeTime}";
+
+                                //   Console.WriteLine($"day {i++}/7 - {openTime} to {closeTime}");
+                            }
+
+                            attraction.Opening_Hours = opening_hours;
+                        }
+                        else
+                        {
+                            attraction.Opening_Hours = "Opening hours are not available.";
+                            //   Console.WriteLine("Opening hours are not available.");
+                        }
+
+                        if (!string.IsNullOrEmpty(website))
+                        {
+                            attraction.Website = website;
+
+                          //  Console.WriteLine($"Website: {website}");
+                        }
+                        else
+                        {
+
+                            attraction.Website = "Website is not available.";
+                          //  Console.WriteLine("Website is not available.");
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("Error fetching details: " + response.StatusCode);
+                    }
+                }
+            }
+            */
+        
+
+
+
+    }
+
+
+
+
+}
+<style>
+
+    .top-column {
+        width: 100%;
+        margin-bottom: 20px; /* Adds space between the top column and the bottom columns */
+        display: flex;
+        flex-direction: column; /* Ensures buttons stack vertically */
+         /* You can adjust this value */
+        overflow-y: auto; /* Enables vertical scrolling for the top column if needed */
+
+        height: 50vh;
+    }
+
+    .columns-container {
+        display: flex;
+        justify-content: space-between; /* Ensures the columns are opposite each other */
+        width: 100%;
+    }
+
+    .column {
+        width: 30%; /* Adjust the width of the columns as needed */
+        max-height: 300px; /* Set a max height to trigger the scrollbar */
+        overflow-y: auto; /* Enables the vertical scroll bar */
+        border: 1px solid #ccc;
+        padding: 10px;
+    }
+
+    .btn {
+        display: block;
+        margin-bottom: 10px;
+    }
+
+
+</style>

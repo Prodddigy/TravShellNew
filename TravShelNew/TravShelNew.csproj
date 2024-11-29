@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MudBlazor" Version="7.15.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\TravShell.App\TravShell.App.csproj" />
+    <ProjectReference Include="..\TravShell.Core\TravShell.Core.csproj" />
+    <ProjectReference Include="..\TravShell.Infrastructure\TravShell.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>
