@@ -19,7 +19,7 @@
 {
 *@
 	<h3>NEW CREATION</h3>
-<EditForm Model="Model" OnValidSubmit="SaveTrip" FormName="InitialTripCreationForm">
+<EditForm Model="Model" OnValidSubmit="VerifyLocation" FormName="InitialTripCreationForm">
 
 	<DataAnnotationsValidator />
 	<CustomCssClassProvider ProviderType="BootstrapFieldCssClassProvider" />
@@ -42,13 +42,27 @@
 	<InputText @bind-Value="Model.City" />
 	<ValidationMessage For="()=>Model.City" />
 	<span>Make it public?</span>
-	<InputCheckbox @bind-Value="Model.IsPublic" />
+	<InputCheckbox @bind-Value="Model.IsPublic"  />
 
 
 	<span class="text-danger">@errorMessage</span>
 	
-	<button type="submit" class="btn btn-success">Start Planning!</button>
+	<button type="submit" class="btn btn-success">Verify Location</button>
 	</EditForm>
+
+
+
+	<MudButton Disabled="isNotVerified" OnClick="SaveTrip" Variant="Variant.Filled" Size="Size.Small" Color="Color.Primary">Start planning!</MudButton>
+
+
+<GoogleMap @ref="googleMapRef"
+		   ApiKey="@TravShell.App.GoogleAPI.GoogleService.apiKey"
+		   Center="@center"
+		   Height="400"
+		   Width="100"
+		   Zoom="8"
+		   />
+
 
 	@*
 }
@@ -99,9 +113,14 @@ else
 	[Parameter]
 	public int TripId { get; set; } = -1;
 
+	public bool isNotVerified { get; set; } = true;
+
 
 	public User user { get; set; }
 
+	GoogleMap googleMapRef = default!;
+
+	public GoogleMapCenter center /*= new GoogleMapCenter(37.50024109655184, -122.28528451834352)*/;
 
 
 	public string? errorMessage { get; set; }
@@ -119,6 +138,23 @@ else
 
 		// }
 		//base.OnParametersSet();
+	}
+
+
+	public async Task VerifyLocation()
+	{
+		var model = await GoogleService.GetCoordinates(Model);
+
+		
+		center = new GoogleMapCenter(model.latitude, model.longitude);
+		Console.WriteLine("verify?");
+
+		await googleMapRef.RefreshAsync();
+
+		
+		isNotVerified = false;
+	
+	
 	}
 
 	public async Task SaveTrip()
