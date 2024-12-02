@@ -54,7 +54,17 @@
 }}
 
 </div>
-   
+
+
+
+
+<GoogleMap @ref="googleMapRef"
+           ApiKey="@TravShell.App.GoogleAPI.GoogleService.apiKey"
+           Center="@center"
+           Height="400"
+           Width="100"
+           Zoom="12"
+           Markers="markers" />
 
 
 
@@ -82,6 +92,13 @@
 
     public int lastAttraction { get; set; } = -1;
 
+    GoogleMap googleMapRef = default!;
+
+    public GoogleMapCenter center /*= new GoogleMapCenter(37.50024109655184, -122.28528451834352)*/;
+    public List<GoogleMapMarker> markers = new();
+
+    public bool MapVisible = false;
+
     protected async override Task OnInitializedAsync()
     {
         int numOfAtt = await attractionsService.CountTripAttractions(TripId);
@@ -91,6 +108,18 @@
             //GetTripAttractionsOrderByStartDate
             Attractions = await attractionsService.GetTripAttractionsOrderByStartDate(TripId);
 
+            int i = 1;
+            foreach(var a in Attractions)
+            {
+                
+
+
+                markers.Add(new GoogleMapMarker()
+                {   
+                 Position = new GoogleMapMarkerPosition(a.latitude, a.longitude),
+                 Title =$"No.{i++} place: {a.Name}"
+                }); 
+            }
             //Console.WriteLine(Trips[0].Name + " trip");
         }
         //FindTripById
@@ -99,13 +128,14 @@
         if(trip != null)
         {
             TripDays = trip.Days;
+            center = new GoogleMapCenter(trip.latitude, trip.longitude);
         }
+  
 
 
-      
     }
 
-
+   
 
     public void setter(Attraction Att)
     {
