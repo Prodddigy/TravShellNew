@@ -39,10 +39,10 @@
 	<InputDate @bind-Value="Model.Lastdate" />
 	<ValidationMessage For="()=>Model.Lastdate" />
 	<span>Trip City</span>
-	<InputText @bind-Value="Model.City" />
+	<InputText @bind-Value="Model.City" @onblur="SetCenterOnBlur"/>
 	<ValidationMessage For="()=>Model.City" />
 	<span>Make it public?</span>
-	<InputCheckbox @bind-Value="Model.IsPublic"  />
+	<InputCheckbox @bind-Value="Model.IsPublic" style="size:width=20%;"  />
 
 
 	<span class="text-danger">@errorMessage</span>
@@ -61,6 +61,7 @@
 		   Height="400"
 		   Width="100"
 		   Zoom="8"
+		   Markers="markers"
 		   />
 
 
@@ -121,6 +122,7 @@ else
 	GoogleMap googleMapRef = default!;
 
 	public GoogleMapCenter center /*= new GoogleMapCenter(37.50024109655184, -122.28528451834352)*/;
+	public List<GoogleMapMarker> markers = new();
 
 
 	public string? errorMessage { get; set; }
@@ -140,13 +142,32 @@ else
 		//base.OnParametersSet();
 	}
 
-
-	public async Task VerifyLocation()
+	private async Task SetCenterOnBlur()
 	{
-		var model = await GoogleService.GetCoordinates(Model);
+		if (Model.City != "" && Model.City != null)
+		{
+			var model = await GoogleService.GetCoordinates(Model);
 
+			markers.Clear();
+			markers.Add(
+				new GoogleMapMarker()
+					{
+						Position = new GoogleMapMarkerPosition(model.latitude, model.longitude),
+						Title = model.City
+					});
+
+			center = new GoogleMapCenter(model.latitude, model.longitude);
+			Console.WriteLine("yes city");
+		}else
+		{
+			Console.WriteLine("no city!!!");
+		}
+
+	}
+
+	private async Task VerifyLocation()
+	{
 		
-		center = new GoogleMapCenter(model.latitude, model.longitude);
 		Console.WriteLine("verify?");
 
 		await googleMapRef.RefreshAsync();
