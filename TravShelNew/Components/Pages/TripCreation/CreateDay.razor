@@ -43,6 +43,14 @@
     <button type="submit" class="btn btn-primary">Go to next day/ finish trip</button>
 </EditForm>
 
+<GoogleMap @ref="googleMapRef"
+           ApiKey="@TravShell.App.GoogleAPI.GoogleService.apiKey"
+           Center="@center"
+           Height="400"
+           Width="100"
+           Zoom="12"
+           Markers="markers" />
+
 <div class="columns-container">
     <div class="column">
         <p>Attractions</p>
@@ -112,6 +120,13 @@
     public static List<Attraction> Restaurants = new List<Attraction>();
     public static List<Attraction> Accommodations = new List<Attraction>();
 
+
+
+    GoogleMap googleMapRef = default!;
+
+    public GoogleMapCenter center /*= new GoogleMapCenter(37.50024109655184, -122.28528451834352)*/;
+    public List<GoogleMapMarker> markers = new();
+
     /*
     * google api
     * 
@@ -145,6 +160,9 @@
             currentDate = trip.Firstdate;
 
             CityName = trip.City;
+
+            center = new GoogleMapCenter(trip.latitude, trip.longitude);
+            await googleMapRef.RefreshAsync();
         }
 
         //  currentDate = trip.Firstdate.AddDays( pastDays);
@@ -207,38 +225,60 @@
 
     }
 
-    public void addAttraction(Attraction att)
+    public async Task addAttraction(Attraction att)
     {
+        //https://docs.blazorbootstrap.com/components/google-map#add-a-marker-to-a-map
+
         if(!selectedAttractions.Contains(att))
         {
 
             //  att.Trip = trip;
             //att.StartDate = currentDate;
-            selectedAttractions.Add(new Attraction
-            {
-                PlaceCode = att.PlaceCode,
-                Name = att.Name,
-                Vicinity = att.Vicinity,
-                Rating = att.Rating,
-                Opening_Hours = att.Opening_Hours,
-                Website = att.Website,
-                Type = att.Type,
-                StartDate = currentDate,
-                step = att.step,
-                latitude = att.latitude,
-                longitude = att.longitude,
-                Trip = trip
-            });
+            var newAttraction = new Attraction
+                {
+                    PlaceCode = att.PlaceCode,
+                    Name = att.Name,
+                    Vicinity = att.Vicinity,
+                    Rating = att.Rating,
+                    Opening_Hours = att.Opening_Hours,
+                    Website = att.Website,
+                    Type = att.Type,
+                    StartDate = currentDate,
+                    step = att.step,
+                    latitude = att.latitude,
+                    longitude = att.longitude,
+                    Trip = trip
+                };
+
+
+            selectedAttractions.Add(newAttraction);
+
+
+            markers.Add(new GoogleMapMarker()
+                {
+                    Position = new GoogleMapMarkerPosition(newAttraction.latitude, newAttraction.longitude),
+                    Title = $" place: {newAttraction.Name}",
+                    Content= ""+newAttraction.Id
+                });
+            await googleMapRef.UpdateMarkersAsync(markers);
+         //   await googleMapRef.RefreshAsync();
         }
 
 
     }
 
-    public void removeAttraction(Attraction att)
+    public async Task removeAttraction(Attraction att)
     {
 
         selectedAttractions.Remove(att);
 
+        var deleteThis = markers.Where(x => x.Content == (att.Id + "")).FirstOrDefault();
+        if (deleteThis != null)
+        {
+            markers.Remove(deleteThis);
+        }
+        await googleMapRef.UpdateMarkersAsync(markers);
+     //   await googleMapRef.RefreshAsync();
     }
 
 
