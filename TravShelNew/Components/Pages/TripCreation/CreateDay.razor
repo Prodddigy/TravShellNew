@@ -49,7 +49,8 @@
            Height="400"
            Width="100"
            Zoom="12"
-           Markers="markers" />
+           Markers="markers" 
+           Clickable="true"/>
 
 <div class="columns-container">
     <div class="column">
@@ -98,7 +99,7 @@
     //  [Parameter]
     public DateTime Date { get; set; }
 
-    public List<Attraction> selectedAttractions = new List<Attraction>();
+    public List<AttractionViewModel> selectedAttractions = new List<AttractionViewModel>();
 
     public string CityName { get; set; } = "Czestochowa";
 
@@ -116,9 +117,9 @@
     //  public static string apiKey = "AIzaSyAflk4zf15LvxfHKOApNoFAbzUsTSaQjOY";
 
 
-    public static List<Attraction> Tourist_Attractions = new List<Attraction>();
-    public static List<Attraction> Restaurants = new List<Attraction>();
-    public static List<Attraction> Accommodations = new List<Attraction>();
+    public static List<AttractionViewModel> Tourist_Attractions = new List<AttractionViewModel>();
+    public static List<AttractionViewModel> Restaurants = new List<AttractionViewModel>();
+    public static List<AttractionViewModel> Accommodations = new List<AttractionViewModel>();
 
 
 
@@ -147,7 +148,7 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        selectedAttractions = new List<Attraction>();
+        selectedAttractions = new List<AttractionViewModel>();
 
         if (trip == null)
         {
@@ -206,18 +207,23 @@
         // await dataContext.SaveChangesAsync();
         if(currentDate != trip.Lastdate)
         {
-            selectedAttractions = new List<Attraction>();
+            selectedAttractions = new List<AttractionViewModel>();
 
             currentDate = currentDate.AddDays(1);
+            markers.Clear();
+          await  googleMapRef.RefreshAsync();
             //   Console.WriteLine("new current date: " +currentDate);
 
         }
         else
         {
-            Tourist_Attractions = new List<Attraction>();
-            Restaurants = new List<Attraction>();
-            Accommodations = new List<Attraction>();
+            Tourist_Attractions = new List<AttractionViewModel>();
+            Restaurants = new List<AttractionViewModel>();
+            Accommodations = new List<AttractionViewModel>();
             trip = null;
+
+            markers.Clear();
+           await googleMapRef.RefreshAsync();
             navigationManager.NavigateTo($"/trips/{UserId}");
         }
 
@@ -225,16 +231,25 @@
 
     }
 
-    public async Task addAttraction(Attraction att)
+    public async Task addAttraction(AttractionViewModel att)
     {
         //https://docs.blazorbootstrap.com/components/google-map#add-a-marker-to-a-map
 
         if(!selectedAttractions.Contains(att))
         {
 
+
+            var marker = new GoogleMapMarker()
+                {
+                    Position = new GoogleMapMarkerPosition(att.latitude, att.longitude),
+                   // Title = $" place: {att.Name}",
+                    //Content= ""+newAttraction.Id
+                };
+            markers.Add(marker);
+
             //  att.Trip = trip;
             //att.StartDate = currentDate;
-            var newAttraction = new Attraction
+            var newAttraction = new AttractionViewModel
                 {
                     PlaceCode = att.PlaceCode,
                     Name = att.Name,
@@ -247,36 +262,34 @@
                     step = att.step,
                     latitude = att.latitude,
                     longitude = att.longitude,
-                    Trip = trip
+                    Trip = trip,
+                    Marker = marker
                 };
 
 
             selectedAttractions.Add(newAttraction);
 
 
-            markers.Add(new GoogleMapMarker()
-                {
-                    Position = new GoogleMapMarkerPosition(newAttraction.latitude, newAttraction.longitude),
-                    Title = $" place: {newAttraction.Name}",
-                    Content= ""+newAttraction.Id
-                });
+            // markers.Add(new GoogleMapMarker()
+            //     {
+            //         Position = new GoogleMapMarkerPosition(newAttraction.latitude, newAttraction.longitude),
+            //         Title = $" place: {newAttraction.Name}",
+            //         Content= ""+newAttraction.Id
+            //     });
             await googleMapRef.UpdateMarkersAsync(markers);
-         //   await googleMapRef.RefreshAsync();
+            //   await googleMapRef.RefreshAsync();
         }
 
 
     }
 
-    public async Task removeAttraction(Attraction att)
+    public async Task removeAttraction(AttractionViewModel att)
     {
 
         selectedAttractions.Remove(att);
 
-        var deleteThis = markers.Where(x => x.Content == (att.Id + "")).FirstOrDefault();
-        if (deleteThis != null)
-        {
-            markers.Remove(deleteThis);
-        }
+        //var deleteThis = markers.Where(x => x.Content == (att.Id + "")).FirstOrDefault();
+        markers.Remove(att.Marker);
         await googleMapRef.UpdateMarkersAsync(markers);
      //   await googleMapRef.RefreshAsync();
     }
@@ -316,7 +329,7 @@
         // return null;
     }
 
-    public async Task GetSetAttractions(string coords, AttractionType type,List<Attraction> list)
+    public async Task GetSetAttractions(string coords, AttractionType type, List<AttractionViewModel> list)
     {
 
             /*

@@ -64,7 +64,8 @@
            Height="400"
            Width="100"
            Zoom="12"
-           Markers="markers" />
+           Markers="markers" 
+           Clickable="true"/>
 
 
 
@@ -117,7 +118,7 @@
                 markers.Add(new GoogleMapMarker()
                 {   
                  Position = new GoogleMapMarkerPosition(a.latitude, a.longitude),
-                 Title =$"No.{i++} place: {a.Name}"
+                // Title =$"No.{i++} place: {a.Name}"
                 }); 
             }
             await googleMapRef.RefreshAsync();

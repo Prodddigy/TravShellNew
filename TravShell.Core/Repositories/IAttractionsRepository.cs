@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TravShell.Core.Entities;
+using TravShell.Core.Entities.ViewModels;
 
 namespace TravShell.Core.Repositories;
 public interface IAttractionsRepository
@@ -12,7 +13,7 @@ public interface IAttractionsRepository
 
 	Task<List<Attraction>> GetTripAttractionsOrderByStartDate(int tripId);
 
-	Task SaveAttractionList(List<Attraction> attractions);
+	Task SaveAttractionList(List<AttractionViewModel> attractions);
 
 }
 

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TravShell.Core.Entities;
+using TravShell.Core.Entities.ViewModels;
 using TravShell.Core.Repositories;
 using TravShell.Infrastructure.Data;
 
@@ -29,9 +30,29 @@ public class AttractionsRepository : IAttractionsRepository
                                                 .ToListAsync();
     }
 
-    public async Task SaveAttractionList(List<Attraction> attractions)
-    {
-        await _dbContext.Attractions.AddRangeAsync(attractions);
+    public async Task SaveAttractionList(List<AttractionViewModel> attractions)
+    {List<Attraction> newList= new List<Attraction>();
+
+        foreach (var att in attractions)
+        {
+            newList.Add(new Attraction
+            {
+                PlaceCode = att.PlaceCode,
+                Name = att.Name,
+                Vicinity = att.Vicinity,
+                Rating = att.Rating,
+                Opening_Hours = att.Opening_Hours,
+                Website = att.Website,
+                Type = att.Type,
+                StartDate = att.StartDate,
+                step = att.step,
+                latitude = att.latitude,
+                longitude = att.longitude,
+                Trip = att.Trip
+            });
+        }
+
+        await _dbContext.Attractions.AddRangeAsync(newList);
         await _dbContext.SaveChangesAsync();
     }
 }

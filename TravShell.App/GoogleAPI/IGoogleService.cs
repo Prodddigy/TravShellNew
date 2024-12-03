@@ -11,9 +11,9 @@ public interface IGoogleService
 {
     Task<TripViewModel> GetCoordinates(TripViewModel model);
 
-    Task<List<Attraction>> GetSetAttractions(string coords, AttractionType type, List<Attraction> list);
+    Task<List<AttractionViewModel>> GetSetAttractions(string coords, AttractionType type, List<AttractionViewModel> list);
 
-    Task<List<Attraction>> GetSetAttractionsDetails(List<Attraction> list);
+    Task<List<AttractionViewModel>> GetSetAttractionsDetails(List<AttractionViewModel> list);
 
 }
 

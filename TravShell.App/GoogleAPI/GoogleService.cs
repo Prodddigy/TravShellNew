@@ -48,7 +48,7 @@ public class GoogleService :IGoogleService
         return null;
     }
 
-    public async Task<List<Attraction>> GetSetAttractions(string coords, AttractionType type, List<Attraction> list)
+    public async Task<List<AttractionViewModel>> GetSetAttractions(string coords, AttractionType type, List<AttractionViewModel> list)
     {
         string placesApi = null;
 
@@ -81,7 +81,7 @@ public class GoogleService :IGoogleService
 
                 for (int i = 0; i < attractions.Count(); i++)
                 {
-                    list.Add(new Attraction
+                    list.Add(new AttractionViewModel
                     {
                         PlaceCode = attractions[i]["place_id"].ToString(),
                         Name = attractions[i]["name"].ToString(),
@@ -105,7 +105,7 @@ public class GoogleService :IGoogleService
         return list;
     }
 
-    public async Task<List<Attraction>?> GetSetAttractionsDetails(List<Attraction> list)
+    public async Task<List<AttractionViewModel>?> GetSetAttractionsDetails(List<AttractionViewModel> list)
     {
         if(list ==null)
         {

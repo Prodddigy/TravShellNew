@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TravShell.Core.Entities;
+using TravShell.Core.Entities.ViewModels;
 using TravShell.Core.Repositories;
 using TravShell.Infrastructure.Data;
 
@@ -26,7 +27,7 @@ public class AttractionService :IAttractionService
         return await _attractionsRepository.GetTripAttractionsOrderByStartDate(tripId);
     }
 
-   public async Task SaveAttractionList(List<Attraction> attractions)
+   public async Task SaveAttractionList(List<AttractionViewModel> attractions)
     {
          await _attractionsRepository.SaveAttractionList(attractions);
     }
