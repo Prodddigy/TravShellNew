@@ -111,6 +111,8 @@
 
     public string? coordinates { get; set; }
 
+    public int numOfAtt = 1;
+
 
     //    public int[] days { get; set; } 
 
@@ -211,7 +213,7 @@
 
             currentDate = currentDate.AddDays(1);
             markers.Clear();
-          await  googleMapRef.RefreshAsync();
+            await  googleMapRef.RefreshAsync();
             //   Console.WriteLine("new current date: " +currentDate);
 
         }
@@ -223,7 +225,7 @@
             trip = null;
 
             markers.Clear();
-           await googleMapRef.RefreshAsync();
+            await googleMapRef.RefreshAsync();
             navigationManager.NavigateTo($"/trips/{UserId}");
         }
 
@@ -242,6 +244,12 @@
             var marker = new GoogleMapMarker()
                 {
                     Position = new GoogleMapMarkerPosition(att.latitude, att.longitude),
+
+                    PinElement = new PinElement
+                    {
+                        Glyph = numOfAtt++,
+
+                    }
                    // Title = $" place: {att.Name}",
                     //Content= ""+newAttraction.Id
                 };

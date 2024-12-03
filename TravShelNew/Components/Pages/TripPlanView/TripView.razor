@@ -73,16 +73,16 @@
 
 @code {
 
-    [Inject]
-    public required IAttractionService attractionsService { get; set; }
+        [Inject]
+        public required IAttractionService attractionsService { get; set; }
 
-    [Inject]
-    public required ITripService tripsService { get; set; }
+        [Inject]
+        public required ITripService tripsService { get; set; }
 
-    [Parameter]
-    public int UserId { get; set; }
-    [Parameter]
-    public int TripId { get; set; }
+        [Parameter]
+        public int UserId { get; set; }
+        [Parameter]
+        public int TripId { get; set; }
 
     private Attraction? prevAtt { get; set; } 
 
@@ -112,13 +112,23 @@
             int i = 1;
             foreach(var a in Attractions)
             {
-                
+
 
 
                 markers.Add(new GoogleMapMarker()
                 {   
                  Position = new GoogleMapMarkerPosition(a.latitude, a.longitude),
-                // Title =$"No.{i++} place: {a.Name}"
+
+                        PinElement = new PinElement
+                        {
+                            Glyph = (Attractions.Count()-(numOfAtt--)+1)+"",
+                            GlyphColor = "white"
+
+                        },
+
+                        
+                        Title = a.Website != "Website is not available."? $" <a target = '_blank' jstcache = '6' href = '{a.Website}' tabindex = '0'> <span> Check the website!</span> </a> ":"<h1> No Website available </h1>",
+                        //       "<a target='_blank' jstcache='6' href='https://maps.google.com/maps?ll=37.500241,-122.285285&amp;z=12&amp;t=m&amp;hl=pl-PL&amp;gl=US&amp;mapclient=apiv3&amp;cid=15157168628928593561' tabindex='0'> <span>Zobacz w Mapach Google</span> </a>",
                 }); 
             }
             await googleMapRef.RefreshAsync();
