@@ -247,13 +247,14 @@
 
                     PinElement = new PinElement
                     {
-                        Glyph = numOfAtt++,
-
+                        Glyph = (numOfAtt++) + "",
+                        GlyphColor = "white"
                     }
                    // Title = $" place: {att.Name}",
                     //Content= ""+newAttraction.Id
                 };
             markers.Add(marker);
+            Console.WriteLine(markers.Count());
 
             //  att.Trip = trip;
             //att.StartDate = currentDate;
@@ -285,7 +286,7 @@
             //         Content= ""+newAttraction.Id
             //     });
             await googleMapRef.UpdateMarkersAsync(markers);
-            //   await googleMapRef.RefreshAsync();
+            //  await googleMapRef.RefreshAsync();
         }
 
 
