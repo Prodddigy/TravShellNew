@@ -13,6 +13,7 @@
 
 @using TravShell.App.Attractions;
 
+@using MudBlazor.Utilities
 
 
 @inject DataContext dataContext
@@ -20,20 +21,111 @@
 
 
 <h3>Day: @currentDate.ToShortDateString()</h3>
-@if(trip ==null ||currentDate == trip.Lastdate)
+@if (trip == null || currentDate == trip.Lastdate)
 {
     <h3>This is the last day!</h3>
-}
+} 
+<div class="d-flex flex-column mud-width-full mud-height-full">
+
+    <MudToolBar Class="gap-4">
+        <MudButton  Variant="Variant.Filled" Color="Color.Default">???</MudButton>
+        <MudButton  Variant="Variant.Filled" Color="Color.Primary">Prev. day</MudButton>
 
 
+
+        @if (trip == null || currentDate == trip.Lastdate)
+        {
+            <MudButton OnClick="SaveDayAttractions" Disabled="WaitForGoogle" Variant="Variant.Filled" Color="Color.Primary">
+                Finish trip
+            </MudButton>
+        }
+        else
+        {
+            <MudButton OnClick="SaveDayAttractions" Disabled="WaitForGoogle" Variant="Variant.Filled" Color="Color.Primary">
+                Next Day
+            </MudButton>
+        }
+        <MudSpacer />
+        <MudButton  Variant="Variant.Text" Color="Color.Error">Refresh map</MudButton>
+    </MudToolBar>
+
+
+    <MudDropContainer T="AttractionViewModel" Items="@_dropzoneItems" @ref="_container" ItemsSelector="@((att,dropzone) => att.dropzone == dropzone)" ItemDropped="ItemUpdated" >
+          <ChildContent>
+        <div class="columns-container">
+            <MudPaper Class="column">
+                <MudList T="string" Class="d-flex flex-column mud-height-full">
+                    <MudListSubheader>Your attractions</MudListSubheader>
+                    <MudDropZone T="AttractionViewModel" Identifier="0" Class="flex-grow-1" AllowReorder="true" />
+                </MudList>
+
+
+            </MudPaper>
+
+                <GoogleMap @ref="googleMapRef"
+                           ApiKey="@TravShell.App.GoogleAPI.GoogleService.apiKey"
+                           Center="@center"
+                           Height="300"
+                           Width="60"
+                           Zoom="12"
+                           Clickable="true" />
+
+            </div>
+
+            <div class="columns-container">
+
+                @for (int i = 1; i <= 3; i++)
+                {
+                    var dropzone = i.ToString();
+                    <MudPaper Class="column">
+                        <MudList T="string" Class="d-flex flex-column mud-height-full">
+                            <MudListSubheader>Drop Zone @dropzone</MudListSubheader>
+                            <MudDropZone T="AttractionViewModel" Identifier="@dropzone" CanDrop="@((item) => false)" Class="flex-grow-1" AllowReorder="true" />
+                        </MudList>
+                    </MudPaper>
+                }
+
+            </div>
+        </ChildContent>
+        <ItemRenderer>
+            @if (context.dropzone == "0")
+            {
+
+
+                <MudListItem T="string" Text="@($"{context.Name} ({context.step})")">
+                    @($"{context.Name} ({context.step})")
+                    <MudButton OnClick="()=>removeAttraction(context)" Variant="Variant.Filled" Color="Color.Error">Remove</MudButton>
+                </MudListItem>
+            }
+            else
+            {
+                <MudListItem T="string" Text="@($"{context.Name} ({context.step})")">
+                    @($"{context.Name} ({context.step})")
+
+                </MudListItem>
+            }
+
+
+
+        </ItemRenderer>
+
+
+    </MudDropContainer>
+
+
+
+</div>
+
+
+@*
 <div class="top-column">
     <span>Your selected activities</span>
     @foreach(var att in selectedAttractions)
     {
         <div style="display:inline-flex">
         <button class="btn btn-primary" style="width:60vw" @onclick="()=>removeAttraction(att)"> @att.Name
-            
-          
+
+
         </button>
             <InputNumber @bind-Value="att.step" style="justify-content:space-between" />
             </div>
@@ -51,6 +143,7 @@
            Zoom="12"
            Markers="markers" 
            Clickable="true"/>
+
 
 <div class="columns-container">
     <div class="column">
@@ -75,8 +168,13 @@
         }
     </div>
 </div>
+*@
+
 
 @code {
+
+
+
 
     [Inject]
     public required IUserService UserService { get; set; }
@@ -130,6 +228,15 @@
     public GoogleMapCenter center /*= new GoogleMapCenter(37.50024109655184, -122.28528451834352)*/;
     public List<GoogleMapMarker> markers = new();
 
+
+    private List<AttractionViewModel> _dropzoneItems = new();
+
+    private MudDropContainer<AttractionViewModel> _container;
+
+    public bool WaitForGoogle = true;
+
+    public int LastAttIndex = 0;
+
     /*
     * google api
     * 
@@ -147,6 +254,9 @@
      * 
      * 
      */
+
+
+
 
     protected override async Task OnParametersSetAsync()
     {
@@ -196,15 +306,200 @@
         {
             await GetSetAttractions(coordinates, AttractionType.Accommodation, Accommodations);
         }
+
+        if(_dropzoneItems.Count()==0)
+        {
+            PopulateDropzone(Tourist_Attractions, "1");
+            Console.WriteLine("done 1");
+            PopulateDropzone(Restaurants, "2");
+            PopulateDropzone(Accommodations, "3");
+            Console.WriteLine("done all");
+        }
+
+
+        WaitForGoogle = false;
+        RefreshContainer();
+
         //   base.OnParametersSet();
+    }
+
+    private  void PopulateDropzone(List<AttractionViewModel> list, string dropzone)
+    {
+        foreach (var att in list)
+        {
+            att.dropzone = dropzone;
+
+            att.step = LastAttIndex++;
+
+            _dropzoneItems.Add(att);
+        }
+    }
+
+    private void Reorder()
+    {
+        List<AttractionViewModel> nItems = _dropzoneItems.OrderBy(x => x.step).ToList();
+        for (var i = 0; i < _dropzoneItems.Count(); i++)
+        {
+            nItems[i].step = i;
+        }
+
+        _dropzoneItems = nItems;
+        RefreshContainer();
+    }
+
+
+
+    private async void  ItemUpdated(MudItemDropInfo<AttractionViewModel> att) //??????????????
+    {
+        ItemAdded(att);
+
+
+
+
+
+
+        //  att.Item.dropzone = att.DropzoneIdentifier;
+
+        _dropzoneItems.UpdateOrder(att, item => item.step, 0);
+
+        Reorder();
+
+
+        foreach (var a in _dropzoneItems.Where(x => x.dropzone == "0"))
+        {
+            foreach (var m in markers)
+            {
+                if (m == a.Marker)
+                {
+                    Console.WriteLine("equal");
+                    m.PinElement = new PinElement
+                        {
+                            Glyph = (a.step) + "",
+                            GlyphColor = "white"
+                        };
+                }
+            }
+        }
+        //_dropzoneItems.UpdateOrder(att, item => item.step, 0);
+
+        await googleMapRef.UpdateMarkersAsync(markers);
+        Console.WriteLine(markers.Count());
+
+    }
+
+    private void ItemAdded(MudItemDropInfo<AttractionViewModel> att)
+    {
+        AttractionViewModel AVM = null;
+
+        if (att.Item.dropzone == "1" || att.Item.dropzone == "2" || att.Item.dropzone == "3")
+        {
+            if (att.DropzoneIdentifier == "0")
+            {
+                AVM = new AttractionViewModel()
+                    {
+                        PlaceCode = att.Item.PlaceCode,
+                        Name = att.Item.Name,
+                        Vicinity = att.Item.Vicinity,
+                        Rating = att.Item.Rating,
+                        Opening_Hours = att.Item.Opening_Hours,
+                        Website = att.Item.Website,
+                        Type = att.Item.Type,
+                        StartDate = currentDate,
+                        step = att.Item.step,
+                        latitude = att.Item.latitude,
+                        longitude = att.Item.longitude,
+                        Trip = trip,
+                        // Marker = marker,
+                        dropzone = att.Item.dropzone
+                    };
+
+                _dropzoneItems.Add(AVM);
+
+                Reorder();
+
+                //UPDATE ORDER FOR MARKERS!!!! HERE!!!!!!
+
+                // RefreshContainer();
+
+                Console.WriteLine("Add attraction to the day");
+
+                att.Item.dropzone = att.DropzoneIdentifier;
+
+                _dropzoneItems.UpdateOrder(att, item => item.step, 0);
+
+                Reorder();
+
+                var marker = new GoogleMapMarker()
+                    {
+                        Position = new GoogleMapMarkerPosition(att.Item.latitude, att.Item.longitude),
+
+                        PinElement = new PinElement
+                        {
+                            Glyph = (att.Item.step) + "",
+                            GlyphColor = "white"
+                        }
+                        // Title = $" place: {att.Name}",
+                        // Content= ""+newAttraction.Id
+                    };
+                markers.Add(marker);
+                att.Item.Marker = marker;
+
+                markers.OrderBy(x => x.PinElement.Glyph);
+
+                // selectedAttractions.Add(att.Item);
+            }
+            else
+            {
+                Console.WriteLine("reorder");
+            }
+
+        }
+
+    }
+
+
+    private void RefreshContainer()
+    {
+        //update the binding to the container
+        StateHasChanged();
+
+        //the container refreshes the internal state
+        _container.Refresh();
     }
 
     public async Task SaveDayAttractions()
     {
         //  Console.WriteLine(selectedAttractions[0].Id + " name: " + selectedAttractions[0].Name);
 
+        //await AttractionService.SaveAttractionList(selectedAttractions);
 
-        await AttractionService.SaveAttractionList(selectedAttractions);
+        List<AttractionViewModel> nList = new();
+
+        foreach (var att in _dropzoneItems.Where(x => x.dropzone == "0").ToList())
+        {
+            nList.Add(new AttractionViewModel()
+                {
+                    PlaceCode = att.PlaceCode,
+                    Name = att.Name,
+                    Vicinity = att.Vicinity,
+                    Rating = att.Rating,
+                    Opening_Hours = att.Opening_Hours,
+                    Website = att.Website,
+                    Type = att.Type,
+                    StartDate = currentDate,
+                    step = att.step,
+                    latitude = att.latitude,
+                    longitude = att.longitude,
+                    Trip = trip,
+                    // Marker = marker,
+                    dropzone = att.dropzone
+                });
+        }
+
+
+        await AttractionService.SaveAttractionList(nList);
+        
+
         // await dataContext.Attractions.AddRangeAsync(selectedAttractions);
         // await dataContext.SaveChangesAsync();
         if(currentDate != trip.Lastdate)
@@ -215,7 +510,6 @@
             markers.Clear();
             await  googleMapRef.RefreshAsync();
             //   Console.WriteLine("new current date: " +currentDate);
-
         }
         else
         {
@@ -229,18 +523,17 @@
             navigationManager.NavigateTo($"/trips/{UserId}");
         }
 
+        _dropzoneItems.RemoveAll(x => x.dropzone == "0");
 
-
+        Reorder();
     }
 
-    public async Task addAttraction(AttractionViewModel att)
+    public async Task addAttraction(AttractionViewModel att)// nie potrzebne już chyba
     {
         //https://docs.blazorbootstrap.com/components/google-map#add-a-marker-to-a-map
 
         if(!selectedAttractions.Contains(att))
         {
-
-
             var marker = new GoogleMapMarker()
                 {
                     Position = new GoogleMapMarkerPosition(att.latitude, att.longitude),
@@ -268,7 +561,7 @@
                     Website = att.Website,
                     Type = att.Type,
                     StartDate = currentDate,
-                    step = att.step,
+                    step = numOfAtt,
                     latitude = att.latitude,
                     longitude = att.longitude,
                     Trip = trip,
@@ -295,8 +588,12 @@
     public async Task removeAttraction(AttractionViewModel att)
     {
 
-        selectedAttractions.Remove(att);
 
+
+        selectedAttractions.Remove(att);
+        _dropzoneItems.Remove(att);
+
+        Reorder();
         //var deleteThis = markers.Where(x => x.Content == (att.Id + "")).FirstOrDefault();
         markers.Remove(att.Marker);
         await googleMapRef.UpdateMarkersAsync(markers);

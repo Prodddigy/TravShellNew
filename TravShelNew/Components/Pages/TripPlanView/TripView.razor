@@ -1,5 +1,7 @@
 ﻿@page "/trips/{UserId:int}/{TripId:int}"
 
+
+
 @rendermode InteractiveServer
 
 @inject DataContext dataContext
@@ -17,6 +19,7 @@
         @foreach (var attraction in @context)
         {
             <h1>@(context.IndexOf(attraction)+1)</h1>
+            <p>actual step: @attraction.step</p>
             <p> @attraction.Name</p>
             <p>Opening at: trzeba sformatować na czytelniejsze</p>
             <p>Address: @attraction.Vicinity</p>
@@ -200,6 +203,8 @@
 
     protected async override Task OnInitializedAsync()
     {
+       
+
 
         currentTrip = await tripsService.FindTripById(TripId);
         int numOfAtt = await attractionsService.CountTripAttractions(TripId);
@@ -250,13 +255,8 @@
             Console.WriteLine(AttractionMap.Keys.Count()+ " <---count");
             foreach (var a in AttractionMap)
             {
-                _source.Add(a.Value);
+                _source.Add(a.Value.OrderBy(x=>x.step).ToList());
             }
-
-
-
-
-
 
             int i = 1;
             foreach(var a in AttractionMap)
@@ -264,7 +264,9 @@
                 i = 1;
 
                 var newMarkers = new List<GoogleMapMarker>();
-                foreach(var aa in a.Value)
+
+                
+                foreach(var aa in a.Value.OrderBy(x=>x.step).ToList())
                 {
                     newMarkers.Add(new GoogleMapMarker()
                         {
@@ -284,10 +286,6 @@
                         });
                 }
                 AllMarkers.Add(newMarkers);
-
-
-
-
             }
 
 

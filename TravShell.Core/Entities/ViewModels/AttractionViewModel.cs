@@ -20,16 +20,20 @@ public class AttractionViewModel
     public string? Opening_Hours { get; set; }
     public string? Website { get; set; }
 
-    public AttractionType Type { get; set; } = AttractionType.Attraction;
+    public AttractionType Type { get; set; }
 
     public DateTime StartDate { get; set; } = DateTime.Now.Date;
     public double latitude { get; set; }
     public double longitude { get; set; }
 
     public int step { get; set; } = 0;
+    
+    public string dropzone { get; set; }
 
     public Trip Trip { get; set; }
 
     public GoogleMapMarker Marker { get; set; }
+
+
 }
 

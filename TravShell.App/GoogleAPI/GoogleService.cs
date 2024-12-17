@@ -52,19 +52,25 @@ public class GoogleService :IGoogleService
     {
         string placesApi = null;
 
+        string zone = "";
+
         if (type == AttractionType.Attraction)
         {
             placesApi = $"https://maps.googleapis.com/maps/api/place/nearbysearch/json?&location={coords}&radius=1500&rankby=prominence&type=tourist_attraction&key={apiKey}";
+            zone = "1";
+        
         }
 
         if (type == AttractionType.Restaurant)
         {
             placesApi = $"https://maps.googleapis.com/maps/api/place/nearbysearch/json?&location={coords}&radius=1500&rankby=prominence&type=restaurant&key={apiKey}";
+            zone = "2";
         }
 
         if (type == AttractionType.Accommodation)
         {
             placesApi = $"https://maps.googleapis.com/maps/api/place/nearbysearch/json?&location={coords}&radius=1500&rankby=prominence&type=lodging&key={apiKey}";
+            zone = "3";
         }
 
         using (HttpClient client = new HttpClient())
@@ -90,6 +96,10 @@ public class GoogleService :IGoogleService
 
                         latitude = attractions[i]["geometry"]["location"]["lat"].ToObject<double>(),
                         longitude = attractions[i]["geometry"]["location"]["lng"].ToObject<double>(),
+
+                        Type = type,
+
+                        dropzone= zone
 
                     }
                     );

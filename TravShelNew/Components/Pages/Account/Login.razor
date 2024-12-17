@@ -37,7 +37,7 @@
 			<span class="text-danger">@errorMessage</span>
 		</div>
 		<div class="mb-3 d-grid gap-2">
-			<button type="submit" class="btn btn-primary">Login</button>
+			<button type="submit" disabled="@IsLogging" class="btn btn-primary">Login</button>
 		</div>
 
 	</EditForm>
@@ -59,24 +59,28 @@
 
 	private string? errorMessage;
 
+	private bool IsLogging = false;
+
 	private async Task Authenticate() //do dorobienia
 	{
 
 		/*Nowa architektura!!!
 			* 
 			*/
-
+		IsLogging = true;
 		var user1 = await UserService.FindUserAsync(Model.Email);
 
 		if (user1 is null)
 		{
 			errorMessage = "Invalid Email or Password";
+			IsLogging = false;
 			return;
 		}
 
 		if (!BCrypt.Verify(Model.Password, user1.PasswordHash))
 		{
 			errorMessage = "Invalid Email or Password";
+			IsLogging = false;
 			return;
 		}
 

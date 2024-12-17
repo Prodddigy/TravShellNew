@@ -1,4 +1,7 @@
 ﻿@page "/trips/{UserId:int}"
+@page "/trips"
+
+
 @rendermode InteractiveServer
 
 @attribute [Authorize]
@@ -9,6 +12,7 @@
 
 @inject DataContext dataContext
 @inject NavigationManager navigationManager
+@inject AuthenticationStateProvider ASP
 
 
 
@@ -88,6 +92,20 @@
 
 	protected async override Task OnInitializedAsync()
 	{
+
+		// if (UserId == default)
+		// {
+		// 	var authState = await ASP.GetAuthenticationStateAsync();
+
+
+		// 	if (authState.User.Identity.IsAuthenticated)
+		// 	{
+
+		// 		UserId = Int32.Parse(authState.User.Identity.Name);
+		
+
+
+
 		//Console.WriteLine("auth");
 		TotalTrips =await  tripService.CountUserTrips(UserId);
 		//Console.WriteLine(TotalTrips + " total");
@@ -97,8 +115,9 @@
 			Trips = await tripService.GetUserTrips(UserId);
 
 			//Console.WriteLine(Trips[0].Name + " trip");
+		// }
+		// 	}
 		}
-
 
 
 	}
