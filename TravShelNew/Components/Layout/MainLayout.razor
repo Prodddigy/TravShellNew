@@ -40,22 +40,11 @@
 <MudLayout>
     <MudAppBar>
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="DrawerToggle" />
-        Travelling in a nutShell
+        Travelling in a NutShell
 
         
     </MudAppBar>
-    <CascadingAuthenticationState>
-        <AuthorizeView>
-            <NotAuthorized>
-                <a href="/login">Login</a>
-            </NotAuthorized>
-            <Authorized>
-                <a href="/logout">Logout</a>
-
-
-            </Authorized>
-        </AuthorizeView>
-    </CascadingAuthenticationState>
+   
     
     <MudDrawer @bind-Open="@_drawerOpen">
         

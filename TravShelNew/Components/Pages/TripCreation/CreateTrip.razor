@@ -1,23 +1,28 @@
 ﻿@page "/createTrip/{UserId:int}/newTrip"
-@page "/createTrip/{UserId:int}/{TripId:int}"
-
+@*@page "/createTrip/{UserId:int}/{TripId:int}"
+	*@
 
 @rendermode InteractiveServer
 @using RazorComponents
-
+@using Microsoft.AspNetCore.Authorization
 @using TravShell.App.GoogleAPI
 @using TravShell.App.Trips
 
-
+@attribute [Authorize]
 @inject DataContext dataContext
 @inject NavigationManager navigationManager
-
+@inject AuthenticationStateProvider ASP
 
 @*
 
 @if(trip == null)
 {
 *@
+
+
+@if(IsAuth)
+{
+
 	<h3>NEW CREATION</h3>
 <EditForm Model="Model" OnValidSubmit="VerifyLocation" FormName="InitialTripCreationForm">
 
@@ -62,7 +67,13 @@
 		   Width="100"
 		   Zoom="8"
 		   Markers="markers"
-		   />
+	/>
+
+}
+else
+{
+	<h1>Restricted Area</h1>
+}
 
 
 	@*
@@ -127,9 +138,33 @@ else
 
 	public string? errorMessage { get; set; }
 
+	private bool IsAuth = false;
+
+
+
+
+
+
 	protected override async Task OnParametersSetAsync()
 	{
-		user = await UserService.FindUserByIdAsync(UserId+"");
+
+		var authState = await ASP.GetAuthenticationStateAsync();
+
+
+		if (authState.User.Identity.IsAuthenticated)
+		{
+
+			int userIdcheck = Int32.Parse(authState.User.Identity.Name);
+
+
+			if(UserId ==userIdcheck )
+			{
+				user = await UserService.FindUserByIdAsync(UserId + "");
+				IsAuth = true;
+			}
+			
+		}
+	
 
 		//dataContext.Users.Where(x => x.Id == UserId).FirstOrDefault();
 

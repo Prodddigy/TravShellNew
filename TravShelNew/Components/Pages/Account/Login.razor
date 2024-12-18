@@ -14,9 +14,17 @@
 
 @inject DataContext dataContext
 @inject NavigationManager navigationManager
+@inject AuthenticationStateProvider ASP
+@if (AlreadyLoggedIn)
+{
 
-
+	<h1>You are already logged in</h1>
+}
+else
+{
+		
 <div class="row">
+	
 	<EditForm Model="@Model" OnValidSubmit="Authenticate" FormName="LoginForm">
 	
 		<div class="mb-3 text-center flex-column">
@@ -43,6 +51,8 @@
 	</EditForm>
 
 </div>
+}
+
 
 
 @code {
@@ -60,6 +70,22 @@
 	private string? errorMessage;
 
 	private bool IsLogging = false;
+
+	private bool AlreadyLoggedIn = false;
+
+	protected async override  Task OnInitializedAsync()
+	{
+		var authState = await ASP.GetAuthenticationStateAsync();
+
+
+		if (authState.User.Identity.IsAuthenticated)
+		{
+			AlreadyLoggedIn = true;	
+		}
+
+		
+	}
+
 
 	private async Task Authenticate() //do dorobienia
 	{

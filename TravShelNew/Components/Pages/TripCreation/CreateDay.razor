@@ -46,7 +46,7 @@
             </MudButton>
         }
         <MudSpacer />
-        <MudButton  Variant="Variant.Text" Color="Color.Error">Refresh map</MudButton>
+        <MudButton OnClick="RefreshMap" Variant="Variant.Text" Color="Color.Error">Refresh map</MudButton>
     </MudToolBar>
 
 
@@ -437,7 +437,8 @@
                         {
                             Glyph = (att.Item.step) + "",
                             GlyphColor = "white"
-                        }
+                        },
+                            Title = att.Item.Website != "Website is not available." ? $" <a target = '_blank' jstcache = '6' href = '{att.Item.Website}' tabindex = '0'> <span> Check the website!</span> </a> " : "<h1> No Website available </h1>"
                         // Title = $" place: {att.Name}",
                         // Content= ""+newAttraction.Id
                     };
@@ -456,7 +457,11 @@
         }
 
     }
-
+    private async void RefreshMap()
+    {
+        await googleMapRef.RefreshAsync();
+        await googleMapRef.UpdateMarkersAsync(markers);
+    }
 
     private void RefreshContainer()
     {

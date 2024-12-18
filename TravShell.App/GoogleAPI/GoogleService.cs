@@ -12,8 +12,13 @@ using TravShell.Core.Entities;
 using TravShell.Core.Entities.ViewModels;
 
 namespace TravShell.App.GoogleAPI;
-public class GoogleService :IGoogleService
+public class GoogleService : IGoogleService
 {
+
+    public static List<String> days= new(){
+		"Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" ,"Sunday"};
+        
+
     public static string apiKey = "AIzaSyARfnT3GsxeslzR5yjxcqDrlRGb88qBnUs";
 
     public async Task<TripViewModel> GetCoordinates(TripViewModel model)
@@ -37,12 +42,12 @@ public class GoogleService :IGoogleService
                      model.latitude = coordsResult["geometry"]["location"]["lat"].ToObject<double>();
                      model.longitude = coordsResult["geometry"]["location"]["lng"].ToObject<double>();
                     return model;
-                    //return $"{latitude.ToString(CultureInfo.InvariantCulture)}%2C{longitude.ToString(CultureInfo.InvariantCulture)}";
+                   
                 }
             }
             else
             {
-                Console.WriteLine("Error" + response.StatusCode);
+                Console.WriteLine("Google API response error: " + response.StatusCode);
             }
         }
         return null;
@@ -56,20 +61,20 @@ public class GoogleService :IGoogleService
 
         if (type == AttractionType.Attraction)
         {
-            placesApi = $"https://maps.googleapis.com/maps/api/place/nearbysearch/json?&location={coords}&radius=1500&rankby=prominence&type=tourist_attraction&key={apiKey}";
+            placesApi = $"https://maps.googleapis.com/maps/api/place/nearbysearch/json?&location={coords}&radius=3000&rankby=prominence&type=tourist_attraction&key={apiKey}";
             zone = "1";
         
         }
 
         if (type == AttractionType.Restaurant)
         {
-            placesApi = $"https://maps.googleapis.com/maps/api/place/nearbysearch/json?&location={coords}&radius=1500&rankby=prominence&type=restaurant&key={apiKey}";
+            placesApi = $"https://maps.googleapis.com/maps/api/place/nearbysearch/json?&location={coords}&radius=3000&rankby=prominence&type=restaurant&key={apiKey}";
             zone = "2";
         }
 
         if (type == AttractionType.Accommodation)
         {
-            placesApi = $"https://maps.googleapis.com/maps/api/place/nearbysearch/json?&location={coords}&radius=1500&rankby=prominence&type=lodging&key={apiKey}";
+            placesApi = $"https://maps.googleapis.com/maps/api/place/nearbysearch/json?&location={coords}&radius=3000&rankby=prominence&type=lodging&key={apiKey}";
             zone = "3";
         }
 
@@ -83,18 +88,23 @@ public class GoogleService :IGoogleService
                 JObject parsed = JObject.Parse(result);
 
                 var attractions = parsed["results"];
-                Console.WriteLine("number of attractions" + attractions.Count());
+                Console.WriteLine("number of attractions" + attractions.Count()+" successfully downloaded");
+                
 
                 for (int i = 0; i < attractions.Count(); i++)
                 {
                     list.Add(new AttractionViewModel
                     {
                         PlaceCode = attractions[i]["place_id"].ToString(),
+
                         Name = attractions[i]["name"].ToString(),
+
                         Vicinity = attractions[i]["vicinity"].ToString(),
-                        Rating = attractions[i]["rating"] != null ? attractions[i]["rating"].ToString() : "No rating",
+
+                        Rating = attractions[i]["rating"] != null ? attractions[i]["rating"].ToString() : "Rating unavailable",
 
                         latitude = attractions[i]["geometry"]["location"]["lat"].ToObject<double>(),
+
                         longitude = attractions[i]["geometry"]["location"]["lng"].ToObject<double>(),
 
                         Type = type,
@@ -108,8 +118,8 @@ public class GoogleService :IGoogleService
             else
             {
                 string result = await response.Content.ReadAsStringAsync();
-                Console.WriteLine("Error: " + response.StatusCode);
-                Console.WriteLine("Response content: " + result);
+                Console.WriteLine("Google API response error: " + response.StatusCode);
+             
             }
         }
         return list;
@@ -138,19 +148,30 @@ public class GoogleService :IGoogleService
 
                     var openingHours = placeResult["opening_hours"];
                     var website = placeResult["website"]?.ToString();
-                    string opening_hours = "Opening Hours:";
+                    string opening_hours = "Working Hours:";
 
                     if (openingHours != null)
                     {
-                        int i = 1;
-                        // string opening_hours = "Opening Hours:";
+                        int i = 0;
+                   
 
                         foreach (var period in openingHours["periods"])
                         {
                             string openTime = period["open"]?["time"]?.ToString();
+
+
                             string closeTime = period["close"]?["time"]?.ToString();
-                            opening_hours += $"\n day {i++}/7 - {openTime} to {closeTime}";
-                            //   Console.WriteLine($"day {i++}/7 - {openTime} to {closeTime}");
+
+                            if (i > 6)
+                            {
+                                break;
+                            }
+                            opening_hours += $"{days[i++]} from: {openTime} to: {closeTime}, ";
+                            if(i == 6)
+                            {
+                                break;
+                            }
+                        
                         }
 
                         attraction.Opening_Hours = opening_hours;
@@ -158,23 +179,22 @@ public class GoogleService :IGoogleService
                     else
                     {
                         attraction.Opening_Hours = "Opening hours are not available.";
-                        //   Console.WriteLine("Opening hours are not available.");
                     }
 
                     if (!string.IsNullOrEmpty(website))
                     {
                         attraction.Website = website;
-                        //  Console.WriteLine($"Website: {website}");
+               
                     }
                     else
                     {
                         attraction.Website = "Website is not available.";
-                        //  Console.WriteLine("Website is not available.");
+                       
                     }
                 }
                 else
                 {
-                    Console.WriteLine("Error fetching details: " + response.StatusCode);
+                    Console.WriteLine("Google API response error: " + response.StatusCode);
                 }
             }
         }

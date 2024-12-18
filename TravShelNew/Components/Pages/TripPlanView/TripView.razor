@@ -4,13 +4,20 @@
 
 @rendermode InteractiveServer
 
+@attribute [Authorize]
+
 @inject DataContext dataContext
+@inject AuthenticationStateProvider ASP
 
 @using TravShell.App.Attractions
 @using TravShell.App.Trips
 @using TravShell.Core.Entities
 
+
+@if(IsAuth)
+{
 <h3>User id: @UserId and Trip id: @TripId</h3>
+<h3>Trip: @TripName</h3>
 
 <MudCarousel Class="mud-width-full" @ref="_carousel" ItemsSource="@_source" Style="height:200px;" ShowArrows="true" ShowBullets="false" EnableSwipeGesture="true" AutoCycle="false" @bind-SelectedIndex="staticIndex">
     <ItemTemplate>
@@ -19,9 +26,9 @@
         @foreach (var attraction in @context)
         {
             <h1>@(context.IndexOf(attraction)+1)</h1>
-            <p>actual step: @attraction.step</p>
+          
             <p> @attraction.Name</p>
-            <p>Opening at: trzeba sformatować na czytelniejsze</p>
+            <p>Opening at: @attraction.Opening_Hours</p>
             <p>Address: @attraction.Vicinity</p>
             <p>Rating: @attraction.Rating</p>
             <p>Type: @attraction.Type</p>
@@ -45,6 +52,7 @@
             </span>
         </div>
     </NextButtonTemplate>
+
     @*
     <ChildContent>
        
@@ -139,12 +147,16 @@
            ApiKey="@TravShell.App.GoogleAPI.GoogleService.apiKey"
            Center="@center"
            Height="300"
-           Width="100"
+           Width="60"
            Zoom="12"
            Markers="markers" 
            Clickable="true"/>
            
-
+}
+else
+{
+    <h1>Not Authorized</h1>
+}
 
 
 
@@ -185,9 +197,9 @@
 
 
     public Trip currentTrip { get; set; }
+    public string TripName { get; set; } = "Loading...";
 
-
-    private Transition transition = Transition.Slide;
+    //   private Transition transition = Transition.Slide;
 
     private MudCarousel<List<Attraction>> _carousel;
     private IList<List<Attraction>> _source = new List<List<Attraction>>();
@@ -196,18 +208,31 @@
 
     private int selectedIndex = 0;
 
-    // public async Task InvokeAsync()
-    // {
-    //     await InvokeAsync(StateHasChanged);
-    // }
+    private bool IsAuth = false;
+
 
     protected async override Task OnInitializedAsync()
     {
-       
 
 
-        currentTrip = await tripsService.FindTripById(TripId);
-        int numOfAtt = await attractionsService.CountTripAttractions(TripId);
+        var authState = await ASP.GetAuthenticationStateAsync();
+
+
+        if (authState.User.Identity.IsAuthenticated)
+        {
+
+            int userIdCheck = Int32.Parse(authState.User.Identity.Name);
+
+
+            if(userIdCheck == UserId)
+            {
+
+                IsAuth = true;
+
+                currentTrip = await tripsService.FindTripById(TripId);
+
+                TripName = currentTrip.Name;
+                int numOfAtt = await attractionsService.CountTripAttractions(TripId);
         //Console.WriteLine(TotalTrips + " total");
         if (numOfAtt != 0)
         {
@@ -286,8 +311,12 @@
                         });
                 }
                 AllMarkers.Add(newMarkers);
-            }
 
+                    }
+
+           
+
+          
 
 
             // foreach(var a in Attractions)
@@ -329,6 +358,9 @@
         await googleMapRef.RefreshAsync();
 
         await InvokeAsync(StateHasChanged);
+
+            }
+        }
     }
 
 
@@ -338,7 +370,11 @@
         prevAtt = Att;
     }
 
-
+    private async void RefreshMap()
+    {
+        await googleMapRef.RefreshAsync();
+        await googleMapRef.UpdateMarkersAsync(markers);
+    }
 
 
     private async Task GoLeft()
