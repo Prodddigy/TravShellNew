@@ -16,8 +16,13 @@
 
 @if(IsAuth)
 {
-<h3>User id: @UserId and Trip id: @TripId</h3>
-<h3>Trip: @TripName</h3>
+    @*<h3>User id: @UserId and Trip id: @TripId</h3>*@
+
+    <MudToolBar Class="gap-4">
+        <h3>Trip: @TripName</h3>
+        <MudSpacer />
+        <MudButton OnClick="RefreshMap" Variant="Variant.Text" Color="Color.Error">Refresh map</MudButton>
+        </MudToolBar>
 
 <MudCarousel Class="mud-width-full" @ref="_carousel" ItemsSource="@_source" Style="height:200px;" ShowArrows="true" ShowBullets="false" EnableSwipeGesture="true" AutoCycle="false" @bind-SelectedIndex="staticIndex">
     <ItemTemplate>
@@ -233,39 +238,40 @@ else
 
                 TripName = currentTrip.Name;
                 int numOfAtt = await attractionsService.CountTripAttractions(TripId);
-        //Console.WriteLine(TotalTrips + " total");
-        if (numOfAtt != 0)
-        {
-            //GetTripAttractionsOrderByStartDate
-            Attractions = await attractionsService.GetTripAttractionsOrderByStartDate(TripId);
-
-            DateTime tmp = Attractions.First().StartDate;
-
-            List<Attraction> tmpList = new();
-            foreach(var a in Attractions)
-            {
-                if (a.StartDate == tmp )
+                //Console.WriteLine(TotalTrips + " total");
+                if (numOfAtt != 0)
                 {
-                    tmpList.Add(a);
+                    //GetTripAttractionsOrderByStartDate
+                    Attractions = await attractionsService.GetTripAttractionsOrderByStartDate(TripId);
 
-                }
-                else
-                {
+                    DateTime tmp = Attractions.First().StartDate;
 
-                    AttractionMap.Add(tmp, tmpList);
-
-                    tmp=a.StartDate;
-
-                    tmpList = new();
-
-                    tmpList.Add(a);
-
-
-                    if(Attractions.Last()==a)
+                    List<Attraction> tmpList = new();
+                    foreach(var a in Attractions)
                     {
+                        if (a.StartDate == tmp )
+                        {
+                            tmpList.Add(a);
 
-                        AttractionMap.Add(tmp, tmpList);
-                    }
+                        }
+                        else
+                        {
+
+                            AttractionMap.Add(tmp, tmpList);
+
+                            tmp=a.StartDate;
+
+                            tmpList = new();
+
+                            tmpList.Add(a);
+
+
+                            if(Attractions.Last()==a)
+                            {
+
+                                AttractionMap.Add(tmp, tmpList);
+                                break;
+                            }
                 }
 
                 if (Attractions.Last() == a)
