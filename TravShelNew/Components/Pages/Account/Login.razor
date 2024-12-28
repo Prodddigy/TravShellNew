@@ -23,13 +23,33 @@
 else
 {
 		
-<div class="row">
-	
-	<EditForm Model="@Model" OnValidSubmit="Authenticate" FormName="LoginForm">
-	
+
+		<EditForm Model="@Model" OnValidSubmit="Authenticate" FormName="LoginForm" style=" margin: auto;  width: 50%;
+  padding: 10px;">
+	<DataAnnotationsValidator />
 		<div class="mb-3 text-center flex-column">
 			<h3>LOGIN</h3>
 		</div>
+		<MudGrid>
+			<MudItem xs="12" >
+				<MudCard>
+					<MudCardContent>
+						<MudTextField Label="Email" @bind-Value="Model.Email" For="@(()=>Model.Email)"/>
+						<MudTextField Label="Password" Class="mt-3" @bind-Value="Model.Password" For="@(()=>Model.Password)" />
+					</MudCardContent>
+					<MudCardActions>
+						<MudButton ButtonType="MudBlazor.ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto"> Login </MudButton>
+					</MudCardActions>
+				</MudCard>
+			</MudItem>
+				<MudItem xs="12">
+					<MudText Typo="Typo.body2" Align="Align.Center">
+						<MudText Color="Color.Error" disabled="IsLogging">@errorMessage</MudText>
+					</MudText>
+				</MudItem>
+
+		</MudGrid>
+		@*
 		<div class="mb-3">
 			<label>Email</label>
 			<InputText @bind-Value="Model.Email" class="form-control" placeholder="Email@Email.com" />
@@ -47,10 +67,10 @@ else
 		<div class="mb-3 d-grid gap-2">
 			<button type="submit" disabled="@IsLogging" class="btn btn-primary">Login</button>
 		</div>
-
+		*@
 	</EditForm>
 
-</div>
+
 }
 
 

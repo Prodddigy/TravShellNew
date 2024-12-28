@@ -79,7 +79,23 @@
                     var dropzone = i.ToString();
                     <MudPaper Class="column">
                         <MudList T="string" Class="d-flex flex-column mud-height-full">
-                            <MudListSubheader>Drop Zone @dropzone</MudListSubheader>
+                            <MudListSubheader>
+                                @if(dropzone =="1")
+                                {
+                                  <p>Tourist Attractions</p>
+                                }
+                                
+                                 @if(dropzone =="2")
+                                {
+                                  <p>Restaurants</p>
+                                }
+                                @if (dropzone == "3")
+                                {
+                                    <p>Accommodation</p>
+                                }
+                            
+                            
+                            </MudListSubheader>
                             <MudDropZone T="AttractionViewModel" Identifier="@dropzone" CanDrop="@((item) => false)" Class="flex-grow-1" AllowReorder="true" />
                         </MudList>
                     </MudPaper>
