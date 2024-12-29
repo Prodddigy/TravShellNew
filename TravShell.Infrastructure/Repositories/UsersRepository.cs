@@ -35,7 +35,7 @@ public class UsersRepository :IUsersRepository
 		newUser.Forename = Model.Forename;
 		newUser.Surename = Model.Surename;
 		newUser.Email = Model.Email;
-		newUser.DOB = Model.DOB;
+		newUser.DOB = (DateTime)Model.DOB;
 		newUser.PasswordHash = passwordHash;
 		await _dbContext.Users.AddAsync(newUser);
 		await _dbContext.SaveChangesAsync();

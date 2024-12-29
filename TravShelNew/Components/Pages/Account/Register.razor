@@ -7,13 +7,50 @@
 
 
 
+@*<div class="row"> *@
+	
 
-<div class="row">
-	<EditForm Model="@Model" OnValidSubmit="Registration" FormName="RegisterForm">
+<EditForm   Model="@Model" OnValidSubmit="Registration"  FormName="RegisterForm" style=" margin: auto;  width: 50%;
+  padding: 5px;">
 		<DataAnnotationsValidator />
 		<div class="mb-3 text-center flex-column">
 			<h3>REGISTER</h3>
 		</div>
+		
+		<MudGrid>
+			
+			<MudItem xs="12">
+			
+				<MudCard>
+				
+				<MudCardContent>
+
+					<MudTextField Label="Email" @bind-Value="Model.Email"  Placeholder="name@email.com" For="@(()=>Model.Email)" />
+					<MudDatePicker Label="Date of birth" @bind-Value="Model.DOB" Class="mt-3" For="@(()=>Model.DOB)" />
+
+					<MudTextField Label="Forename" @bind-Value="Model.Forename" Class="mt-3" Placeholder="John" For="@(()=>Model.Forename)" />
+					<MudTextField Label="Surename" @bind-Value="Model.Surename" Class="mt-3" Placeholder="Carmac" For="@(()=>Model.Surename)" />
+
+					<MudTextField Label="Password" InputType="InputType.Password" Class="mt-3" @bind-Value="Model.Password" For="@(()=>Model.Password)" @ref="firstPass"/>
+					<MudTextField Label="Repeat Password" InputType="InputType.Password" Class="mt-3" @bind-Value="Model.Password2" For="@(()=>Model.Password2)"  />
+					
+				</MudCardContent>
+				
+					<MudCardActions>
+						<MudButton ButtonType="MudBlazor.ButtonType.Submit"  Disabled="IsRegistering" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto"> Register </MudButton>
+				</MudCardActions>
+			</MudCard> 
+			</MudItem>
+		
+					<MudItem xs="12">
+						<MudText Typo="Typo.body2" Align="Align.Center">
+							<MudText Color="Color.Error" >@errorMessage</MudText>
+						</MudText>
+					</MudItem>
+		</MudGrid>
+
+
+		@*
 		<div class="mb-3">
 			<label>Forename</label>
 			<InputText @bind-Value="Model.Forename" class="form-control" placeholder="John" />
@@ -47,39 +84,57 @@
 			<button type="submit" class="btn btn-primary">register</button>
 		</div>
 
-	</EditForm>
+		*@
 
-</div>
+	</EditForm>
+	
+
+@*</div>*@
+
+
 
 @code {
 
 	[Inject]
 	public required IUserService UserService { get; set; }
 
+	MudTextField<string> firstPass;
+
 	public string tmpPassword { get; set; } = string.Empty;
 	private string? errorMessage { get; set; } 
-	//zrób RegisterViewModel jak w Login i na podstawie tego zarejestruj i dodaj do bazy danych użytkownika!!!
+
 	[SupplyParameterFromForm]
 	public RegisterViewModel Model { get; set; } = new();
 
-	
+	private bool IsRegistering = false;
+
+
 
 	private async Task Registration()
 	{
 
+
 		//NOWA IMPLEMENTACJA ZASTĘPUJĄCA PRZETESTUJ!!!
 		/*
-			* var user1 = await UserService.FindUserAsync(Model.Email);
+		* var user1 = await UserService.FindUserAsync(Model.Email);
 
-		if (user1 != null)
+	if (user1 != null)	
 		{
-			//throw error about email already being taken
-			errorMessage = "This email already has an account attached to it.";
-			return;
-		}
+		//throw error about email already being taken
+		errorMessage = "This email already has an account attached to it.";
+		return;
+	}
 
-		await UserService.RegisterUserAsync(Model);
-			*/
+	await UserService.RegisterUserAsync(Model);
+		*/
+		IsRegistering = true;
+	
+			StateHasChanged();
+			await Task.Delay(1);
+
+			
+		
+	
 
 		var user1 = await UserService.FindUserAsync(Model.Email);
 
@@ -87,6 +142,7 @@
 		{
 			//throw error about email already being taken
 			errorMessage = "This email already has an account attached to it.";
+			IsRegistering = false;
 			return;
 		}
 

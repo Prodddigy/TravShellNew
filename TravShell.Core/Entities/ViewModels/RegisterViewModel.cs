@@ -20,8 +20,11 @@ public class RegisterViewModel
 	[PasswordPropertyText]
 	public string Password { get; set; } = string.Empty;
 
+	[Compare(nameof(Password))]
+	public string Password2 { get; set; } = string.Empty;
+
 	[Required(AllowEmptyStrings = false, ErrorMessage = "Please provide date of birth")]
-	public DateTime DOB { get; set; } = DateTime.Now;
+	public DateTime? DOB { get; set; } = DateTime.Now;
 
 }
 

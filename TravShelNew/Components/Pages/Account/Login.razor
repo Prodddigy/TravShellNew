@@ -35,16 +35,16 @@ else
 				<MudCard>
 					<MudCardContent>
 						<MudTextField Label="Email" @bind-Value="Model.Email" For="@(()=>Model.Email)"/>
-						<MudTextField Label="Password" Class="mt-3" @bind-Value="Model.Password" For="@(()=>Model.Password)" />
+						<MudTextField Label="Password" InputType="InputType.Password" Class="mt-3" @bind-Value="Model.Password" For="@(()=>Model.Password)" />
 					</MudCardContent>
 					<MudCardActions>
-						<MudButton ButtonType="MudBlazor.ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto"> Login </MudButton>
+						<MudButton ButtonType="MudBlazor.ButtonType.Submit" Disabled="IsLogging" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto"> Login </MudButton>
 					</MudCardActions>
 				</MudCard>
 			</MudItem>
 				<MudItem xs="12">
 					<MudText Typo="Typo.body2" Align="Align.Center">
-						<MudText Color="Color.Error" disabled="IsLogging">@errorMessage</MudText>
+						<MudText Color="Color.Error">@errorMessage</MudText>
 					</MudText>
 				</MudItem>
 
@@ -103,7 +103,7 @@ else
 			AlreadyLoggedIn = true;	
 		}
 
-		
+
 	}
 
 
@@ -113,7 +113,11 @@ else
 		/*Nowa architektura!!!
 			* 
 			*/
-		IsLogging = true;
+
+			IsLogging = true;
+		StateHasChanged();
+		await Task.Delay(1);
+
 		var user1 = await UserService.FindUserAsync(Model.Email);
 
 		if (user1 is null)
