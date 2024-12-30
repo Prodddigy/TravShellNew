@@ -1,8 +1,5 @@
 ﻿@page "/{UserId:int}/trip={TripId:int}/createDay"
 
-@*@page "/{UserId:int}/trip/{TripName}/1"
-@page "/{UserId:int}/trip/{TripId:int}/{Date:DateTime}"
-*@
 @rendermode InteractiveServer
 @using RazorComponents
 
@@ -15,10 +12,8 @@
 
 @using MudBlazor.Utilities
 
-
 @inject DataContext dataContext
 @inject NavigationManager navigationManager
-
 
 <h3>Day: @currentDate.ToShortDateString()</h3>
 @if (trip == null || currentDate == trip.Lastdate)
@@ -30,8 +25,6 @@
     <MudToolBar Class="gap-4">
         <MudButton  Variant="Variant.Filled" Color="Color.Default">???</MudButton>
         <MudButton  Variant="Variant.Filled" Color="Color.Primary">Prev. day</MudButton>
-
-
 
         @if (trip == null || currentDate == trip.Lastdate)
         {
@@ -45,10 +38,15 @@
                 Next Day
             </MudButton>
         }
+        <MudPopover Open="@IsPopup" Fixed="true" Class="px-4 pt-4">
+            <div class="d-flex flex-column">
+                <MudText>Your list of attractions is empty... in order to proceed choose one.</MudText>
+                <MudButton OnClick="@ToggleOpen" Class="ml-auto mr-n3 mb-1" Color="Color.Error">Close</MudButton>
+            </div>
+        </MudPopover>
         <MudSpacer />
         <MudButton OnClick="RefreshMap" Variant="Variant.Text" Color="Color.Error">Refresh map</MudButton>
     </MudToolBar>
-
 
     <MudDropContainer T="AttractionViewModel" Items="@_dropzoneItems" @ref="_container" ItemsSelector="@((att,dropzone) => att.dropzone == dropzone)" ItemDropped="ItemUpdated" >
           <ChildContent>
@@ -58,8 +56,6 @@
                     <MudListSubheader>Your attractions</MudListSubheader>
                     <MudDropZone T="AttractionViewModel" Identifier="0" Class="flex-grow-1" AllowReorder="true" />
                 </MudList>
-
-
             </MudPaper>
 
                 <GoogleMap @ref="googleMapRef"
@@ -69,7 +65,6 @@
                            Width="60"
                            Zoom="12"
                            Clickable="true" />
-
             </div>
 
             <div class="columns-container">
@@ -94,20 +89,16 @@
                                     <p>Accommodation</p>
                                 }
                             
-                            
                             </MudListSubheader>
                             <MudDropZone T="AttractionViewModel" Identifier="@dropzone" CanDrop="@((item) => false)" Class="flex-grow-1" AllowReorder="true" />
                         </MudList>
                     </MudPaper>
                 }
-
             </div>
         </ChildContent>
         <ItemRenderer>
             @if (context.dropzone == "0")
             {
-
-
                 <MudListItem T="string" Text="@($"{context.Name} ({context.step})")">
                     @($"{context.Name} ({context.step})")
                     <MudButton OnClick="()=>removeAttraction(context)" Variant="Variant.Filled" Color="Color.Error">Remove</MudButton>
@@ -120,78 +111,12 @@
 
                 </MudListItem>
             }
-
-
-
         </ItemRenderer>
-
-
     </MudDropContainer>
 
-
-
 </div>
-
-
-@*
-<div class="top-column">
-    <span>Your selected activities</span>
-    @foreach(var att in selectedAttractions)
-    {
-        <div style="display:inline-flex">
-        <button class="btn btn-primary" style="width:60vw" @onclick="()=>removeAttraction(att)"> @att.Name
-
-
-        </button>
-            <InputNumber @bind-Value="att.step" style="justify-content:space-between" />
-            </div>
-    }
-</div>
-<EditForm Model="selectedAttractions" OnValidSubmit="SaveDayAttractions" FormName="DayTimetable">
-    <button type="submit" class="btn btn-primary">Go to next day/ finish trip</button>
-</EditForm>
-
-<GoogleMap @ref="googleMapRef"
-           ApiKey="@TravShell.App.GoogleAPI.GoogleService.apiKey"
-           Center="@center"
-           Height="400"
-           Width="100"
-           Zoom="12"
-           Markers="markers" 
-           Clickable="true"/>
-
-
-<div class="columns-container">
-    <div class="column">
-        <p>Attractions</p>
-        @foreach(var att in Tourist_Attractions)
-        {
-            <button class="btn btn-primary" @onclick="()=>addAttraction(att)">@att.Name</button>
-        }
-    </div>
-    <div class="column">
-        <p>Restaurants</p>
-        @foreach (var att in Restaurants)
-        {
-            <button class="btn btn-primary" @onclick="()=>addAttraction(att)">@att.Name</button>
-        }
-    </div>
-    <div class="column">
-        <p>Accommodations</p>
-        @foreach (var att in Accommodations)
-        {
-            <button class="btn btn-primary" @onclick="()=>addAttraction(att)">@att.Name</button>
-        }
-    </div>
-</div>
-*@
-
 
 @code {
-
-
-
-
     [Inject]
     public required IUserService UserService { get; set; }
 
@@ -208,11 +133,7 @@
     public int UserId { get; set; }
     [Parameter]
     public int TripId { get; set; }
-    //[Parameter]
-    public string TripName { get; set; }
-    //  [Parameter]
-    public DateTime Date { get; set; }
-
+   
     public List<AttractionViewModel> selectedAttractions = new List<AttractionViewModel>();
 
     public string CityName { get; set; } = "Czestochowa";
@@ -221,22 +142,13 @@
 
     public DateTime currentDate { get; set; }
 
-    public int pastDays { get; set; } = 0;
-
     public string? coordinates { get; set; }
 
     public int numOfAtt = 1;
 
-
-    //    public int[] days { get; set; } 
-
-    //  public static string apiKey = "AIzaSyAflk4zf15LvxfHKOApNoFAbzUsTSaQjOY";
-
-
     public static List<AttractionViewModel> Tourist_Attractions = new List<AttractionViewModel>();
     public static List<AttractionViewModel> Restaurants = new List<AttractionViewModel>();
     public static List<AttractionViewModel> Accommodations = new List<AttractionViewModel>();
-
 
 
     GoogleMap googleMapRef = default!;
@@ -252,6 +164,10 @@
     public bool WaitForGoogle = true;
 
     public int LastAttIndex = 0;
+
+    private bool NoSelectedTrips = true;
+
+    private bool IsPopup = false;
 
     /*
     * google api
@@ -270,9 +186,6 @@
      * 
      * 
      */
-
-
-
 
     protected override async Task OnParametersSetAsync()
     {
@@ -351,6 +264,11 @@
         }
     }
 
+    private void ToggleOpen()
+    {
+        IsPopup = !IsPopup;
+    }
+
     private void Reorder()
     {
         List<AttractionViewModel> nItems = _dropzoneItems.OrderBy(x => x.step).ToList();
@@ -368,12 +286,6 @@
     private async void  ItemUpdated(MudItemDropInfo<AttractionViewModel> att) //??????????????
     {
         ItemAdded(att);
-
-
-
-
-
-
         //  att.Item.dropzone = att.DropzoneIdentifier;
 
         _dropzoneItems.UpdateOrder(att, item => item.step, 0);
@@ -464,6 +376,8 @@
                 markers.OrderBy(x => x.PinElement.Glyph);
 
                 // selectedAttractions.Add(att.Item);
+
+                NoSelectedTrips = false;
             }
             else
             {
@@ -493,6 +407,13 @@
         //  Console.WriteLine(selectedAttractions[0].Id + " name: " + selectedAttractions[0].Name);
 
         //await AttractionService.SaveAttractionList(selectedAttractions);
+        if(NoSelectedTrips)
+        {
+            IsPopup = true;
+            StateHasChanged();
+            await Task.Delay(1);
+            return;
+        }
 
         List<AttractionViewModel> nList = new();
 
@@ -519,7 +440,7 @@
 
 
         await AttractionService.SaveAttractionList(nList);
-        
+
 
         // await dataContext.Attractions.AddRangeAsync(selectedAttractions);
         // await dataContext.SaveChangesAsync();
@@ -547,6 +468,7 @@
         _dropzoneItems.RemoveAll(x => x.dropzone == "0");
 
         Reorder();
+        NoSelectedTrips = true;
     }
 
     public async Task addAttraction(AttractionViewModel att)// nie potrzebne już chyba
@@ -617,170 +539,37 @@
         Reorder();
         //var deleteThis = markers.Where(x => x.Content == (att.Id + "")).FirstOrDefault();
         markers.Remove(att.Marker);
+        markers.Clear();
+        //var tmpMarker=null;
+
+        Console.WriteLine("after markers clear");
+        foreach (var a in _dropzoneItems.Where(x=> x.dropzone=="0").ToList())
+        {
+            a.Marker.PinElement.Glyph = a.step + "";
+
+            //tmpMarker = a.Marker
+
+            markers.Add(a.Marker);
+            Console.WriteLine(a.Marker.PinElement.Glyph+" glyph");
+        }
+        //await googleMapRef.RefreshAsync();
         await googleMapRef.UpdateMarkersAsync(markers);
-     //   await googleMapRef.RefreshAsync();
-    }
+        if (_dropzoneItems.Where(x => x.dropzone == "0").Count()==0)
+        {
+            NoSelectedTrips = true;
+            StateHasChanged();
+            await Task.Delay(1);
+        }
 
-
-    public async Task<string?> GetasfsdfsCoords()
-    {
-        return null;//await GoogleService.GetCoordinates(CityName);
-
-        // string placesApi = $"https:maps.googleapis.com/maps/api/place/textsearch/json?query={Uri.EscapeDataString(CityName)}&key={apiKey}";
-
-        // using (HttpClient client = new HttpClient())
-        // {
-        //     HttpResponseMessage response = await client.GetAsync(placesApi);
-
-        //     if (response.IsSuccessStatusCode)
-        //     {
-        //         string result = await response.Content.ReadAsStringAsync();
-
-        //         JObject a = JObject.Parse(result);
-
-        //         var coordsResult = a["results"]?.First;
-
-        //         if (coordsResult != null)
-        //         {
-        //             double latitude = coordsResult["geometry"]["location"]["lat"].ToObject<double>();
-        //             double longitude = coordsResult["geometry"]["location"]["lng"].ToObject<double>();
-
-        //             return $"{latitude.ToString(CultureInfo.InvariantCulture)}%2C{longitude.ToString(CultureInfo.InvariantCulture)}";
-        //         }
-        //     }
-        //     else
-        //     {
-        //         Console.WriteLine("Error" + response.StatusCode);
-        //     }
-        // }
-        // return null;
+     
     }
 
     public async Task GetSetAttractions(string coords, AttractionType type, List<AttractionViewModel> list)
     {
-
-            /*
-            string placesApi=null;
-
-            if(type == AttractionType.Attraction)
-            {
-            placesApi =   $"https://maps.googleapis.com/maps/api/place/nearbysearch/json?&location={coords}&radius=1500&rankby=prominence&type=tourist_attraction&key={apiKey}";
-            }
-
-            if(type == AttractionType.Restaurant)
-            {
-            placesApi =   $"https://maps.googleapis.com/maps/api/place/nearbysearch/json?&location={coords}&radius=1500&rankby=prominence&type=restaurant&key={apiKey}";
-            }
-
-            if (type == AttractionType.Accommodation)
-            {
-            placesApi = $"https://maps.googleapis.com/maps/api/place/nearbysearch/json?&location={coords}&radius=1500&rankby=prominence&type=lodging&key={apiKey}";
-            }
-
-            using (HttpClient client = new HttpClient())
-            {
-            HttpResponseMessage response = await client.GetAsync(placesApi);
-                if (response.IsSuccessStatusCode)
-                {
-                string result = await response.Content.ReadAsStringAsync();
-
-                JObject parsed = JObject.Parse(result);
-
-                  var attractions = parsed["results"];
-                Console.WriteLine("number of attractions"+ attractions.Count());
-
-                    for (int i = 0; i <  attractions.Count(); i++)
-                        {
-
-                            list.Add(new Attraction
-                            {
-                            PlaceCode = attractions[i]["place_id"].ToString(),
-                            Name = attractions[i]["name"].ToString(),
-                            Vicinity = attractions[i]["vicinity"].ToString(),
-                            Rating = attractions[i]["rating"] != null ? attractions[i]["rating"].ToString() : "No rating"
-                }
-            );
-            }
-
-            }
-                else
-                {
-                string result = await response.Content.ReadAsStringAsync();
-                Console.WriteLine("Error: " + response.StatusCode);
-                Console.WriteLine("Response content: " + result); 
-        }
-    }
-
-    */
-
         var populatedList = await GoogleService.GetSetAttractions(coords, type, list);//test!!!
 
         list = await GoogleService.GetSetAttractionsDetails(populatedList);
-                /*
-            foreach (var attraction in list)
-            {
-                string du = $"https://maps.googleapis.com/maps/api/place/details/json?fields=opening_hours%2Cwebsite&place_id={attraction.PlaceCode}&key={apiKey}";
-                using (HttpClient client = new HttpClient())
-                {
-
-                    HttpResponseMessage response = await client.GetAsync(du);
-
-                    if (response.IsSuccessStatusCode)
-                    {
-                        string result = await response.Content.ReadAsStringAsync();
-
-                        JObject details = JObject.Parse(result);
-                        var placeResult = details["result"];
-
-                        var openingHours = placeResult["opening_hours"];
-                        var website = placeResult["website"]?.ToString();
-                        string opening_hours = "Opening Hours:";
-                        if (openingHours != null)
-                        {
-                            int i = 1;
-                            // string opening_hours = "Opening Hours:";
-
-                            foreach (var period in openingHours["periods"])
-                            {
-                                string openTime = period["open"]?["time"]?.ToString();
-                                string closeTime = period["close"]?["time"]?.ToString();
-                                opening_hours += $"\n day {i++}/7 - {openTime} to {closeTime}";
-
-                                //   Console.WriteLine($"day {i++}/7 - {openTime} to {closeTime}");
-                            }
-
-                            attraction.Opening_Hours = opening_hours;
-                        }
-                        else
-                        {
-                            attraction.Opening_Hours = "Opening hours are not available.";
-                            //   Console.WriteLine("Opening hours are not available.");
-                        }
-
-                        if (!string.IsNullOrEmpty(website))
-                        {
-                            attraction.Website = website;
-
-                          //  Console.WriteLine($"Website: {website}");
-                        }
-                        else
-                        {
-
-                            attraction.Website = "Website is not available.";
-                          //  Console.WriteLine("Website is not available.");
-                        }
-                    }
-                    else
-                    {
-                        Console.WriteLine("Error fetching details: " + response.StatusCode);
-                    }
-                }
-            }
-            */
-        
-
-
-
+    
     }
 
 

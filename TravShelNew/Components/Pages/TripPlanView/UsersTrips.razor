@@ -14,9 +14,6 @@
 @inject NavigationManager navigationManager
 @inject AuthenticationStateProvider ASP
 
-
-
-
 <CascadingAuthenticationState>
 	<AuthorizeView>
 	<Authorized>
@@ -27,15 +24,7 @@
 			<button type="button" class="btn btn-outline-success" @onclick="navigateToCreateTrip">Create a new trip</button>
 			
 			
-			<p></p>
 
- @*<Virtualize Items="@Trips" Context="trip" OverscanCount="50" SpacerElement="div">
-  	<div>
-
-  		<button type="button">@trip.Name</button>
-  	</div>
-  </Virtualize>
-  *@
   @if(Trips != null)
   {
   @foreach(var trip in Trips)
@@ -93,48 +82,15 @@
 	protected async override Task OnInitializedAsync()
 	{
 
-		// if (UserId == default)
-		// {
-		// 	var authState = await ASP.GetAuthenticationStateAsync();
-
-
-		// 	if (authState.User.Identity.IsAuthenticated)
-		// 	{
-
-		// 		UserId = Int32.Parse(authState.User.Identity.Name);
-		
-
-
-
 		//Console.WriteLine("auth");
 		TotalTrips =await  tripService.CountUserTrips(UserId);
 		//Console.WriteLine(TotalTrips + " total");
 		if (TotalTrips != 0)
 		{
-
 			Trips = await tripService.GetUserTrips(UserId);
 
-			//Console.WriteLine(Trips[0].Name + " trip");
-		// }
-		// 	}
 		}
 
 
-	}
-
-	private async ValueTask<ItemsProviderResult<Trip>> LoadTrips(ItemsProviderRequest request)
-	{
-		// if (TotalTrips == 0)
-		// {
-		// 	TotalTrips =  dataContext.Trips.Count(x => x.User.Id == UserId); await???
-		// }
-
-		// Console.WriteLine(TotalTrips+ " trips");
-
-		var numblogposts = Math.Min(request.Count, TotalTrips - request.StartIndex);
-
-		//List<Trip> trips =  dataContext.Trips.Where(x => x.User.Id == UserId).ToList();
-
-		return new ItemsProviderResult<Trip>(Trips, TotalTrips);
 	}
 }

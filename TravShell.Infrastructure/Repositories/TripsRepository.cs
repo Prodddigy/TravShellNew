@@ -41,8 +41,8 @@ namespace TravShell.Infrastructure.Repositories;
 		Trip trip = new Trip
 		{
 			Name = Model.Name,
-			Firstdate = Model.Firstdate.Date,
-			Lastdate = Model.Lastdate.Date,
+			Firstdate = (DateTime) Model.Firstdate,
+			Lastdate =(DateTime) Model.Lastdate,
 			Days = 1,
 			City = Model.City,
 			User = user,
@@ -63,9 +63,9 @@ namespace TravShell.Infrastructure.Repositories;
 		Trip trip = new Trip
 		{
 			Name = Model.Name,
-			Firstdate = Model.Firstdate.Date,
-			Lastdate = Model.Lastdate.Date,
-			Days = (Model.Lastdate.Date - Model.Firstdate.Date).Days + 1,
+			Firstdate =(DateTime) Model.Firstdate,
+			Lastdate = (DateTime) Model.Lastdate,
+			Days = ((DateTime)Model.Lastdate - (DateTime)Model.Firstdate).Days + 1,
 			City = Model.City,
 			User = user,
 			latitude = Model.latitude,

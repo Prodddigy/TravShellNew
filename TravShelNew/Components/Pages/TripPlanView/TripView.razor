@@ -58,94 +58,7 @@
         </div>
     </NextButtonTemplate>
 
-    @*
-    <ChildContent>
-       
-        <MudCarouselItem Color="@Color.Primary" Style=" width:100%;">
-            <h1>@currentTrip.Name</h1>
-        </MudCarouselItem>
-        
-
-        @foreach (var am in AttractionMap)
-        {
-         
-            <MudCarouselItem Color="@Color.Primary" Style=" width:100%;">
-
-                <div>
-                    Day @am.Key
-                </div>
-                <div class="horizontal-scroll" style="height:100%">
-                    
-                    @foreach(var attraction in am.Value)
-                    {
-                        <p> @attraction.Name</p>
-                        <p>Opening at: trzeba sformatować na czytelniejsze</p>
-                        <p>Address: @attraction.Vicinity</p>
-                        <p>Rating: @attraction.Rating</p>
-                        <p>Type: @attraction.Type</p>
-                        <p>------------------------</p>
-                        
-                    }
-
-
-                </div>
-            </MudCarouselItem>
-
-          
-        }
-        
-
-    </ChildContent>
-        *@
 </MudCarousel>
-
-@*
-<div class="horizontal-scroll">
-
- @if(Attractions != null )
- {
-     
-@for (var i=0; i <TripDays;i++)
-{         
-                <div class="box">
-               
-                    @if(i==0)
-                    {
-                    <div >
-                        Day @Attractions[0].StartDate
-                    </div>
-                }
-                else
-                {
-                    <div >
-                        Day @Attractions[0].StartDate.AddDays(i).
-                    </div>
-                }
-                    
-                    @foreach(var attraction in Attractions )
-                    {
-                    @if (Attractions[0].StartDate.AddDays(i) == attraction.StartDate )
-                       {
-                        
-                        <p> @attraction.Name</p>
-                        <p>Opening at: trzeba sformatować na czytelniejsze</p>
-                        <p>Address: @attraction.Vicinity</p>
-                        <p>Rating: @attraction.Rating</p>
-                        <p>Type: @attraction.Type</p>
-                        <p>------------------------</p>
-                     
-                    }
-               
-                }
-                <p> END OF THE DAY</p>
-                </div>
-
-}}
-
-</div>
-*@
-
-
 
 
 <GoogleMap @ref="googleMapRef"
@@ -178,17 +91,11 @@ else
     [Parameter]
     public int TripId { get; set; }
 
-    private Attraction? prevAtt { get; set; } 
-
     public List<Attraction> Attractions { get; set; } = default;
-    public List<Attraction> OneDayAtt { get; set; } = new();
-
 
     public Dictionary<DateTime, List<Attraction>> AttractionMap { get; set; } = new();
 
     public int TripDays { get; set; }
-
-    public int lastAttraction { get; set; } = -1;
 
     GoogleMap googleMapRef = default!;
 
@@ -197,14 +104,8 @@ else
 
     public List<List<GoogleMapMarker>> AllMarkers = new();
 
-
-    public bool MapVisible = false;
-
-
     public Trip currentTrip { get; set; }
     public string TripName { get; set; } = "Loading...";
-
-    //   private Transition transition = Transition.Slide;
 
     private MudCarousel<List<Attraction>> _carousel;
     private IList<List<Attraction>> _source = new List<List<Attraction>>();
@@ -218,20 +119,14 @@ else
 
     protected async override Task OnInitializedAsync()
     {
-
-
         var authState = await ASP.GetAuthenticationStateAsync();
-
 
         if (authState.User.Identity.IsAuthenticated)
         {
-
             int userIdCheck = Int32.Parse(authState.User.Identity.Name);
-
 
             if(userIdCheck == UserId)
             {
-
                 IsAuth = true;
 
                 currentTrip = await tripsService.FindTripById(TripId);
@@ -241,7 +136,6 @@ else
                 //Console.WriteLine(TotalTrips + " total");
                 if (numOfAtt != 0)
                 {
-                    //GetTripAttractionsOrderByStartDate
                     Attractions = await attractionsService.GetTripAttractionsOrderByStartDate(TripId);
 
                     DateTime tmp = Attractions.First().StartDate;
@@ -252,11 +146,9 @@ else
                         if (a.StartDate == tmp )
                         {
                             tmpList.Add(a);
-
                         }
                         else
                         {
-
                             AttractionMap.Add(tmp, tmpList);
 
                             tmp=a.StartDate;
@@ -265,10 +157,8 @@ else
 
                             tmpList.Add(a);
 
-
                             if(Attractions.Last()==a)
                             {
-
                                 AttractionMap.Add(tmp, tmpList);
                                 break;
                             }
@@ -276,14 +166,11 @@ else
 
                 if (Attractions.Last() == a)
                 {
-
                     AttractionMap.Add(tmp, tmpList);
                 }
-                // tmp = a.StartDate;
-
             }
 
-            Console.WriteLine(AttractionMap.Keys.Count()+ " <---count");
+//            Console.WriteLine(AttractionMap.Keys.Count()+ " <---count");
             foreach (var a in AttractionMap)
             {
                 _source.Add(a.Value.OrderBy(x=>x.step).ToList());
@@ -295,8 +182,7 @@ else
                 i = 1;
 
                 var newMarkers = new List<GoogleMapMarker>();
-
-                
+ 
                 foreach(var aa in a.Value.OrderBy(x=>x.step).ToList())
                 {
                     newMarkers.Add(new GoogleMapMarker()
@@ -313,46 +199,14 @@ else
 
 
                             Title = aa.Website != "Website is not available." ? $" <a target = '_blank' jstcache = '6' href = '{aa.Website}' tabindex = '0'> <span> Check the website!</span> </a> " : "<h1> No Website available </h1>",
-                            //       "<a target='_blank' jstcache='6' href='https://maps.google.com/maps?ll=37.500241,-122.285285&amp;z=12&amp;t=m&amp;hl=pl-PL&amp;gl=US&amp;mapclient=apiv3&amp;cid=15157168628928593561' tabindex='0'> <span>Zobacz w Mapach Google</span> </a>",
                         });
                 }
                 AllMarkers.Add(newMarkers);
 
                     }
-
-           
-
-          
-
-
-            // foreach(var a in Attractions)
-            // {
-
-
-
-            //     markers.Add(new GoogleMapMarker()
-            //     {   
-            //      Position = new GoogleMapMarkerPosition(a.latitude, a.longitude),
-
-            //             PinElement = new PinElement
-            //             {
-            //                 Glyph = (Attractions.Count()-(numOfAtt--)+1)+"",
-            //                 GlyphColor = "white"
-
-            //             },
-
-
-            //             Title = a.Website != "Website is not available."? $" <a target = '_blank' jstcache = '6' href = '{a.Website}' tabindex = '0'> <span> Check the website!</span> </a> ":"<h1> No Website available </h1>",
-            //                   "<a target='_blank' jstcache='6' href='https:maps.google.com/maps?ll=37.500241,-122.285285&amp;z=12&amp;t=m&amp;hl=pl-PL&amp;gl=US&amp;mapclient=apiv3&amp;cid=15157168628928593561' tabindex='0'> <span>Zobacz w Mapach Google</span> </a>",
-            //     }); 
-            // }
-
-
             markers = AllMarkers[0];
-            //await googleMapRef.RefreshAsync();
-            //Console.WriteLine(Trips[0].Name + " trip");
         }
-        //FindTripById
+        
         var trip = await tripsService.FindTripById(TripId);
 
         if(trip != null)
@@ -367,13 +221,6 @@ else
 
             }
         }
-    }
-
-
-
-    public void setter(Attraction Att)
-    {
-        prevAtt = Att;
     }
 
     private async void RefreshMap()
@@ -395,12 +242,11 @@ else
         else
         {
             markers = AllMarkers[selectedIndex];
-           // selectedIndex = selectedIndex - 1;
         }
 
         await googleMapRef.UpdateMarkersAsync(markers);
         await InvokeAsync(StateHasChanged);
-        Console.WriteLine("Left: " + selectedIndex);
+      //  Console.WriteLine("Left: " + selectedIndex);
     }
 
     private async Task GoRight()
@@ -411,7 +257,6 @@ else
         if (selectedIndex >= TripDays)
         {
 
-            //markers = AllMarkers[0];
             selectedIndex = 0;
 
             markers = AllMarkers.First();
@@ -419,14 +264,11 @@ else
         else
         {
             markers = AllMarkers[selectedIndex];
-            //selectedIndex = selectedIndex;
-
-           // markers = AllMarkers[selectedIndex];
         }
 
         await googleMapRef.UpdateMarkersAsync(markers);
         await InvokeAsync(StateHasChanged);
-        Console.WriteLine("Right: "+ selectedIndex);
+     //   Console.WriteLine("Right: "+ selectedIndex);
     }
 
 
