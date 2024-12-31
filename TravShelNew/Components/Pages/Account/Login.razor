@@ -1,14 +1,10 @@
-﻿
+﻿@page "/login"
 @using TravShelNew.Components.Middleware
 
 @using System.Security.Claims;
 
 @using Microsoft.AspNetCore.Authentication.Cookies
 @using Microsoft.AspNetCore.Authentication
-
-
-
-@page "/login"
 
 @rendermode InteractiveServer
 
@@ -23,9 +19,7 @@
 else
 {
 		
-
-		<EditForm Model="@Model" OnValidSubmit="Authenticate" FormName="LoginForm" style=" margin: auto;  width: 50%;
-  padding: 10px;">
+		<EditForm Model="@Model" OnValidSubmit="Authenticate" FormName="LoginForm" style=" margin: auto;  width: 50%; padding: 10px;">
 	<DataAnnotationsValidator />
 		<div class="mb-3 text-center flex-column">
 			<h3>LOGIN</h3>
@@ -49,40 +43,13 @@ else
 				</MudItem>
 
 		</MudGrid>
-		@*
-		<div class="mb-3">
-			<label>Email</label>
-			<InputText @bind-Value="Model.Email" class="form-control" placeholder="Email@Email.com" />
-			<ValidationMessage For="()=>Model.Email" />
-		</div>
-
-		<div class="mb-3">
-			<label>Password</label>
-			<InputText @bind-Value="Model.Password" placeholder="Password" typeof="password" class="form-control" />
-			<ValidationMessage For="()=> Model.Password" />
-		</div>
-		<div class="mb-3 text-center">
-			<span class="text-danger">@errorMessage</span>
-		</div>
-		<div class="mb-3 d-grid gap-2">
-			<button type="submit" disabled="@IsLogging" class="btn btn-primary">Login</button>
-		</div>
-		*@
 	</EditForm>
-
-
 }
-
-
 
 @code {
 
 	[Inject]
 	public required IUserService UserService { get; set; }
-
-	// [CascadingParameter]
-	// public HttpContext? HttpContext { get; set; }
-
 
 	[SupplyParameterFromForm]
 	public LoginViewModel Model { get; set; } = new();
@@ -97,24 +64,15 @@ else
 	{
 		var authState = await ASP.GetAuthenticationStateAsync();
 
-
 		if (authState.User.Identity.IsAuthenticated)
 		{
 			AlreadyLoggedIn = true;	
 		}
-
-
 	}
 
-
-	private async Task Authenticate() //do dorobienia
+	private async Task Authenticate()
 	{
-
-		/*Nowa architektura!!!
-			* 
-			*/
-
-			IsLogging = true;
+		IsLogging = true;
 		StateHasChanged();
 		await Task.Delay(1);
 
@@ -151,56 +109,5 @@ else
 
 		navigationManager.NavigateTo(path3, true);
 		
-
-		//--------------------NEW END
-
-		// var user =   dataContext.Users.Where(x => x.Email == Model.Email).FirstOrDefault();
-
-		// if(user is null )
-		// {
-		// 	errorMessage = "Invalid Email or Password";
-		// 	return;
-		// }
-
-
-
-		// if ( !BCrypt.Verify(Model.Password,user.PasswordHash))
-		// {
-		// 	errorMessage = "Invalid Email or Password";
-		// 	return;
-		// }
-
-		// var claims = new List<Claim>
-		// {
-		// 	new Claim(ClaimTypes.Email, Model.Email),
-		// 	new Claim(ClaimTypes.Name,user.Id+""),
-		// 	new Claim(ClaimTypes.Role, "user")
-		// };
-
-		// var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-		// var principal = new ClaimsPrincipal(identity);
-
-
-		// ClaimsPrincipal claimsPrincipal = null;
-		// Guid key = Guid.NewGuid();
-		// TravShellAuthMiddleware.Logins[key] = principal;
-
-
-
-
-		// await Context.HttpContext?.SignInAsync(principal);
-
-
-		// ASP.UserLoggedIn(user.Id + "", claims);
-
-		// string path2 = $"/trips/{user.Id}?key={key}";
-		// string path = $"/trips/{user.Id}";
-
-		// string path3 = $"/login?key={key}";
-
-		// navigationManager.NavigateTo(path3, true);
-
-
 	}
-
 }

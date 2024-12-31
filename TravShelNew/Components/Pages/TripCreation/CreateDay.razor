@@ -45,7 +45,7 @@
             </div>
         </MudPopover>
         <MudSpacer />
-        <MudButton OnClick="RefreshMap" Variant="Variant.Text" Color="Color.Error">Refresh map</MudButton>
+        <MudButton  Variant="Variant.Text" Color="Color.Error">???</MudButton>
     </MudToolBar>
 
     <MudDropContainer T="AttractionViewModel" Items="@_dropzoneItems" @ref="_container" ItemsSelector="@((att,dropzone) => att.dropzone == dropzone)" ItemDropped="ItemUpdated" >
@@ -100,14 +100,14 @@
             @if (context.dropzone == "0")
             {
                 <MudListItem T="string" Text="@($"{context.Name} ({context.step})")">
-                    @($"{context.Name} ({context.step})")
+                    @($"{context.Name} ({context.step +1})")
                     <MudButton OnClick="()=>removeAttraction(context)" Variant="Variant.Filled" Color="Color.Error">Remove</MudButton>
                 </MudListItem>
             }
             else
             {
                 <MudListItem T="string" Text="@($"{context.Name} ({context.step})")">
-                    @($"{context.Name} ({context.step})")
+                    @($"{context.Name}, rating: {context.Rating}")
 
                 </MudListItem>
             }
@@ -150,12 +150,10 @@
     public static List<AttractionViewModel> Restaurants = new List<AttractionViewModel>();
     public static List<AttractionViewModel> Accommodations = new List<AttractionViewModel>();
 
-
     GoogleMap googleMapRef = default!;
 
-    public GoogleMapCenter center /*= new GoogleMapCenter(37.50024109655184, -122.28528451834352)*/;
+    public GoogleMapCenter center ;
     public List<GoogleMapMarker> markers = new();
-
 
     private List<AttractionViewModel> _dropzoneItems = new();
 
@@ -169,55 +167,27 @@
 
     private bool IsPopup = false;
 
-    /*
-    * google api
-    * 
-    * twórz po kolei atrakcje
-    * 
-    * 
-    * dodaj to każdego przycisku dolnych kolumn opcje dodania do kolumny górnej
-    * 
-    * kolumna górna ma za zadanie być podsumowaniem wycieczki danego dnia
-    * 
-    * po prawej stronie powinien znajdować się przycisk submit który przekieruje użytkownika do:
-    * A-> następnego dnia wycieczki
-    * 
-    * B-> wyświetlenia gotowej wycieczki w TripView w sytuacji kiedy obecny dzień jest ostatnim :)
-     * 
-     * 
-     */
-
     protected override async Task OnParametersSetAsync()
     {
         selectedAttractions = new List<AttractionViewModel>();
 
         if (trip == null)
         {
-            Console.WriteLine("OPSA!!!");
             trip = await TripsService.FindTripById(TripId);
-
-
-            //  dataContext.Trips.Where(x => x.Id == TripId).FirstOrDefault();
 
             currentDate = trip.Firstdate;
 
             CityName = trip.City;
 
             center = new GoogleMapCenter(trip.latitude, trip.longitude);
+            StateHasChanged();
+            await Task.Delay(3);
             await googleMapRef.RefreshAsync();
         }
-
-        //  currentDate = trip.Firstdate.AddDays( pastDays);
 
         if (Tourist_Attractions.Count() == 0 || Restaurants.Count() == 0 || Accommodations.Count() == 0)
         {
             coordinates = $"{trip.latitude.ToString(CultureInfo.InvariantCulture)}%2C{trip.longitude.ToString(CultureInfo.InvariantCulture)}";
-
-
-            //await GetCoords();//testuj
-
-
-
         }
 
 
@@ -245,11 +215,8 @@
             Console.WriteLine("done all");
         }
 
-
         WaitForGoogle = false;
         RefreshContainer();
-
-        //   base.OnParametersSet();
     }
 
     private  void PopulateDropzone(List<AttractionViewModel> list, string dropzone)
@@ -281,17 +248,13 @@
         RefreshContainer();
     }
 
-
-
-    private async void  ItemUpdated(MudItemDropInfo<AttractionViewModel> att) //??????????????
+    private async void  ItemUpdated(MudItemDropInfo<AttractionViewModel> att)
     {
         ItemAdded(att);
-        //  att.Item.dropzone = att.DropzoneIdentifier;
 
         _dropzoneItems.UpdateOrder(att, item => item.step, 0);
 
         Reorder();
-
 
         foreach (var a in _dropzoneItems.Where(x => x.dropzone == "0"))
         {
@@ -302,17 +265,15 @@
                     Console.WriteLine("equal");
                     m.PinElement = new PinElement
                         {
-                            Glyph = (a.step) + "",
+                            Glyph = (a.step +1) + "",
                             GlyphColor = "white"
                         };
                 }
             }
         }
-        //_dropzoneItems.UpdateOrder(att, item => item.step, 0);
-
+        
         await googleMapRef.UpdateMarkersAsync(markers);
-        Console.WriteLine(markers.Count());
-
+       // Console.WriteLine(markers.Count());
     }
 
     private void ItemAdded(MudItemDropInfo<AttractionViewModel> att)
@@ -345,11 +306,7 @@
 
                 Reorder();
 
-                //UPDATE ORDER FOR MARKERS!!!! HERE!!!!!!
-
-                // RefreshContainer();
-
-                Console.WriteLine("Add attraction to the day");
+                //Console.WriteLine("Add attraction to the day");
 
                 att.Item.dropzone = att.DropzoneIdentifier;
 
@@ -363,7 +320,7 @@
 
                         PinElement = new PinElement
                         {
-                            Glyph = (att.Item.step) + "",
+                            Glyph = (att.Item.step+1) + "",
                             GlyphColor = "white"
                         },
                             Title = att.Item.Website != "Website is not available." ? $" <a target = '_blank' jstcache = '6' href = '{att.Item.Website}' tabindex = '0'> <span> Check the website!</span> </a> " : "<h1> No Website available </h1>"
@@ -374,8 +331,6 @@
                 att.Item.Marker = marker;
 
                 markers.OrderBy(x => x.PinElement.Glyph);
-
-                // selectedAttractions.Add(att.Item);
 
                 NoSelectedTrips = false;
             }
@@ -404,9 +359,6 @@
 
     public async Task SaveDayAttractions()
     {
-        //  Console.WriteLine(selectedAttractions[0].Id + " name: " + selectedAttractions[0].Name);
-
-        //await AttractionService.SaveAttractionList(selectedAttractions);
         if(NoSelectedTrips)
         {
             IsPopup = true;
@@ -441,9 +393,6 @@
 
         await AttractionService.SaveAttractionList(nList);
 
-
-        // await dataContext.Attractions.AddRangeAsync(selectedAttractions);
-        // await dataContext.SaveChangesAsync();
         if(currentDate != trip.Lastdate)
         {
             selectedAttractions = new List<AttractionViewModel>();
@@ -451,7 +400,6 @@
             currentDate = currentDate.AddDays(1);
             markers.Clear();
             await  googleMapRef.RefreshAsync();
-            //   Console.WriteLine("new current date: " +currentDate);
         }
         else
         {
@@ -471,88 +419,22 @@
         NoSelectedTrips = true;
     }
 
-    public async Task addAttraction(AttractionViewModel att)// nie potrzebne już chyba
-    {
-        //https://docs.blazorbootstrap.com/components/google-map#add-a-marker-to-a-map
-
-        if(!selectedAttractions.Contains(att))
-        {
-            var marker = new GoogleMapMarker()
-                {
-                    Position = new GoogleMapMarkerPosition(att.latitude, att.longitude),
-
-                    PinElement = new PinElement
-                    {
-                        Glyph = (numOfAtt++) + "",
-                        GlyphColor = "white"
-                    }
-                   // Title = $" place: {att.Name}",
-                    //Content= ""+newAttraction.Id
-                };
-            markers.Add(marker);
-            Console.WriteLine(markers.Count());
-
-            //  att.Trip = trip;
-            //att.StartDate = currentDate;
-            var newAttraction = new AttractionViewModel
-                {
-                    PlaceCode = att.PlaceCode,
-                    Name = att.Name,
-                    Vicinity = att.Vicinity,
-                    Rating = att.Rating,
-                    Opening_Hours = att.Opening_Hours,
-                    Website = att.Website,
-                    Type = att.Type,
-                    StartDate = currentDate,
-                    step = numOfAtt,
-                    latitude = att.latitude,
-                    longitude = att.longitude,
-                    Trip = trip,
-                    Marker = marker
-                };
-
-
-            selectedAttractions.Add(newAttraction);
-
-
-            // markers.Add(new GoogleMapMarker()
-            //     {
-            //         Position = new GoogleMapMarkerPosition(newAttraction.latitude, newAttraction.longitude),
-            //         Title = $" place: {newAttraction.Name}",
-            //         Content= ""+newAttraction.Id
-            //     });
-            await googleMapRef.UpdateMarkersAsync(markers);
-            //  await googleMapRef.RefreshAsync();
-        }
-
-
-    }
-
     public async Task removeAttraction(AttractionViewModel att)
     {
-
-
-
         selectedAttractions.Remove(att);
         _dropzoneItems.Remove(att);
 
         Reorder();
-        //var deleteThis = markers.Where(x => x.Content == (att.Id + "")).FirstOrDefault();
         markers.Remove(att.Marker);
         markers.Clear();
-        //var tmpMarker=null;
 
-        Console.WriteLine("after markers clear");
+        //Console.WriteLine("after markers clear");
         foreach (var a in _dropzoneItems.Where(x=> x.dropzone=="0").ToList())
         {
-            a.Marker.PinElement.Glyph = a.step + "";
-
-            //tmpMarker = a.Marker
+            a.Marker.PinElement.Glyph = (a.step +1) + "";
 
             markers.Add(a.Marker);
-            Console.WriteLine(a.Marker.PinElement.Glyph+" glyph");
         }
-        //await googleMapRef.RefreshAsync();
         await googleMapRef.UpdateMarkersAsync(markers);
         if (_dropzoneItems.Where(x => x.dropzone == "0").Count()==0)
         {
@@ -560,21 +442,14 @@
             StateHasChanged();
             await Task.Delay(1);
         }
-
-     
     }
 
     public async Task GetSetAttractions(string coords, AttractionType type, List<AttractionViewModel> list)
     {
-        var populatedList = await GoogleService.GetSetAttractions(coords, type, list);//test!!!
+        var populatedList = await GoogleService.GetSetAttractions(coords, type, list);
 
         list = await GoogleService.GetSetAttractionsDetails(populatedList);
-    
     }
-
-
-
-
 }
 <style>
 

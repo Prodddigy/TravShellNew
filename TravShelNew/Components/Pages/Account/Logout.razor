@@ -1,8 +1,5 @@
 ﻿@page "/logout"
 
-
-
-
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Authentication
 @using Microsoft.AspNetCore.Authentication.Cookies
@@ -14,26 +11,6 @@
 
 @layout Layout.StaticSsrLayout
 
-
-@*
-<div class="row">
-	<div class="col-12">
-		<div class="card">
-			<div class="card-body flex-column">
-				<div class="text-center">
-					<h3>You have just logged out </h3>
-				</div>
-				<div class="text-center mt-2">
-					<span class="text-danger fw-bolder">You've successfullt logged out of this app.</span>
-				</div>
-
-			</div>
-		</div>
-	</div>
-
-</div>
-*@
-
 @code {
 	[CascadingParameter]
 	public  HttpContext httpContext { get; set; }
@@ -41,41 +18,11 @@
 
 	protected override async Task OnInitializedAsync()
 	{
-		if(httpContext ==null)
-		{
-			Console.WriteLine("null!!");
-		}
-		else
+		if(httpContext !=null)
 		{
 			await httpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
 
-
 			navigationManager.NavigateTo("/",forceLoad: true);
-
 		}
-
-		//await context.HttpContext.SignOutAsync("Cookies");
-
-		//await SignInManager.SignOutAsync();
-
-
-	//	await Context.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-
-	
-
-	//	navigationManager.NavigateTo("/");
-
-		// var authState = await ASP.GetAuthenticationStateAsync();
-
-		// if (authState.User.Identity.IsAuthenticated)
-		// {
-
-		// 	await httpContext.SignOutAsync();
-		// 	Console.WriteLine(httpContext.User.Identity.Name + "email?");
-
-		// 	authState.Logout();
-		// 	navigationManager.NavigateTo("/logout",true);
-		// }
 	}
-
 }

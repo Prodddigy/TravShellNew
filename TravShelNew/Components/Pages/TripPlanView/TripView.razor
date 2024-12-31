@@ -21,7 +21,7 @@
     <MudToolBar Class="gap-4">
         <h3>Trip: @TripName</h3>
         <MudSpacer />
-        <MudButton OnClick="RefreshMap" Variant="Variant.Text" Color="Color.Error">Refresh map</MudButton>
+        <MudButton  Variant="Variant.Text" Color="Color.Error">???</MudButton>
         </MudToolBar>
 
 <MudCarousel Class="mud-width-full" @ref="_carousel" ItemsSource="@_source" Style="height:200px;" ShowArrows="true" ShowBullets="false" EnableSwipeGesture="true" AutoCycle="false" @bind-SelectedIndex="staticIndex">
@@ -214,10 +214,11 @@ else
             TripDays = trip.Days;
             center = new GoogleMapCenter(trip.latitude, trip.longitude);
         }
-
+        StateHasChanged();
+        await Task.Delay(3);
         await googleMapRef.RefreshAsync();
 
-        await InvokeAsync(StateHasChanged);
+//        await InvokeAsync(StateHasChanged);
 
             }
         }
