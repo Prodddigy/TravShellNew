@@ -7,10 +7,19 @@
 @using TravShell.App.GoogleAPI
 @using TravShell.App.Trips
 
+@using GoogleApi.Entities.Common;
+@using GoogleApi.Entities.Common.Enums;
+@using GoogleApi.Entities.Places.QueryAutoComplete.Request;
+@using GoogleApi;
+@using GoogleApi.Entities.Places.AutoComplete.Request;
+
 @attribute [Authorize]
 @inject DataContext dataContext
 @inject NavigationManager navigationManager
 @inject AuthenticationStateProvider ASP
+
+
+
 
 
 @if(IsAuth)
@@ -31,11 +40,17 @@
 						<MudTextField Label="Trip name" @bind-Value="Model.Name" For="@(()=>Model.Name)" />
 						<MudDatePicker Label="Start date" @bind-Date="Model.Firstdate" PickerVariant="PickerVariant.Dialog" Class="mt-3" For="@(()=>Model.Firstdate)" />
 						<MudDatePicker Label="Last date" @bind-Date="Model.Lastdate" PickerVariant="PickerVariant.Dialog" Class="mt-3" For="@(()=>Model.Lastdate)" />
-
+						<MudAutocomplete T="string" Label="Search for places"
+										 Placeholder="Start typing..."
+										 SearchFunc="SearchPlacesAsync"
+										 Clearable="true"
+										 CoerceText="true"
+										 ResetValueOnEmptyText="true" @bind-Value="Model.City" For="@(()=>Model.City)" />
 
 
 						<MudTextField Label="Short description" MaxLength="80" @bind-Value="Model.ShortDescription" Class="mt-3" For="@(()=>Model.ShortDescription)" AutoGrow MaxLines="4" Variant="Variant.Text" />
-						<MudTextField Label="City" @bind-Value="Model.City" Class="mt-3" For="@(()=>Model.City)"  />
+					
+						
 						<MudCheckBox Label="Public" @bind-Value="Model.IsPublic" Class="mt-3" For="@(()=>Model.IsPublic)" Color="Color.Primary" />
 				</MudCardContent>
 
@@ -54,7 +69,7 @@
 			<GoogleMap @ref="googleMapRef"
 			   ApiKey="@TravShell.App.GoogleAPI.GoogleService.apiKey"
 			   Center="@center"
-			   Height="400"
+			   Height="350"
 			   Width="100"
 			   Zoom="@zoom"
 			   Markers="markers"
@@ -197,7 +212,7 @@ else
 				var newModel = await GoogleService.GetCoordinates(Model);
 
 				trip_id = await TripsService.CreateMultiDayTrip(newModel, user);
-			
+
 				navigationManager.NavigateTo($"/{UserId}/trip={trip_id}/createDay");
 
 			}
@@ -221,6 +236,36 @@ else
 		{
 			errorMessage = "Dates are in the past. First: "+Model.Firstdate.Value.Date.ToShortDateString()+". Second: "+Model.Lastdate.Value.Date.ToShortDateString()+".";
 		}	
+	}
+
+
+	//przenieś do services!!!!!!!!!!!!!! 
+	public async Task<IEnumerable<string>> GetPlaceNames(string place, CancellationToken cancellationToken)
+	{
+		if (string.IsNullOrWhiteSpace(place))
+			return Enumerable.Empty<string>();
+
+		var request = new PlacesAutoCompleteRequest
+			{
+				Key = "AIzaSyARfnT3GsxeslzR5yjxcqDrlRGb88qBnUs",
+				Input = place
+			};
+
+		var response = await GooglePlaces.AutoComplete.QueryAsync(request, cancellationToken);
+
+		if (response?.Predictions==null ||!response.Predictions.Any())
+			return Enumerable.Empty<string>();
+
+		return response.Predictions.Select(p => p.Description);
+	}
+
+
+	private async Task<IEnumerable<string>> SearchPlacesAsync(string place, CancellationToken cancellationToken)
+	{
+		if (string.IsNullOrWhiteSpace(place))
+			return Enumerable.Empty<string>();
+
+		return await GetPlaceNames(place, cancellationToken);
 	}
 
 }
