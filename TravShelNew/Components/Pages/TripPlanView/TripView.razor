@@ -18,6 +18,9 @@
 {
     @*<h3>User id: @UserId and Trip id: @TripId</h3>*@
 
+    if(TripExists)
+    {
+
     <MudToolBar Class="gap-4">
         <h3>Trip: @TripName</h3>
         <MudSpacer />
@@ -68,8 +71,13 @@
            Width="60"
            Zoom="12"
            Markers="markers" 
-           Clickable="true"/>
-           
+        Clickable="true"/>
+    }
+    else
+    {
+        <h1>Trip @TripId does not exist</h1>
+    }
+
 }
 else
 {
@@ -116,6 +124,8 @@ else
 
     private bool IsAuth = false;
 
+    private bool TripExists = true;
+
 
     protected async override Task OnInitializedAsync()
     {
@@ -130,6 +140,12 @@ else
                 IsAuth = true;
 
                 currentTrip = await tripsService.FindTripById(TripId);
+
+                if(currentTrip == null)
+                {
+                    TripExists = false;
+                    return;
+                }
 
                 TripName = currentTrip.Name;
                 int numOfAtt = await attractionsService.CountTripAttractions(TripId);
