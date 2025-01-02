@@ -20,5 +20,7 @@ public interface ITripsRepository
 	public Task<int> CreateOneDayTrip(TripViewModel model, User user);
 
 	public Task<int> CreateMultiDayTrip(TripViewModel model, User user);
+
+	public Task RemoveTripById(int tripId);
 }
 

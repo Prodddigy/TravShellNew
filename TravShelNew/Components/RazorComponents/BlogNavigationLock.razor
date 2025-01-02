@@ -2,13 +2,13 @@
 @implements IDisposable
 
 <NavigationLock 
-    ConfirmExternalNavigation="@(CurrentEditContext.IsModified() && CheckNavigation)"
+    ConfirmExternalNavigation="@(CheckNavigation)"
     OnBeforeInternalNavigation="OnBeforeInternalNavigation" />
 
 @code{
     [CascadingParameter]
     public required EditContext CurrentEditContext { get; set; }
-    public string InternalNavigationMessage { get; set; } = "Zmiany zostaną utracone. Czy na pewno chcesz opuścić stronę?";
+    public string InternalNavigationMessage { get; set; } = "Changes will be lost. Still want to leave the page?";
     
     [Parameter]    
     public bool CheckNavigation { get; set; }=true;
@@ -25,7 +25,7 @@
 
     private async Task OnBeforeInternalNavigation(LocationChangingContext context)
     {
-        if (CurrentEditContext.IsModified() && CheckNavigation)
+        if (CheckNavigation)
         {
             var isConfirmed = await JSRuntime.InvokeAsync<bool>("confirm",
                 InternalNavigationMessage);

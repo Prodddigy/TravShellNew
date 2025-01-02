@@ -72,14 +72,21 @@ namespace TravShell.Infrastructure.Repositories;
 			longitude = Model.longitude,
 			IsPublic = Model.IsPublic
 		};
-		Console.WriteLine(trip.Id + " identyfiacja!!!!");
 		await _dbContext.Trips.AddAsync(trip);
 		await _dbContext.SaveChangesAsync();
-
-		Console.WriteLine(trip.Id + " identyfiacja!!!!");
 
 		return trip.Id;
 	}
 
+	public async Task RemoveTripById(int tripId)
+    {
+       var trip =  await FindTripById(tripId);
 
+        if (trip != null)
+		{
+			 _dbContext.Trips.Remove(trip);
+			await _dbContext.SaveChangesAsync();
+		}
+		return;
+    }
 }

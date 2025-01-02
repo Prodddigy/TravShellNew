@@ -42,5 +42,11 @@ public class TripService : ITripService
 	{
 		return await _tripsRepository.CreateMultiDayTrip(model, user);
 	}
+
+   public async Task RemoveTripById(int tripId)
+    {
+		 await _tripsRepository.RemoveTripById(tripId);
+		return;
+    }
 }
 

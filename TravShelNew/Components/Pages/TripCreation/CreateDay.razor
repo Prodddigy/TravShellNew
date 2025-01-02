@@ -1,7 +1,7 @@
 ﻿@page "/{UserId:int}/trip={TripId:int}/createDay"
 
 @rendermode InteractiveServer
-@using RazorComponents
+@using RazorComponents;
 
 @using Newtonsoft.Json.Linq;
 @using System.Globalization;
@@ -10,10 +10,27 @@
 
 @using TravShell.App.Attractions;
 
-@using MudBlazor.Utilities
+@using MudBlazor.Utilities;
 
 @inject DataContext dataContext
 @inject NavigationManager navigationManager
+@attribute [Authorize]
+
+
+
+<NavigationLock ConfirmExternalNavigation="@NotSaved" OnBeforeInternalNavigation="@OnBeforeInternalNavigation"></NavigationLock>
+@if(IsLoading)
+{
+    <MudProgressLinear Color="Color.Primary" Buffer="true" Value="@Value" BufferValue="@BufferValue" Class="my-7" >
+        <MudText Typo="Typo.subtitle1" Color="Color.Dark">
+            <b>@Status</b>
+        </MudText>
+
+    </MudProgressLinear>
+}
+else
+{
+    
 
 <h3>Day: @currentDate.ToShortDateString()</h3>
 @if (trip == null || currentDate == trip.Lastdate)
@@ -28,15 +45,19 @@
 
         @if (trip == null || currentDate == trip.Lastdate)
         {
-            <MudButton OnClick="SaveDayAttractions" Disabled="WaitForGoogle" Variant="Variant.Filled" Color="Color.Primary">
+                
+                    <MudButton OnClick="SaveDayAttractions" Disabled="WaitForGoogle" ButtonType="MudBlazor.ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary">
                 Finish trip
             </MudButton>
+             
         }
         else
         {
-            <MudButton OnClick="SaveDayAttractions" Disabled="WaitForGoogle" Variant="Variant.Filled" Color="Color.Primary">
+                
+                <MudButton OnClick="SaveDayAttractions" Disabled="WaitForGoogle" ButtonType="MudBlazor.ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary">
                 Next Day
             </MudButton>
+                
         }
         <MudPopover Open="@IsPopup" Fixed="true" Class="px-4 pt-4">
             <div class="d-flex flex-column">
@@ -115,6 +136,7 @@
     </MudDropContainer>
 
 </div>
+}
 
 @code {
     [Inject]
@@ -133,7 +155,7 @@
     public int UserId { get; set; }
     [Parameter]
     public int TripId { get; set; }
-   
+
     public List<AttractionViewModel> selectedAttractions = new List<AttractionViewModel>();
 
     public string CityName { get; set; } = "Czestochowa";
@@ -167,8 +189,19 @@
 
     private bool IsPopup = false;
 
+    private bool IsLoading = true;
+
+    public int Value = 0;
+
+    public int BufferValue = 0;
+
+    public string Status = "Loading tourist attractions... 0%";
+    [Inject] IJSRuntime? JsRuntime { get; set; }
+    private bool NotSaved { get; set; } = true;
+
     protected override async Task OnParametersSetAsync()
     {
+        NotSaved = true;
         selectedAttractions = new List<AttractionViewModel>();
 
         if (trip == null)
@@ -180,9 +213,7 @@
             CityName = trip.City;
 
             center = new GoogleMapCenter(trip.latitude, trip.longitude);
-            StateHasChanged();
-            await Task.Delay(3);
-            await googleMapRef.RefreshAsync();
+
         }
 
         if (Tourist_Attractions.Count() == 0 || Restaurants.Count() == 0 || Accommodations.Count() == 0)
@@ -194,16 +225,31 @@
         if (Tourist_Attractions.Count() == 0)
         {
             await GetSetAttractions(coordinates, AttractionType.Attraction, Tourist_Attractions);
+            await SimulateProgressAsync("Loading restaurants... 30%");
+        }
+        else
+        {
+            await SimulateProgressAsync("Loading restaurants... 30%");
         }
 
         if (Restaurants.Count() == 0)
         {
             await GetSetAttractions(coordinates, AttractionType.Restaurant, Restaurants);
+            await SimulateProgressAsync("Loading accommodations... 60%");
+        }
+        else
+        {
+            await SimulateProgressAsync("Loading accommodations... 60%");            
         }
 
         if (Accommodations.Count() == 0)
         {
             await GetSetAttractions(coordinates, AttractionType.Accommodation, Accommodations);
+            await SimulateProgressAsync("Finalizng... 90%");
+        }
+        else
+        {
+            await SimulateProgressAsync("Finalizng... 90%");
         }
 
         if(_dropzoneItems.Count()==0)
@@ -213,11 +259,45 @@
             PopulateDropzone(Restaurants, "2");
             PopulateDropzone(Accommodations, "3");
             Console.WriteLine("done all");
+            await SimulateProgressAsync("Get ready 100%");
+
+
         }
 
         WaitForGoogle = false;
+        if(_container == null)
+        {
+            _container = new();
+        }
+
         RefreshContainer();
+
+        StateHasChanged();
+
+        if(_container==null)
+        {
+            Console.WriteLine("null container");
+        }
+        // await Task.Delay(3);
+        // await googleMapRef.RefreshAsync();
     }
+
+    public async Task SimulateProgressAsync(string status)
+    {
+        Status =status;
+        Value += 30;
+        BufferValue += 35;
+        StateHasChanged();
+        await Task.Delay(500);
+        if(Value>= 100)
+        {
+            IsLoading = false;
+            StateHasChanged();
+            await Task.Delay(500);
+        }
+
+    }
+
 
     private  void PopulateDropzone(List<AttractionViewModel> list, string dropzone)
     {
@@ -271,9 +351,10 @@
                 }
             }
         }
-        
+
         await googleMapRef.UpdateMarkersAsync(markers);
-       // Console.WriteLine(markers.Count());
+
+        // Console.WriteLine(markers.Count());
     }
 
     private void ItemAdded(MudItemDropInfo<AttractionViewModel> att)
@@ -301,7 +382,7 @@
                         // Marker = marker,
                         dropzone = att.Item.dropzone
                     };
-
+                //  selectedAttractions.Add(AVM);
                 _dropzoneItems.Add(AVM);
 
                 Reorder();
@@ -385,17 +466,18 @@
                     latitude = att.latitude,
                     longitude = att.longitude,
                     Trip = trip,
-                    // Marker = marker,
+                   // Marker = marker,
                     dropzone = att.dropzone
                 });
         }
+        selectedAttractions.AddRange( nList);
 
 
-        await AttractionService.SaveAttractionList(nList);
+        // await AttractionService.SaveAttractionList(nList);
 
         if(currentDate != trip.Lastdate)
         {
-            selectedAttractions = new List<AttractionViewModel>();
+
 
             currentDate = currentDate.AddDays(1);
             markers.Clear();
@@ -403,13 +485,33 @@
         }
         else
         {
+            await AttractionService.SaveAttractionList(selectedAttractions);
             Tourist_Attractions = new List<AttractionViewModel>();
             Restaurants = new List<AttractionViewModel>();
             Accommodations = new List<AttractionViewModel>();
+            selectedAttractions = new List<AttractionViewModel>();
             trip = null;
 
             markers.Clear();
             await googleMapRef.RefreshAsync();
+
+            WaitForGoogle = true;
+
+            LastAttIndex = 0;
+
+            NoSelectedTrips = true;
+
+            IsPopup = false;
+
+            IsLoading = true;
+
+            Value = 0;
+
+            BufferValue = 0;
+
+            Status = "Loading tourist attractions... 0%";
+
+            NotSaved = false;
             navigationManager.NavigateTo($"/trips/{UserId}");
         }
 
@@ -421,7 +523,7 @@
 
     public async Task removeAttraction(AttractionViewModel att)
     {
-        selectedAttractions.Remove(att);
+        // selectedAttractions.Remove(att);
         _dropzoneItems.Remove(att);
 
         Reorder();
@@ -450,8 +552,58 @@
 
         list = await GoogleService.GetSetAttractionsDetails(populatedList);
     }
+
+    private async Task OnBeforeInternalNavigation(LocationChangingContext context)
+    {
+        if (JsRuntime is null) return;
+
+        if (NotSaved)
+        {
+            var isConfirmed = await JsRuntime.InvokeAsync<bool>("confirm",
+                "Changes will be lost. Still want to leave the page?");
+
+            if (!isConfirmed)
+            {
+                context.PreventNavigation();
+            }
+            else
+            {
+                
+                Console.WriteLine("wyjście");
+                Tourist_Attractions = new List<AttractionViewModel>();
+                Restaurants = new List<AttractionViewModel>();
+                Accommodations = new List<AttractionViewModel>();
+                selectedAttractions = new List<AttractionViewModel>();
+                trip = null;
+
+                markers.Clear();
+               // await googleMapRef.RefreshAsync();
+
+                WaitForGoogle = true;
+
+                LastAttIndex = 0;
+
+                NoSelectedTrips = true;
+
+                IsPopup = false;
+
+                IsLoading = true;
+
+                Value = 0;
+
+                BufferValue = 0;
+
+                Status = "Loading tourist attractions... 0%";
+                await TripsService.RemoveTripById(TripId);
+                Console.WriteLine("usunueło się?");
+            }
+
+        }
+    }
 }
-<style>
+
+
+    <style>
 
     .top-column {
         width: 100%;
