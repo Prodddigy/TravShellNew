@@ -22,11 +22,12 @@
 @if(IsLoading)
 {
     <MudProgressLinear Color="Color.Primary" Buffer="true" Value="@Value" BufferValue="@BufferValue" Class="my-7" >
-        <MudText Typo="Typo.subtitle1" Color="Color.Dark">
-            <b>@Status</b>
-        </MudText>
+        
 
     </MudProgressLinear>
+    <MudText Typo="Typo.subtitle1" Color="Color.Dark">
+        <b>@Status</b>
+    </MudText>
 }
 else
 {
