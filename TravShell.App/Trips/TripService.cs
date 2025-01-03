@@ -48,5 +48,10 @@ public class TripService : ITripService
 		 await _tripsRepository.RemoveTripById(tripId);
 		return;
     }
+
+	public async Task<List<Trip>> GetNineUserTrips(int userId, int page, int trips)
+	{
+		return await _tripsRepository.GetNineUserTrips(userId, page, trips);
+	}
 }
 

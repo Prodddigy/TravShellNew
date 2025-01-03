@@ -22,11 +22,60 @@
 <h3 class="align-content-center" > Here are your Trips! @UserId</h3>
 		
 			<button type="button" class="btn btn-outline-success" @onclick="navigateToCreateTrip">Create a new trip</button>
-			
-			
 
-  @if(Trips != null)
+
+
+
+@if (CurrentVisibleContent != null)
   {
+
+<MudContainer style=" margin: auto;  width: 60vw; min-width:400px; padding: 10px;" Class="border-8 border-solid mud-border-primary pa-4">
+<MudGrid>
+	<MudItem xs="12">
+		<MudGrid Justify="Justify.SpaceEvenly">
+			@foreach (var i in CurrentVisibleContent)
+			{
+				<MudItem xs="4">
+					<MudPaper Style=" aspect-ratio: 1 / 1; overflow: hidden; overflow: hidden; text-overflow: ellipsis;" Class="border-dashed border-2 mud-border-primary pa-4" Square="true">
+
+					<MudButton Class="d-flex flex-column align-center justify-center mud-width-full py-8" OnClick="()=>EnterTrip(i.Id)" Typo="Typo.h6" Align="Align.Center">
+							
+							<MudText Typo="Typo.h6">     @i.Name : <MudText Inline="false">@i.ShortDescription aaaa</MudText></MudText>
+							
+
+
+						</MudButton>
+
+					</MudPaper>
+				</MudItem>
+			}
+			@if (CurrentVisibleContent.Count() < 9)
+			{
+				for (var i = 0; i < (9 - CurrentVisibleContent.Count()); i++)
+				{
+					<MudItem xs="4">
+						<MudPaper Style="aspect-ratio: 1 / 1;overflow: hidden; text-overflow: ellipsis;" Class="border-dashed border-2 mud-border-primary pa-4" Square="true">
+
+													<MudButton Class="d-flex flex-column align-center justify-center mud-width-full py-8" OnClick="navigateToCreateTrip" Typo="Typo.h6" Align="Align.Center">Make a new trip!</MudButton>
+
+						</MudPaper>
+					</MudItem>
+				}
+			}
+
+		</MudGrid>
+	</MudItem>
+</MudGrid>
+
+
+
+</MudContainer>
+<MudContainer MaxWidth="MaxWidth.False" Style="display: flex; justify-content: center;">
+<MudPagination SelectedChanged="NextPage" Color="Color.Primary" Count="pages" />
+</MudContainer>
+
+@*
+
   @foreach(var trip in Trips)
 {
 	<div>
@@ -36,12 +85,17 @@
 <p></p>
 	</div>
 			}
+			*@
   }
+
+			
 		}
 		else
 		{
 			<h3>This List is unavailable</h3>
 		}
+
+
 	</Authorized>
 	</AuthorizeView>
 </CascadingAuthenticationState>
@@ -58,6 +112,16 @@
 	private int TotalTrips { get; set; }
 
 	private List<Trip> Trips { get; set; }
+
+
+	private int _selected = 1;
+	private List<Trip> content = new List<Trip>();
+	private List<Trip> downloadedContent = new List<Trip>();
+
+	private List<Trip> CurrentVisibleContent = new List<Trip>();
+	public int pages;
+
+
 
 	private void EnterTrip(int TripId)
 	{
@@ -87,10 +151,23 @@
 		//Console.WriteLine(TotalTrips + " total");
 		if (TotalTrips != 0)
 		{
-			Trips = await tripService.GetUserTrips(UserId);
+			CurrentVisibleContent = await tripService.GetNineUserTrips(UserId, 1, 9);
+
+			pages = (int)Math.Ceiling((double)TotalTrips / 9);
 
 		}
 
 
+	}
+
+	private async void  NextPage(int i)
+	{
+		
+
+		CurrentVisibleContent = await tripService.GetNineUserTrips(UserId, i, 9);
+		Console.WriteLine("downloaded!!");
+
+		_selected = i ;
+		Console.WriteLine("next page: " + i);
 	}
 }

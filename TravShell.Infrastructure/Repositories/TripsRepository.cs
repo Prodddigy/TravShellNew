@@ -45,6 +45,7 @@ namespace TravShell.Infrastructure.Repositories;
 			Lastdate =(DateTime) Model.Lastdate,
 			Days = 1,
 			City = Model.City,
+			ShortDescription = Model.ShortDescription,
 			User = user,
 			latitude = Model.latitude,
 			longitude = Model.longitude,
@@ -67,6 +68,7 @@ namespace TravShell.Infrastructure.Repositories;
 			Lastdate = (DateTime) Model.Lastdate,
 			Days = ((DateTime)Model.Lastdate - (DateTime)Model.Firstdate).Days + 1,
 			City = Model.City,
+			ShortDescription = Model.ShortDescription,
 			User = user,
 			latitude = Model.latitude,
 			longitude = Model.longitude,
@@ -89,4 +91,9 @@ namespace TravShell.Infrastructure.Repositories;
 		}
 		return;
     }
+
+	public async Task<List<Trip>> GetNineUserTrips(int userId, int page, int trips)
+	{
+		return await _dbContext.Trips.Where(x=>x.User.Id==userId).Skip((page-1)*trips).Take(trips).ToListAsync();
+	}
 }

@@ -13,6 +13,8 @@ public interface ITripService
 
 	public Task<List<Trip>> GetUserTrips(int userId);
 
+	public Task<List<Trip>> GetNineUserTrips(int userId,int page,int trips);
+
 	public Task<Trip> FindTripById(int tripId);
 
 	public Task<int> CreateOneDayTrip(TripViewModel model, User user);
