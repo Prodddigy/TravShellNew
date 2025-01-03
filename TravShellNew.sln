@@ -3,13 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.11.35222.181
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TravShelNew", "TravShelNew\TravShelNew.csproj", "{403A02BF-5F0A-4ED4-B1FA-E18E69B6206A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TravShelNew", "TravShelNew\TravShelNew.csproj", "{403A02BF-5F0A-4ED4-B1FA-E18E69B6206A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TravShell.App", "TravShell.App\TravShell.App.csproj", "{DD5326D2-A3B8-4BEC-A0CE-BE3ACEB565AB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TravShell.App", "TravShell.App\TravShell.App.csproj", "{DD5326D2-A3B8-4BEC-A0CE-BE3ACEB565AB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TravShell.Core", "TravShell.Core\TravShell.Core.csproj", "{0C3D22A2-B198-4EB0-954F-EB554A077D01}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TravShell.Core", "TravShell.Core\TravShell.Core.csproj", "{0C3D22A2-B198-4EB0-954F-EB554A077D01}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TravShell.Infrastructure", "TravShell.Infrastructure\TravShell.Infrastructure.csproj", "{D3CAA6DC-D9D9-4E76-BE38-220152B4EF6E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TravShell.Infrastructure", "TravShell.Infrastructure\TravShell.Infrastructure.csproj", "{D3CAA6DC-D9D9-4E76-BE38-220152B4EF6E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

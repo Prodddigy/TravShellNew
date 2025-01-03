@@ -5,27 +5,45 @@
 @rendermode InteractiveServer
 
 @inject AuthenticationStateProvider ASP
-
+@inject NavigationManager navigationManager
 
 <PageTitle>Home</PageTitle>
 
 <div class="row">
-	<div class="col-12">
-		<h2 class="fw-bolder"> Welcome to <span class="text-danger">TravShellPrototype</span></h2>
-	</div>
-	<div class="col-12">
-		<div class="card">
+
+	<MudText Style="@($"color:{Colors.Purple.Darken4};")" Typo="Typo.h1">Travelling in a nutshell</MudText>
+	
+
+	<MudContainer style=" margin: auto;  width: 60vw; min-width:400px; padding: 10px;">
+		<MudGrid>
+	
 			<AuthorizeView>
 				<NotAuthorized>
-					<span> You are not logged in. Please <a class="fw-bolder" href="/login">click here</a> to log in or <a class="fw-bolder" href="/register">click here</a> to register</span>
+					<MudText Typo="Typo.h4">Welcome! Please login or create a new account.</MudText>
+					<MudPaper Class=" align-start d-flex" Style="width: 250px;">
+						<MudPaper Class="pa-3" Elevation="6">
+							 <MudFab Href="/login" Color="Color.Primary" Label="Login" StartIcon="@Icons.Material.Filled.Login" />
+							 </MudPaper>
+						<MudSpacer />
+						<MudPaper Class="pa-3" Elevation="6"> <MudFab Class="pa-3" Href="/register" Color="Color.Tertiary" Label="Register" StartIcon="@Icons.Material.Filled.AccountCircle" />
+						</MudPaper>
+					</MudPaper>
 				</NotAuthorized>
 				<Authorized>
-					
+					<MudDivider />
+					<p>
 
-					<span> Logged in as <b>@UserName</b>, <a class="fw-bolder" href="/logout">logout</a></span>
-					<span>Or see your <a class="fw-bolder" href="/trips/@context.User.Identity.Name">trips</a></span>
-
+					</p>
+					<p>
+					<MudText Typo="Typo.h5"> Hello! <b>@UserName</b>! Where would you like to travel today?</MudText>
+					</p>
+					<MudDivider />
+					<MudButton Variant="Variant.Filled" Href="@($"/createTrip/{UserId}/newTrip")" Color="Color.Success">New Trip! <MudIcon Icon="@Icons.Material.Filled.TravelExplore" Size="Size.Large" Color="Color.Warning" /> </MudButton>
 					
+					<MudButton Variant="Variant.Filled" Href="@($"/trips/{UserId}")" Color="Color.Surface">Trip List <MudIcon Icon="@Icons.Material.Filled.GridView" Size="Size.Large" Color="Color.Info" /> </MudButton>
+					
+					<MudSpacer />
+					<MudButton>Random Trip <MudIcon Icon="@Icons.Material.Filled.NotListedLocation" Color="Color.Secondary"Size="Size.Large"/></MudButton>
 					<MudCarousel Class="mud-width-full" Style="height:200px;" ShowArrows="@arrows" ShowBullets="@bullets" EnableSwipeGesture="@enableSwipeGesture" AutoCycle="@autocycle" TData="object">
 						<MudCarouselItem Transition="transition" Color="@Color.Primary">
 							<div class="d-flex" style="height:100%">
@@ -50,14 +68,11 @@
 				
 				</Authorized>
 			</AuthorizeView>
-		</div>
-	</div>
+	
+	</MudGrid>
+	</MudContainer>
 
 </div>
-
-
-
-
 
 
 @code{
@@ -78,20 +93,16 @@
 	// public HttpContext HttpContext { get; set; }
 
 
-
-
-
-
 	public string UserName { get; set; } = "Error";
 
 
-	public string UserId { get; set; }
+	public int UserId { get; set; }
 
 	protected override async Task OnInitializedAsync()
 	{
 
 		var authState = await ASP.GetAuthenticationStateAsync();
-			
+
 
 		if (authState.User.Identity.IsAuthenticated)
 		{
@@ -101,13 +112,29 @@
 			//User user = dataContext.Users.Where(x => x.Id == Int32.Parse(authState.User.Identity.Name)).FirstOrDefault();
 			if (user != null)
 			{
-				UserName = user.Surename + " " + user.Forename;
+				UserName = user.Forename;
+				UserId = user.Id;
+				Console.WriteLine("idiiidid: "+UserId);
 			}
 		}
+	}
+
+	private void EnterTrip(int TripId)
+	{
+
+		string a = $"/trips/{UserId}/{TripId}";
+
+		navigationManager.NavigateTo(a);
+
+	}
+
+	private void navigateToCreateTrip()
+	{
 
 
-		
-		
+		string b = $"/createTrip/{UserId}/newTrip";
+
+		navigationManager.NavigateTo(b);
 	}
 
 }
