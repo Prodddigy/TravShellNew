@@ -47,7 +47,7 @@
 						</MudButton>
 					
 					</MudPaper>
-					<MudButton OnClick="OpenDialogAsync" Variant="Variant.Filled" Style="object-position: bottom; " Color="Color.Warning">Delete</MudButton>
+					<MudButton OnClick="()=>OpenDeleteTripDialogAsync(i)" Variant="Variant.Filled" Style="object-position: bottom; " Color="Color.Error">Delete</MudButton>
 				</MudItem>
 			}
 			@if (CurrentVisibleContent.Count() < 9)
@@ -174,10 +174,16 @@
 		StateHasChanged();
 	}
 
-	private Task OpenDialogAsync()
+	private Task OpenDeleteTripDialogAsync(Trip trip)
 	{
+		var parameters = new DialogParameters<DeleteTripDialog>
+		{
+			{ x => x.tripToDelete, trip.Id },
+			{ x => x.tripName,trip.Name }
+		};
+
 		var options = new DialogOptions { CloseOnEscapeKey = true };
 
-		return DialogService.ShowAsync<DeleteTripDialog>("Simple Dialog", options);
+		return DialogService.ShowAsync<DeleteTripDialog>("Delete trip",parameters, options);
 	}
 }
