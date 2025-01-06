@@ -96,4 +96,14 @@ namespace TravShell.Infrastructure.Repositories;
 	{
 		return await _dbContext.Trips.Where(x=>x.User.Id==userId).Skip((page-1)*trips).Take(trips).ToListAsync();
 	}
+
+    public async Task EditTripDescription(string description, int tripId)
+    {
+		var tripToedit = await _dbContext.Trips.Where(x => x.Id == tripId).FirstOrDefaultAsync();
+
+		if(tripToedit != null)
+		{
+			tripToedit.Description = description;
+		}
+    }
 }

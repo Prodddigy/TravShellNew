@@ -53,5 +53,10 @@ public class TripService : ITripService
 	{
 		return await _tripsRepository.GetNineUserTrips(userId, page, trips);
 	}
+
+    public async Task EditTripDescription(string description, int tripId)
+    {
+        await _tripsRepository.EditTripDescription(description, tripId);
+    }
 }
 

@@ -12,6 +12,7 @@
 @using TravShell.App.Attractions
 @using TravShell.App.Trips
 @using TravShell.Core.Entities
+@using Markdig
 
 
 @if(IsAuth)
@@ -28,7 +29,7 @@
         </MudToolBar>
 
         <MudContainer style=" margin: auto;  width: 60vw; min-width:400px; padding: 10px;">
-<MudCarousel Class="mud-width-full" @ref="_carousel" ItemsSource="@_source" Style="height:200px;" ShowArrows="true" ShowBullets="false" EnableSwipeGesture="true" AutoCycle="false" @bind-SelectedIndex="staticIndex">
+<MudCarousel Class="mud-width-full" @ref="_carousel" ItemsSource="@_source" Style="height:200px;" ShowArrows="true" ShowBullets="false" EnableSwipeGesture="false" AutoCycle="false" @bind-SelectedIndex="staticIndex">
     <ItemTemplate>
         <div class="horizontal-scroll" style="height:100%">
             <h1>@context.First().StartDate.ToShortDateString() Day @(selectedIndex+1) / @TripDays </h1>
@@ -64,15 +65,35 @@
 
 </MudCarousel>
 
+<MudGrid>
 
+    <MudItem xs="8" > 
 <GoogleMap @ref="googleMapRef"
            ApiKey="@TravShell.App.GoogleAPI.GoogleService.apiKey"
            Center="@center"
            Height="300"
-           Width="60"
+           Width="100"
            Zoom="12"
            Markers="markers" 
         Clickable="true"/>
+    </MudItem>
+
+           <MudItem xs="4" >
+               <MudToolBar Class="gap-4">
+                        
+                        <MudSwitch @bind-Value="editMode" Label="Edit desc." Color="Color.Primary" />
+                        <MudButton Disabled="@editMode" hidden="@editMode" Variant="Variant.Filled" Color="Color.Success">Save </MudButton>
+                    </MudToolBar>
+                    
+                    <MudTextField T="string" Disabled="@editMode" Label="Description" Variant="Variant.Outlined" Lines="5" FullWidth />
+                    
+                                    </MudItem>
+
+        <MudItem xs="4" >
+                  
+        </MudItem>
+            </MudGrid>
+            
         </MudContainer>
     }
     else
@@ -128,6 +149,8 @@ else
 
     private bool TripExists = true;
 
+    private bool editMode = true;
+
 
     protected async override Task OnInitializedAsync()
     {
@@ -180,30 +203,30 @@ else
                                 AttractionMap.Add(tmp, tmpList);
                                 break;
                             }
-                }
+                        }
 
-                if (Attractions.Last() == a)
-                {
-                    AttractionMap.Add(tmp, tmpList);
-                }
-            }
+                        if (Attractions.Last() == a)
+                        {
+                            AttractionMap.Add(tmp, tmpList);
+                        }
+                    }
 
-//            Console.WriteLine(AttractionMap.Keys.Count()+ " <---count");
-            foreach (var a in AttractionMap)
-            {
-                _source.Add(a.Value.OrderBy(x=>x.step).ToList());
-            }
+                    //            Console.WriteLine(AttractionMap.Keys.Count()+ " <---count");
+                    foreach (var a in AttractionMap)
+                    {
+                        _source.Add(a.Value.OrderBy(x=>x.step).ToList());
+                    }
 
-            int i = 1;
-            foreach(var a in AttractionMap)
-            {
-                i = 1;
+                    int i = 1;
+                    foreach(var a in AttractionMap)
+                    {
+                        i = 1;
 
-                var newMarkers = new List<GoogleMapMarker>();
- 
-                foreach(var aa in a.Value.OrderBy(x=>x.step).ToList())
-                {
-                    newMarkers.Add(new GoogleMapMarker()
+                        var newMarkers = new List<GoogleMapMarker>();
+
+                        foreach(var aa in a.Value.OrderBy(x=>x.step).ToList())
+                        {
+                            newMarkers.Add(new GoogleMapMarker()
                         {
                             Position = new GoogleMapMarkerPosition(aa.latitude, aa.longitude),
 
@@ -218,29 +241,40 @@ else
 
                             Title = aa.Website != "Website is not available." ? $" <a target = '_blank' jstcache = '6' href = '{aa.Website}' tabindex = '0'> <span> Check the website!</span> </a> " : "<h1> No Website available </h1>",
                         });
-                }
-                AllMarkers.Add(newMarkers);
+                        }
+                        AllMarkers.Add(newMarkers);
 
                     }
-            markers = AllMarkers[0];
-        }
-        
-        var trip = await tripsService.FindTripById(TripId);
+                    markers = AllMarkers[0];
+                }
 
-        if(trip != null)
-        {
-            TripDays = trip.Days;
-            center = new GoogleMapCenter(trip.latitude, trip.longitude);
-        }
-        StateHasChanged();
-        await Task.Delay(3);
-        await googleMapRef.RefreshAsync();
+                var trip = await tripsService.FindTripById(TripId);
 
-//        await InvokeAsync(StateHasChanged);
+                if(trip != null)
+                {
+                    TripDays = trip.Days;
+                    center = new GoogleMapCenter(trip.latitude, trip.longitude);
+                }
+                StateHasChanged();
+                await Task.Delay(3);
+                await googleMapRef.RefreshAsync();
+
+                //        await InvokeAsync(StateHasChanged);
 
             }
         }
     }
+
+
+    private bool editDescription()
+    {
+        editMode=false;
+        StateHasChanged();
+
+        return editMode;
+
+    }
+
 
     private async void RefreshMap()
     {

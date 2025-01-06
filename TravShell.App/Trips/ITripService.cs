@@ -23,5 +23,7 @@ public interface ITripService
 
 	public Task RemoveTripById(int tripId);
 
+	public Task EditTripDescription(string description, int tripId);
+
 }
 
