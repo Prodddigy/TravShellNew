@@ -15,5 +15,7 @@ public interface IGoogleService
 
     Task<List<AttractionViewModel>> GetSetAttractionsDetails(List<AttractionViewModel> list);
 
+    Task<IEnumerable<string>> GetPlaceNamesAutocomplete(string place, CancellationToken cancellationToken);
+
 }
 

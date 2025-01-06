@@ -6,6 +6,10 @@ using System.Net.NetworkInformation;
 using System.Text;
 using System.Threading.Tasks;
 
+
+using GoogleApi;
+using GoogleApi.Entities.Places.AutoComplete.Request;
+
 using Newtonsoft.Json.Linq;
 using System.Globalization;
 using TravShell.Core.Entities;
@@ -200,6 +204,25 @@ public class GoogleService : IGoogleService
         }
 
         return list;
+    }
+
+    public async Task<IEnumerable<string>> GetPlaceNamesAutocomplete(string place, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(place))
+            return Enumerable.Empty<string>();
+
+        var request = new PlacesAutoCompleteRequest
+        {
+            Key = apiKey,
+            Input = place
+        };
+
+        var response = await GooglePlaces.AutoComplete.QueryAsync(request, cancellationToken);
+
+        if (response?.Predictions == null || !response.Predictions.Any())
+            return Enumerable.Empty<string>();
+
+        return response.Predictions.Select(p => p.Description);
     }
 }
 

@@ -27,6 +27,7 @@
         <MudButton  Variant="Variant.Text" Color="Color.Error">???</MudButton>
         </MudToolBar>
 
+        <MudContainer style=" margin: auto;  width: 60vw; min-width:400px; padding: 10px;">
 <MudCarousel Class="mud-width-full" @ref="_carousel" ItemsSource="@_source" Style="height:200px;" ShowArrows="true" ShowBullets="false" EnableSwipeGesture="true" AutoCycle="false" @bind-SelectedIndex="staticIndex">
     <ItemTemplate>
         <div class="horizontal-scroll" style="height:100%">
@@ -72,6 +73,7 @@
            Zoom="12"
            Markers="markers" 
         Clickable="true"/>
+        </MudContainer>
     }
     else
     {

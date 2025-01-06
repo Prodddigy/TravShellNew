@@ -20,7 +20,7 @@
 
 <NavigationLock ConfirmExternalNavigation="@NotSaved" OnBeforeInternalNavigation="@OnBeforeInternalNavigation"></NavigationLock>
 @if(IsLoading)
-{
+{ <MudContainer style=" margin: auto;  width: 60vw; min-width:400px; padding: 10px;">
     <MudProgressLinear Color="Color.Primary" Buffer="true" Value="@Value" BufferValue="@BufferValue" Class="my-7" >
         
 
@@ -28,6 +28,7 @@
     <MudText Typo="Typo.subtitle1" Color="Color.Dark">
         <b>@Status</b>
     </MudText>
+    </MudContainer>
 }
 else
 {
@@ -38,8 +39,8 @@ else
 {
     <h3>This is the last day!</h3>
 } 
-<div class="d-flex flex-column mud-width-full mud-height-full">
-
+    @*<div class="d-flex flex-column mud-width-full mud-height-full">*@
+   
     <MudToolBar Class="gap-4">
         <MudButton  Variant="Variant.Filled" Color="Color.Default">???</MudButton>
         <MudButton  Variant="Variant.Filled" Color="Color.Primary">Prev. day</MudButton>
@@ -60,6 +61,7 @@ else
             </MudButton>
                 
         }
+   
         <MudPopover Open="@IsPopup" Fixed="true" Class="px-4 pt-4">
             <div class="d-flex flex-column">
                 <MudText>Your list of attractions is empty... in order to proceed choose one.</MudText>
@@ -69,6 +71,7 @@ else
         <MudSpacer />
         <MudButton  Variant="Variant.Text" Color="Color.Error">???</MudButton>
     </MudToolBar>
+    <MudContainer style=" margin: auto;  width: 60vw; min-width:500px; padding: 10px;">
 
     <MudDropContainer T="AttractionViewModel" Items="@_dropzoneItems" @ref="_container" ItemsSelector="@((att,dropzone) => att.dropzone == dropzone)" ItemDropped="ItemUpdated" >
           <ChildContent>
@@ -135,8 +138,11 @@ else
             }
         </ItemRenderer>
     </MudDropContainer>
+    </MudContainer>
 
-</div>
+    @*</div>*@
+
+
 }
 
 @code {

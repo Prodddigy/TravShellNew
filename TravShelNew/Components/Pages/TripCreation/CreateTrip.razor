@@ -1,6 +1,5 @@
 ﻿@page "/createTrip/{UserId:int}/newTrip"
 
-
 @rendermode InteractiveServer
 @using RazorComponents
 @using Microsoft.AspNetCore.Authorization
@@ -17,10 +16,6 @@
 @inject DataContext dataContext
 @inject NavigationManager navigationManager
 @inject AuthenticationStateProvider ASP
-
-
-
-
 
 @if(IsAuth)
 {
@@ -238,34 +233,12 @@ else
 		}	
 	}
 
-
-	//przenieś do services!!!!!!!!!!!!!! 
-	public async Task<IEnumerable<string>> GetPlaceNames(string place, CancellationToken cancellationToken)
-	{
-		if (string.IsNullOrWhiteSpace(place))
-			return Enumerable.Empty<string>();
-
-		var request = new PlacesAutoCompleteRequest
-			{
-				Key = "AIzaSyARfnT3GsxeslzR5yjxcqDrlRGb88qBnUs",
-				Input = place
-			};
-
-		var response = await GooglePlaces.AutoComplete.QueryAsync(request, cancellationToken);
-
-		if (response?.Predictions==null ||!response.Predictions.Any())
-			return Enumerable.Empty<string>();
-
-		return response.Predictions.Select(p => p.Description);
-	}
-
-
 	private async Task<IEnumerable<string>> SearchPlacesAsync(string place, CancellationToken cancellationToken)
 	{
 		if (string.IsNullOrWhiteSpace(place))
 			return Enumerable.Empty<string>();
 
-		return await GetPlaceNames(place, cancellationToken);
+		return await GoogleService.GetPlaceNamesAutocomplete(place,cancellationToken);
 	}
 
 }
