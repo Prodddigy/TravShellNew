@@ -9,6 +9,8 @@
 @inject DataContext dataContext
 @inject AuthenticationStateProvider ASP
 
+@inject ISnackbar Snackbar
+
 @using TravShell.App.Attractions
 @using TravShell.App.Trips
 @using TravShell.Core.Entities
@@ -22,17 +24,15 @@
     if(TripExists)
     {
 
-    <MudToolBar Class="gap-4">
-        <h3>Trip: @TripName</h3>
-        <MudSpacer />
-        <MudButton  Variant="Variant.Text" Color="Color.Error">???</MudButton>
-        </MudToolBar>
+
+        <MudText Style="@($"color:{Colors.Purple.Darken4};")" Typo="Typo.h3"> Trip name: @TripName</MudText>  
+   
 
         <MudContainer style=" margin: auto;  width: 60vw; min-width:400px; padding: 10px;">
 <MudCarousel Class="mud-width-full" @ref="_carousel" ItemsSource="@_source" Style="height:200px;" ShowArrows="true" ShowBullets="false" EnableSwipeGesture="false" AutoCycle="false" @bind-SelectedIndex="staticIndex">
     <ItemTemplate>
-        <div class="horizontal-scroll" style="height:100%">
-            <h1>@context.First().StartDate.ToShortDateString() Day @(selectedIndex+1) / @TripDays </h1>
+                    <div class="horizontal-scroll" style="height:100%; padding: 33px;">
+                        <MudText Typo="Typo.h4" Style="@($"color:{Colors.Purple.Darken3};")"> @context.First().StartDate.ToShortDateString() Day @(selectedIndex + 1) / @TripDays</MudText>
         @foreach (var attraction in @context)
         {
             <h1>@(context.IndexOf(attraction)+1)</h1>
@@ -67,27 +67,43 @@
 
 <MudGrid>
 
-    <MudItem xs="8" > 
+    <MudItem xs="7" > 
 <GoogleMap @ref="googleMapRef"
            ApiKey="@TravShell.App.GoogleAPI.GoogleService.apiKey"
            Center="@center"
-           Height="300"
+           Height="280"
            Width="100"
            Zoom="12"
            Markers="markers" 
         Clickable="true"/>
     </MudItem>
 
-           <MudItem xs="4" >
-               <MudToolBar Class="gap-4">
-                        
-                        <MudSwitch @bind-Value="editMode" Label="Edit desc." Color="Color.Primary" />
-                        <MudButton Disabled="@editMode" hidden="@editMode" Variant="Variant.Filled" Color="Color.Success">Save </MudButton>
-                    </MudToolBar>
+           <MudItem xs="5" >
+              
+                    <MudExpansionPanels>
+                       <MudExpansionPanel Text="Edit desc." MaxHeight="1000" >
+                            <MudTextField T="string" @bind-Value="tripDescription" Disabled="@editMode" Immediate="true" Counter="1000" MaxLength="1000" Label="Description" Variant="Variant.Outlined" Lines="5" FullWidth />
+                            <MudToolBar Class="gap-4">
+
+                                <MudSwitch @bind-Value="editMode" Label="edit" Color="Color.Primary" />
+                                <MudButton OnClick="SaveDescription" Disabled="@editMode" hidden="@editMode" Variant="Variant.Filled" Color="Color.Success">Save </MudButton>
+                            </MudToolBar>
+                   
+                        </MudExpansionPanel>
+                    </MudExpansionPanels>
+
+
+                  <MudPaper Style="">
+	                <MudText Style="max-height: 10em; overflow-y: auto;">
+                            @(tripDescriptionMarkUp)
+
+                    </MudText>
+                    </MudPaper>
+
+                    @*    @((MarkupString)tripDescriptionMarkUp)*@
+
                     
-                    <MudTextField T="string" Disabled="@editMode" Label="Description" Variant="Variant.Outlined" Lines="5" FullWidth />
-                    
-                                    </MudItem>
+           </MudItem>
 
         <MudItem xs="4" >
                   
@@ -151,8 +167,14 @@ else
 
     private bool editMode = true;
 
+    private string tripDescription = "";
 
-    protected async override Task OnInitializedAsync()
+    private MarkupString? tripDescriptionMarkUp = (MarkupString)"";
+
+    MarkdownPipeline pipeline = default;
+
+
+    protected async override Task OnInitializedAsync()//zmniejszyć to!!!
     {
         var authState = await ASP.GetAuthenticationStateAsync();
 
@@ -165,6 +187,20 @@ else
                 IsAuth = true;
 
                 currentTrip = await tripsService.FindTripById(TripId);
+
+                pipeline = new MarkdownPipelineBuilder()
+                 .UseAdvancedExtensions() 
+                    .UseEmojiAndSmiley()
+                   .Build();
+
+                if(currentTrip.Description !=null)
+                {
+                    tripDescription = currentTrip.Description;
+
+                    tripDescriptionMarkUp =(MarkupString) Markdig.Markdown.ToHtml(tripDescription, pipeline);
+                }
+
+
 
                 if(currentTrip == null)
                 {
@@ -234,7 +270,8 @@ else
                             {
                                 Glyph = (i++) + "",
                                 GlyphColor = "white",
-                                Background = "Purple"
+                                Background = "Purple",
+                                BorderColor="Black"
 
                             },
 
@@ -258,9 +295,6 @@ else
                 StateHasChanged();
                 await Task.Delay(3);
                 await googleMapRef.RefreshAsync();
-
-                //        await InvokeAsync(StateHasChanged);
-
             }
         }
     }
@@ -272,6 +306,17 @@ else
         StateHasChanged();
 
         return editMode;
+    }
+
+    private async void SaveDescription()
+    {
+        await tripsService.EditTripDescription(tripDescription.ToString(), TripId);
+        editMode = true;
+
+        UpdateHTMLAsync();
+        StateHasChanged();
+
+        Snackbar.Add($"Description has been saved!", Severity.Success);
 
     }
 
@@ -324,6 +369,17 @@ else
      //   Console.WriteLine("Right: "+ selectedIndex);
     }
 
+
+    protected void UpdateHTMLAsync()
+    {
+        if (currentTrip.Description != null)
+        {
+           
+
+            tripDescriptionMarkUp =  (MarkupString)Markdig.Markdown.ToHtml(currentTrip.Description, pipeline);
+        }
+
+    }
 
 }
 <style>

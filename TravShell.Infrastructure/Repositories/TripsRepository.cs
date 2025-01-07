@@ -104,6 +104,7 @@ namespace TravShell.Infrastructure.Repositories;
 		if(tripToedit != null)
 		{
 			tripToedit.Description = description;
-		}
+            await _dbContext.SaveChangesAsync();
+        }
     }
 }
