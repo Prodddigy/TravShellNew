@@ -43,7 +43,7 @@
 										 ResetValueOnEmptyText="true" @bind-Value="Model.City" For="@(()=>Model.City)" />
 
 
-						<MudTextField Label="Short description" MaxLength="80" @bind-Value="Model.ShortDescription" Class="mt-3" For="@(()=>Model.ShortDescription)" AutoGrow MaxLines="4" Variant="Variant.Text" />
+						<MudTextField Label="Short description" Immediate="true" Counter="40" MaxLength="40" @bind-Value="Model.ShortDescription" Class="mt-3" For="@(()=>Model.ShortDescription)" AutoGrow MaxLines="4" Variant="Variant.Text" />
 					
 						
 						<MudCheckBox Label="Public" @bind-Value="Model.IsPublic" Class="mt-3" For="@(()=>Model.IsPublic)" Color="Color.Primary" />

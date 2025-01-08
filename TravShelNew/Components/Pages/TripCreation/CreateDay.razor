@@ -16,14 +16,11 @@
 @inject NavigationManager navigationManager
 @attribute [Authorize]
 
-
-
 <NavigationLock ConfirmExternalNavigation="@NotSaved" OnBeforeInternalNavigation="@OnBeforeInternalNavigation"></NavigationLock>
 @if(IsLoading)
 { <MudContainer style=" margin: auto;  width: 60vw; min-width:400px; padding: 10px;">
     <MudProgressLinear Color="Color.Primary" Buffer="true" Value="@Value" BufferValue="@BufferValue" Class="my-7" >
         
-
     </MudProgressLinear>
     <MudText Typo="Typo.subtitle1" Color="Color.Dark">
         <b>@Status</b>
@@ -33,17 +30,19 @@
 else
 {
     
-
-<h3>Day: @currentDate.ToShortDateString()</h3>
-@if (trip == null || currentDate == trip.Lastdate)
-{
-    <h3>This is the last day!</h3>
-} 
+    @if (trip == null || currentDate == trip.Lastdate)
+    {
+        <h3>Day: @currentDate.ToShortDateString() -> This is the last day!</h3>
+    }
+    else
+    {
+        <h3>Day: @currentDate.ToShortDateString()</h3>
+    }
     @*<div class="d-flex flex-column mud-width-full mud-height-full">*@
    
     <MudToolBar Class="gap-4">
         <MudButton  Variant="Variant.Filled" Color="Color.Default">???</MudButton>
-        <MudButton  Variant="Variant.Filled" Color="Color.Primary">Prev. day</MudButton>
+        <MudButton OnClick="PreviousDay" Variant="Variant.Filled" Color="Color.Primary">Prev. day</MudButton>
 
         @if (trip == null || currentDate == trip.Lastdate)
         {
@@ -141,8 +140,6 @@ else
     </MudContainer>
 
     @*</div>*@
-
-
 }
 
 @code {
@@ -186,6 +183,8 @@ else
 
     private List<AttractionViewModel> _dropzoneItems = new();
 
+    private List<MudItemDropInfo<AttractionViewModel>> addedAtts = new();
+
     private MudDropContainer<AttractionViewModel> _container;
 
     public bool WaitForGoogle = true;
@@ -220,7 +219,6 @@ else
             CityName = trip.City;
 
             center = new GoogleMapCenter(trip.latitude, trip.longitude);
-
         }
 
         if (Tourist_Attractions.Count() == 0 || Restaurants.Count() == 0 || Accommodations.Count() == 0)
@@ -228,65 +226,38 @@ else
             coordinates = $"{trip.latitude.ToString(CultureInfo.InvariantCulture)}%2C{trip.longitude.ToString(CultureInfo.InvariantCulture)}";
         }
 
-
         if (Tourist_Attractions.Count() == 0)
         {
             await GetSetAttractions(coordinates, AttractionType.Attraction, Tourist_Attractions);
-            await SimulateProgressAsync("Loading restaurants... 30%");
         }
-        else
-        {
-            await SimulateProgressAsync("Loading restaurants... 30%");
-        }
+
+        await SimulateProgressAsync("Loading restaurants... 30%");
 
         if (Restaurants.Count() == 0)
         {
             await GetSetAttractions(coordinates, AttractionType.Restaurant, Restaurants);
-            await SimulateProgressAsync("Loading accommodations... 60%");
         }
-        else
-        {
-            await SimulateProgressAsync("Loading accommodations... 60%");            
-        }
+        await SimulateProgressAsync("Loading accommodations... 60%");            
 
         if (Accommodations.Count() == 0)
         {
             await GetSetAttractions(coordinates, AttractionType.Accommodation, Accommodations);
-            await SimulateProgressAsync("Finalizng... 90%");
         }
-        else
+        await SimulateProgressAsync("Finalizng... 90%");
+
+        if (_dropzoneItems.Count() == 0)
         {
-            await SimulateProgressAsync("Finalizng... 90%");
+            PopulateAllDropZones();
         }
 
-        if(_dropzoneItems.Count()==0)
-        {
-            PopulateDropzone(Tourist_Attractions, "1");
-            Console.WriteLine("done 1");
-            PopulateDropzone(Restaurants, "2");
-            PopulateDropzone(Accommodations, "3");
-            Console.WriteLine("done all");
-            await SimulateProgressAsync("Get ready 100%");
-
-
-        }
+        await SimulateProgressAsync("Get ready 100%");
 
         WaitForGoogle = false;
         if(_container == null)
         {
             _container = new();
         }
-
         RefreshContainer();
-
-        StateHasChanged();
-
-        if(_container==null)
-        {
-            Console.WriteLine("null container");
-        }
-        // await Task.Delay(3);
-        // await googleMapRef.RefreshAsync();
     }
 
     public async Task SimulateProgressAsync(string status)
@@ -302,11 +273,9 @@ else
             StateHasChanged();
             await Task.Delay(500);
         }
-
     }
 
-
-    private  void PopulateDropzone(List<AttractionViewModel> list, string dropzone)
+    private void PopulateDropzone(List<AttractionViewModel> list, string dropzone)
     {
         foreach (var att in list)
         {
@@ -335,7 +304,7 @@ else
         RefreshContainer();
     }
 
-    private async void  ItemUpdated(MudItemDropInfo<AttractionViewModel> att)
+    private async void ItemUpdated(MudItemDropInfo<AttractionViewModel> att)
     {
         ItemAdded(att);
 
@@ -349,7 +318,6 @@ else
             {
                 if (m == a.Marker)
                 {
-                    Console.WriteLine("equal");
                     m.PinElement = new PinElement
                         {
                             Glyph = (a.step +1) + "",
@@ -358,10 +326,48 @@ else
                 }
             }
         }
-
         await googleMapRef.UpdateMarkersAsync(markers);
+    }
 
-        // Console.WriteLine(markers.Count());
+    private AttractionViewModel CopyAttraction(AttractionViewModel att)
+    {
+        var AVM = new AttractionViewModel()
+            {
+                PlaceCode = att.PlaceCode,
+                Name = att.Name,
+                Vicinity = att.Vicinity,
+                Rating = att.Rating,
+                Opening_Hours = att.Opening_Hours,
+                Website = att.Website,
+                Type = att.Type,
+                StartDate = currentDate,
+                step = att.step,
+                latitude = att.latitude,
+                longitude = att.longitude,
+                Trip = trip,
+                Marker=att.Marker,
+                dropzone = att.dropzone
+            };
+        return AVM;
+    }
+
+    private GoogleMapMarker CreateMapMarker(AttractionViewModel att)
+    {
+        var marker = new GoogleMapMarker()
+            {
+                Position = new GoogleMapMarkerPosition(att.latitude, att.longitude),
+
+                PinElement = new PinElement
+                {
+                    Glyph = (att.step + 1) + "",
+                    GlyphColor = "white"
+                },
+                Title = att.Website != "Website is not available." ? $" <a target = '_blank' jstcache = '6' href = '{att.Website}' tabindex = '0'> <span> Check the website!</span> </a> " : "<h4> No Website available </h4>"
+                // Title = $" place: {att.Name}",
+                // Content= ""+newAttraction.Id
+            };
+
+        return marker;
     }
 
     private void ItemAdded(MudItemDropInfo<AttractionViewModel> att)
@@ -372,29 +378,8 @@ else
         {
             if (att.DropzoneIdentifier == "0")
             {
-                AVM = new AttractionViewModel()
-                    {
-                        PlaceCode = att.Item.PlaceCode,
-                        Name = att.Item.Name,
-                        Vicinity = att.Item.Vicinity,
-                        Rating = att.Item.Rating,
-                        Opening_Hours = att.Item.Opening_Hours,
-                        Website = att.Item.Website,
-                        Type = att.Item.Type,
-                        StartDate = currentDate,
-                        step = att.Item.step,
-                        latitude = att.Item.latitude,
-                        longitude = att.Item.longitude,
-                        Trip = trip,
-                        // Marker = marker,
-                        dropzone = att.Item.dropzone
-                    };
-                //  selectedAttractions.Add(AVM);
+                AVM = CopyAttraction(att.Item);
                 _dropzoneItems.Add(AVM);
-
-                Reorder();
-
-                //Console.WriteLine("Add attraction to the day");
 
                 att.Item.dropzone = att.DropzoneIdentifier;
 
@@ -402,34 +387,21 @@ else
 
                 Reorder();
 
-                var marker = new GoogleMapMarker()
-                    {
-                        Position = new GoogleMapMarkerPosition(att.Item.latitude, att.Item.longitude),
+                var marker = CreateMapMarker(att.Item);
 
-                        PinElement = new PinElement
-                        {
-                            Glyph = (att.Item.step+1) + "",
-                            GlyphColor = "white"
-                        },
-                            Title = att.Item.Website != "Website is not available." ? $" <a target = '_blank' jstcache = '6' href = '{att.Item.Website}' tabindex = '0'> <span> Check the website!</span> </a> " : "<h1> No Website available </h1>"
-                        // Title = $" place: {att.Name}",
-                        // Content= ""+newAttraction.Id
-                    };
+                AVM.Marker = marker;
                 markers.Add(marker);
                 att.Item.Marker = marker;
 
                 markers.OrderBy(x => x.PinElement.Glyph);
 
                 NoSelectedTrips = false;
-            }
-            else
-            {
-                Console.WriteLine("reorder");
-            }
 
+                addedAtts.Add(att);
+            }
         }
-
     }
+
     private async void RefreshMap()
     {
         await googleMapRef.RefreshAsync();
@@ -445,8 +417,16 @@ else
         _container.Refresh();
     }
 
+    private void PopulateAllDropZones()
+    {
+        PopulateDropzone(Tourist_Attractions, "1");
+        PopulateDropzone(Restaurants, "2");
+        PopulateDropzone(Accommodations, "3");        
+    }
+
     public async Task SaveDayAttractions()
     {
+        bool isDayRepeated = false;
         if(NoSelectedTrips)
         {
             IsPopup = true;
@@ -454,41 +434,51 @@ else
             await Task.Delay(1);
             return;
         }
-
         List<AttractionViewModel> nList = new();
 
         foreach (var att in _dropzoneItems.Where(x => x.dropzone == "0").ToList())
         {
-            nList.Add(new AttractionViewModel()
-                {
-                    PlaceCode = att.PlaceCode,
-                    Name = att.Name,
-                    Vicinity = att.Vicinity,
-                    Rating = att.Rating,
-                    Opening_Hours = att.Opening_Hours,
-                    Website = att.Website,
-                    Type = att.Type,
-                    StartDate = currentDate,
-                    step = att.step,
-                    latitude = att.latitude,
-                    longitude = att.longitude,
-                    Trip = trip,
-                   // Marker = marker,
-                    dropzone = att.dropzone
-                });
+            nList.Add(CopyAttraction(att));
         }
         selectedAttractions.AddRange( nList);
 
-
-        // await AttractionService.SaveAttractionList(nList);
-
         if(currentDate != trip.Lastdate)
         {
-
-
             currentDate = currentDate.AddDays(1);
+
             markers.Clear();
-            await  googleMapRef.RefreshAsync();
+
+            if (selectedAttractions.Where(x => x.StartDate == currentDate).Count()>0)
+            {
+                isDayRepeated = true;
+
+                NoSelectedTrips = false;
+
+                markers.Clear();
+                nList = new();
+                foreach (var att in selectedAttractions.Where(x => x.StartDate == currentDate).ToList())
+                {
+                    var marker = CreateMapMarker(att);
+
+                    markers.Add(marker);
+                    att.Marker = marker;
+
+                    nList.Add(CopyAttraction(att));
+                }
+                selectedAttractions.RemoveAll(x => x.StartDate == currentDate);
+                _dropzoneItems.Clear();
+                LastAttIndex = 0;
+                PopulateDropzone(nList, "0");
+
+                PopulateAllDropZones();
+
+                await googleMapRef.UpdateMarkersAsync(markers);
+
+                RefreshContainer();
+                StateHasChanged();
+                await Task.Delay(1);
+            }
+            await googleMapRef.UpdateMarkersAsync(markers);
         }
         else
         {
@@ -522,22 +512,66 @@ else
             navigationManager.NavigateTo($"/trips/{UserId}");
         }
 
-        _dropzoneItems.RemoveAll(x => x.dropzone == "0");
+        if (!isDayRepeated)
+        {
+            _dropzoneItems.RemoveAll(x => x.dropzone == "0");
+            Reorder();
+            NoSelectedTrips = true;
+        }
+    }
 
-        Reorder();
-        NoSelectedTrips = true;
+    private async void PreviousDay()
+    {
+        if (currentDate > trip.Firstdate)
+        { 
+            List<AttractionViewModel> nList = new();
+
+            foreach (var att in _dropzoneItems.Where(x => x.dropzone == "0").ToList())
+            {
+                nList.Add(CopyAttraction(att));
+            }
+            selectedAttractions.AddRange(nList);
+
+            currentDate = currentDate.AddDays(-1);
+
+            NoSelectedTrips = false;
+
+            markers.Clear();
+            nList = new();
+            foreach (var att in selectedAttractions.Where(x => x.StartDate == currentDate).ToList())
+            {
+                var marker = CreateMapMarker(att);
+      
+                markers.Add(marker);
+
+                var tmpAVM = CopyAttraction(att);
+                tmpAVM.Marker = marker;
+                nList.Add(tmpAVM);
+            }
+
+            selectedAttractions.RemoveAll(x => x.StartDate == currentDate);
+            _dropzoneItems.Clear();
+            LastAttIndex = 0;
+            PopulateDropzone(nList, "0");
+
+            PopulateAllDropZones();
+       
+            await googleMapRef.UpdateMarkersAsync(markers);
+
+            RefreshContainer();
+             StateHasChanged();
+            await Task.Delay(1);
+        }
     }
 
     public async Task removeAttraction(AttractionViewModel att)
     {
-        // selectedAttractions.Remove(att);
         _dropzoneItems.Remove(att);
 
         Reorder();
         markers.Remove(att.Marker);
         markers.Clear();
 
-        //Console.WriteLine("after markers clear");
         foreach (var a in _dropzoneItems.Where(x=> x.dropzone=="0").ToList())
         {
             a.Marker.PinElement.Glyph = (a.step +1) + "";
@@ -575,8 +609,6 @@ else
             }
             else
             {
-                
-                Console.WriteLine("wyjście");
                 Tourist_Attractions = new List<AttractionViewModel>();
                 Restaurants = new List<AttractionViewModel>();
                 Accommodations = new List<AttractionViewModel>();
@@ -584,7 +616,6 @@ else
                 trip = null;
 
                 markers.Clear();
-               // await googleMapRef.RefreshAsync();
 
                 WaitForGoogle = true;
 
@@ -602,9 +633,7 @@ else
 
                 Status = "Loading tourist attractions... 0%";
                 await TripsService.RemoveTripById(TripId);
-                Console.WriteLine("usunueło się?");
             }
-
         }
     }
 }
