@@ -21,26 +21,29 @@
 	<Authorized>
 		@if (Int32.Parse(context.User.Identity.Name) == UserId)
 		{
-<h3 class="align-content-center" > Here are your Trips! @UserId</h3>
-				<MudToolBar Class="gap-4" WrapContent="true">
-					<button type="button" class="btn btn-outline-success" @onclick="navigateToCreateTrip">Create a new trip</button>
-					<MudSpacer/>
-					<MudMenu FullWidth="true" ActivationEvent="@MouseEvent.MouseOver" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter">
-						<ActivatorContent>
-							<MudChip T="string" Icon="@Icons.Material.Filled.FilterAlt" Color="Color.Primary">OrderBy: @(OrderChosen+"")</MudChip>
-						</ActivatorContent>
-						<ChildContent>
-							<MudMenuItem OnClick="()=>OrderTrips(OrderBy.AtoZ)">From A to Z</MudMenuItem>
-							<MudMenuItem OnClick="()=>OrderTrips(OrderBy.ZtoA)">From Z to A</MudMenuItem>
-							<MudMenuItem OnClick="()=>OrderTrips(OrderBy.Upcoming)">Upcoming trips</MudMenuItem>
-							<MudMenuItem OnClick="()=>OrderTrips(OrderBy.Future)">Future trips</MudMenuItem>
-							<MudMenuItem OnClick="()=>OrderTrips(OrderBy.Shortest)">Shortest trips</MudMenuItem>
-							<MudMenuItem OnClick="()=>OrderTrips(OrderBy.Longest)">Longest trips</MudMenuItem>
-						</ChildContent>
-					</MudMenu>
-			</MudToolBar>
+<h3 class="align-content-center" > Trips count: @TotalTrips of user: @UserId</h3>
+<MudToolBar Class="gap-4" WrapContent="true">
+	<button type="button" class="btn btn-outline-success" @onclick="navigateToCreateTrip">Create a new trip</button>
+
+	<MudTextField @bind-Value="SearchedName" Label="Outlined" Variant="Variant.Outlined"></MudTextField>
+	<MudFab Color="Color.Tertiary" StartIcon="@Icons.Material.Filled.Search" OnClick="()=>SearchTripsByCondition(SearchOptions.NameSearch)" />
 
 
+	<MudSpacer/>
+	<MudMenu FullWidth="true" ActivationEvent="@MouseEvent.MouseOver" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter">
+		<ActivatorContent>
+			<MudChip T="string" Icon="@Icons.Material.Filled.FilterAlt" Color="Color.Primary">OrderBy: @(OrderChosen+"")</MudChip>
+		</ActivatorContent>
+		<ChildContent>
+			<MudMenuItem OnClick="()=>SearchTripsByCondition(SearchOptions.AtoZ)">From A to Z</MudMenuItem>
+			<MudMenuItem OnClick="()=>SearchTripsByCondition(SearchOptions.ZtoA)">From Z to A</MudMenuItem>
+			<MudMenuItem OnClick="()=>SearchTripsByCondition(SearchOptions.Upcoming)">Upcoming trips</MudMenuItem>
+			<MudMenuItem OnClick="()=>SearchTripsByCondition(SearchOptions.Future)">Future trips</MudMenuItem>
+			<MudMenuItem OnClick="()=>SearchTripsByCondition(SearchOptions.Shortest)">Shortest trips</MudMenuItem>
+			<MudMenuItem OnClick="()=>SearchTripsByCondition(SearchOptions.Longest)">Longest trips</MudMenuItem>
+		</ChildContent>
+	</MudMenu>
+</MudToolBar>
 
 @if (CurrentVisibleContent != null)
   {
@@ -56,7 +59,7 @@
 
 					<MudButton Class="d-flex flex-column align-center justify-center mud-width-full py-8" OnClick="()=>EnterTrip(i.Id)" Typo="Typo.h6" Align="center">
 							
-							<MudText Typo="Typo.h6">     @i.Name : 
+							<MudText Typo="Typo.h6"> @i.Name : 
 
 								@if(i.Lastdate< DateTime.Now)
 							{
@@ -78,7 +81,7 @@
 															
 							}
 							
-							<p>It is @i.Days long! </p></MudText>
+							<p>@i.Days days long! </p></MudText>
 						
 						</MudButton>
 					
@@ -99,28 +102,21 @@
 					</MudItem>
 				}
 			}
-
 		</MudGrid>
 	</MudItem>
 </MudGrid>
-
-
 
 </MudContainer>
 <MudContainer MaxWidth="MaxWidth.False" Style="display: flex; justify-content: center;">
 <MudPagination SelectedChanged="NextPage" Color="Color.Primary" Count="pages" />
 </MudContainer>
 
-  }
-
-			
+  }		
 		}
 		else
 		{
 			<h3>This List is unavailable</h3>
 		}
-
-
 	</Authorized>
 	</AuthorizeView>
 </CascadingAuthenticationState>
@@ -143,7 +139,9 @@
 	private List<Trip> CurrentVisibleContent = new List<Trip>();
 	public int pages;
 
-	enum OrderBy
+	public string SearchedName="";
+
+	enum SearchOptions
 	{
 		Nothing=0,
 		Upcoming=1,
@@ -151,10 +149,11 @@
 		Shortest=3,
 		Longest=4,
 		AtoZ = 5,
-		ZtoA = 6
+		ZtoA = 6,
+		NameSearch = 7
 	}
 
-	private OrderBy OrderChosen = OrderBy.Nothing ;
+	private SearchOptions OrderChosen = SearchOptions.Nothing ;
 
 	private void EnterTrip(int TripId)
 	{
@@ -173,7 +172,7 @@
 		TotalTrips =await  tripService.CountUserTrips(UserId);
 		if (TotalTrips != 0)
 		{
-			CurrentVisibleContent = await tripService.GetNineUserTrips(UserId, 1, 9, (int)OrderChosen);
+			CurrentVisibleContent = await tripService.GetNineUserTrips(UserId, 1, 9, (int)OrderChosen,"");
 
 			pages = (int)Math.Ceiling((double)TotalTrips / 9);
 		}
@@ -181,7 +180,9 @@
 
 	private async void  NextPage(int i)
 	{
-		CurrentVisibleContent = await tripService.GetNineUserTrips(UserId, i, 9, (int)OrderChosen);
+
+
+		CurrentVisibleContent = await tripService.GetNineUserTrips(UserId, i, 9, (int)OrderChosen,SearchedName);
 		_selected = i ;
 		StateHasChanged();
 	}
@@ -199,16 +200,40 @@
 		return DialogService.ShowAsync<DeleteTripDialog>("Delete trip",parameters, options);
 	}
 
-	private async void OrderTrips(OrderBy filter)
+	private async void SearchTripsByCondition(SearchOptions filter)
+	{
+		if(TotalTrips ==0)
+			return;
+
+		if (filter == SearchOptions.NameSearch && OrderChosen!= SearchOptions.NameSearch)
+		{
+			if (SearchedName.Trim() == "")
+				return;
+
+			//_selected = 1;
+			Console.WriteLine("Searched name "+ SearchedName);
+
+		}
+		
+		if(filter != SearchOptions.NameSearch )
+		{
+			SearchedName = "";
+		}
+
+		OrderChosen = filter;
+		CurrentVisibleContent = await tripService.GetNineUserTrips(UserId, _selected, 9, (int)OrderChosen, SearchedName.Trim());
+
+		pages = (int)Math.Ceiling((double)TotalTrips / 9);
+		StateHasChanged();
+	}
+
+	private async void SearchTripsWithName(string name)
 	{
 		if(TotalTrips ==0)
 		{
 			return;
 		}
-		OrderChosen = filter;
-		CurrentVisibleContent = await tripService.GetNineUserTrips(UserId, _selected, 9, (int)OrderChosen);
-
-		pages = (int)Math.Ceiling((double)TotalTrips / 9);
-		StateHasChanged();
+	//	CurrentVisibleContent = await tripService.SearchTripsByProvidedName(name, UserId, _selected);
 	}
+
 }

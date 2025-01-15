@@ -13,7 +13,7 @@ public interface ITripService
 
 	public Task<List<Trip>> GetUserTrips(int userId);
 
-	public Task<List<Trip>> GetNineUserTrips(int userId,int page,int trips, int orderBy);
+	public Task<List<Trip>> GetNineUserTrips(int userId,int page,int trips, int orderBy, string name);
 
 	public Task<Trip> FindTripById(int tripId);
 
@@ -24,6 +24,9 @@ public interface ITripService
 	public Task RemoveTripById(int tripId);
 
 	public Task EditTripDescription(string description, int tripId);
+
+
+	public Task<List<Trip>> SearchTripsByProvidedName(string name, int Id);
 
 }
 

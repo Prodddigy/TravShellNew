@@ -12,13 +12,11 @@ using TravShell.Infrastructure.Data;
 namespace TravShell.Infrastructure.Repositories;
    public class TripsRepository : ITripsRepository
     {
-
         private readonly DataContext _dbContext;
 
         public TripsRepository(DataContext dbContext) 
         {
-            _dbContext = dbContext;
-            
+            _dbContext = dbContext;    
         }
 
 	public async Task<int> CountUserTrips(int userId)
@@ -92,7 +90,7 @@ namespace TravShell.Infrastructure.Repositories;
 		return;
     }
 
-	public async Task<List<Trip>> GetNineUserTrips(int userId, int page, int trips, int orderBy)
+	public async Task<List<Trip>> GetNineUserTrips(int userId, int page, int trips, int orderBy, string name)
 	{	
 		List<TripViewModel> result = new List<TripViewModel>();
 
@@ -109,7 +107,6 @@ namespace TravShell.Infrastructure.Repositories;
 				return await _dbContext.Trips.Where(x => x.User.Id == userId)
 							.OrderByDescending(x => x.Firstdate)
 							.Skip((page - 1) * trips).Take(trips).ToListAsync();
-
 			case 3:
 				return await _dbContext.Trips.Where(x=> x.User.Id == userId)
 							.OrderBy(x=>x.Days)
@@ -126,20 +123,23 @@ namespace TravShell.Infrastructure.Repositories;
 				return await _dbContext.Trips.Where(x => x.User.Id == userId)
 							.OrderByDescending(x => x.Name)
 							.Skip((page - 1) * trips).Take(trips).ToListAsync();
-
+			case 7:
+				return await _dbContext.Trips
+						
+							.Where(x => x.Name.ToLower().Contains(name.ToLower()) && x.User.Id == userId)
+							.Skip((page - 1) * trips).Take(trips).ToListAsync();
 			default:
 				return await _dbContext.Trips.Where(x => x.User.Id == userId).Skip((page - 1) * trips).Take(trips).ToListAsync();
-
 		}
-
-		//await _dbContext.Trips.Where(x => x.User.Id == userId)
-		//	.OrderByDescending(x => x.Firstdate)
-		//	.Skip((page - 1) * trips).Take(trips).ToListAsync();
-
-		//return await _dbContext.Trips.Where(x=>x.User.Id==userId).Skip((page-1)*trips).Take(trips).ToListAsync();
 	}
 
-    public async Task EditTripDescription(string description, int tripId)
+	public async Task<List<Trip>> SearchTripsByProvidedName(string name, int Id)
+	{
+		return await _dbContext.Trips
+			.Where(x => x.Name.Contains(name, StringComparison.OrdinalIgnoreCase) && x.Id ==Id ).ToListAsync();
+	}
+
+	public async Task EditTripDescription(string description, int tripId)
     {
 		var tripToedit = await _dbContext.Trips.Where(x => x.Id == tripId).FirstOrDefaultAsync();
 
