@@ -4,6 +4,8 @@ namespace TravShell.Core.Entities.ViewModels
 {
     public class TripViewModel
     {
+
+		public int Id { get; set; }
         [MinLength(6)]
         [Required(AllowEmptyStrings = false, ErrorMessage = "Please provide Name for the Trip, try\" My own Cool trip\"")]
         public string Name { get; set; }

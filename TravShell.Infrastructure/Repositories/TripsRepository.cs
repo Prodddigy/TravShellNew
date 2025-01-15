@@ -92,9 +92,51 @@ namespace TravShell.Infrastructure.Repositories;
 		return;
     }
 
-	public async Task<List<Trip>> GetNineUserTrips(int userId, int page, int trips)
-	{
-		return await _dbContext.Trips.Where(x=>x.User.Id==userId).Skip((page-1)*trips).Take(trips).ToListAsync();
+	public async Task<List<Trip>> GetNineUserTrips(int userId, int page, int trips, int orderBy)
+	{	
+		List<TripViewModel> result = new List<TripViewModel>();
+
+		switch(orderBy)
+		{
+			case 0:
+				return await _dbContext.Trips.Where(x => x.User.Id == userId).Skip((page - 1) * trips).Take(trips).ToListAsync();
+			case 1:
+
+				return await _dbContext.Trips.Where(x => x.User.Id == userId)
+							.OrderBy(x => x.Firstdate)
+							.Skip((page - 1) * trips).Take(trips).ToListAsync();
+			case 2:
+				return await _dbContext.Trips.Where(x => x.User.Id == userId)
+							.OrderByDescending(x => x.Firstdate)
+							.Skip((page - 1) * trips).Take(trips).ToListAsync();
+
+			case 3:
+				return await _dbContext.Trips.Where(x=> x.User.Id == userId)
+							.OrderBy(x=>x.Days)
+							.Skip((page - 1) * trips).Take(trips).ToListAsync();
+			case 4:
+				return await _dbContext.Trips.Where(x => x.User.Id == userId)
+							.OrderByDescending(x => x.Days)
+							.Skip((page - 1) * trips).Take(trips).ToListAsync();
+			case 5:
+				return await _dbContext.Trips.Where(x => x.User.Id == userId)
+							.OrderBy(x => x.Name)
+							.Skip((page - 1) * trips).Take(trips).ToListAsync();
+			case 6:
+				return await _dbContext.Trips.Where(x => x.User.Id == userId)
+							.OrderByDescending(x => x.Name)
+							.Skip((page - 1) * trips).Take(trips).ToListAsync();
+
+			default:
+				return await _dbContext.Trips.Where(x => x.User.Id == userId).Skip((page - 1) * trips).Take(trips).ToListAsync();
+
+		}
+
+		//await _dbContext.Trips.Where(x => x.User.Id == userId)
+		//	.OrderByDescending(x => x.Firstdate)
+		//	.Skip((page - 1) * trips).Take(trips).ToListAsync();
+
+		//return await _dbContext.Trips.Where(x=>x.User.Id==userId).Skip((page-1)*trips).Take(trips).ToListAsync();
 	}
 
     public async Task EditTripDescription(string description, int tripId)

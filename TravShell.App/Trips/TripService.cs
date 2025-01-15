@@ -1,4 +1,5 @@
-﻿using System;
+﻿using GoogleApi.Entities.Search.Video.Common.Enums;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -49,9 +50,9 @@ public class TripService : ITripService
 		return;
     }
 
-	public async Task<List<Trip>> GetNineUserTrips(int userId, int page, int trips)
+	public async Task<List<Trip>> GetNineUserTrips(int userId, int page, int trips, int orderBy)
 	{
-		return await _tripsRepository.GetNineUserTrips(userId, page, trips);
+		return await _tripsRepository.GetNineUserTrips(userId, page, trips,  orderBy);
 	}
 
     public async Task EditTripDescription(string description, int tripId)

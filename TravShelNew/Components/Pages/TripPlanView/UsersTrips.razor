@@ -22,9 +22,23 @@
 		@if (Int32.Parse(context.User.Identity.Name) == UserId)
 		{
 <h3 class="align-content-center" > Here are your Trips! @UserId</h3>
-		
-			<button type="button" class="btn btn-outline-success" @onclick="navigateToCreateTrip">Create a new trip</button>
-
+				<MudToolBar Class="gap-4" WrapContent="true">
+					<button type="button" class="btn btn-outline-success" @onclick="navigateToCreateTrip">Create a new trip</button>
+					<MudSpacer/>
+					<MudMenu FullWidth="true" ActivationEvent="@MouseEvent.MouseOver" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter">
+						<ActivatorContent>
+							<MudChip T="string" Icon="@Icons.Material.Filled.FilterAlt" Color="Color.Primary">OrderBy: @(OrderChosen+"")</MudChip>
+						</ActivatorContent>
+						<ChildContent>
+							<MudMenuItem OnClick="()=>OrderTrips(OrderBy.AtoZ)">From A to Z</MudMenuItem>
+							<MudMenuItem OnClick="()=>OrderTrips(OrderBy.ZtoA)">From Z to A</MudMenuItem>
+							<MudMenuItem OnClick="()=>OrderTrips(OrderBy.Upcoming)">Upcoming trips</MudMenuItem>
+							<MudMenuItem OnClick="()=>OrderTrips(OrderBy.Future)">Future trips</MudMenuItem>
+							<MudMenuItem OnClick="()=>OrderTrips(OrderBy.Shortest)">Shortest trips</MudMenuItem>
+							<MudMenuItem OnClick="()=>OrderTrips(OrderBy.Longest)">Longest trips</MudMenuItem>
+						</ChildContent>
+					</MudMenu>
+			</MudToolBar>
 
 
 
@@ -38,11 +52,33 @@
 			@foreach (var i in CurrentVisibleContent)
 			{
 				<MudItem xs="4">
-				<MudPaper Style="  aspect-ratio: 1 / 1; overflow: hidden; overflow: hidden; text-overflow: ellipsis;" Class="border-dashed border-2 mud-border-primary pa-4" Square="true">
+				<MudPaper Style="  aspect-ratio: 1 / 1; overflow: hidden; overflow-y:auto " Class="border-dashed border-2 mud-border-primary pa-4" Square="true">
 
-					<MudButton Class="d-flex flex-column align-center justify-center mud-width-full py-8" OnClick="()=>EnterTrip(i.Id)" Typo="Typo.h6" Align="Align.Center">
+					<MudButton Class="d-flex flex-column align-center justify-center mud-width-full py-8" OnClick="()=>EnterTrip(i.Id)" Typo="Typo.h6" Align="center">
 							
-							<MudText Typo="Typo.h6">     @i.Name : <MudText Inline="false">@i.ShortDescription</MudText></MudText>
+							<MudText Typo="Typo.h6">     @i.Name : 
+
+								@if(i.Lastdate< DateTime.Now)
+							{
+							<MudText Color="Color.Error" Inline="false">
+								@i.ShortDescription
+								<p> From @i.Firstdate.ToShortDateString()
+								 To @i.Lastdate.ToShortDateString()
+									and is EXPIRED
+								</p>
+							</MudText>
+							}
+							else
+							{
+							<MudText Inline="false">
+								@i.ShortDescription
+								<p>From @i.Firstdate.ToShortDateString()
+								To @i.Lastdate.ToShortDateString()</p>
+							</MudText>
+															
+							}
+							
+							<p>It is @i.Days long! </p></MudText>
 						
 						</MudButton>
 					
@@ -57,7 +93,7 @@
 					<MudItem xs="4">
 						<MudPaper Style="aspect-ratio: 1 / 1;overflow: hidden; text-overflow: ellipsis;" Class="border-dashed border-2 mud-border-primary pa-4" Square="true">
 
-													<MudButton Class="d-flex flex-column align-center justify-center mud-width-full py-8" OnClick="navigateToCreateTrip" Typo="Typo.h6" Align="Align.Center">Make a new trip!</MudButton>
+				<MudButton Class="d-flex flex-column align-center justify-center mud-width-full py-8" OnClick="navigateToCreateTrip" Typo="Typo.h6" Align="Align.Center">Make a new trip!</MudButton>
 
 						</MudPaper>
 					</MudItem>
@@ -75,18 +111,6 @@
 <MudPagination SelectedChanged="NextPage" Color="Color.Primary" Count="pages" />
 </MudContainer>
 
-@*
-
-  @foreach(var trip in Trips)
-{
-	<div>
-		
-	<button type="button" class="btn btn-primary" @onclick="()=>EnterTrip(trip.Id)">@trip.Name, which is @trip.Days days long!</button>
-	
-<p></p>
-	</div>
-			}
-			*@
   }
 
 			
@@ -101,8 +125,6 @@
 	</AuthorizeView>
 </CascadingAuthenticationState>
 
-
-
 @code {
 	[Inject]
 	public required ITripService tripService { get; set; }
@@ -114,7 +136,6 @@
 
 	private List<Trip> Trips { get; set; }
 
-
 	private int _selected = 1;
 	private List<Trip> content = new List<Trip>();
 	private List<Trip> downloadedContent = new List<Trip>();
@@ -122,55 +143,46 @@
 	private List<Trip> CurrentVisibleContent = new List<Trip>();
 	public int pages;
 
+	enum OrderBy
+	{
+		Nothing=0,
+		Upcoming=1,
+		Future=2,
+		Shortest=3,
+		Longest=4,
+		AtoZ = 5,
+		ZtoA = 6
+	}
 
+	private OrderBy OrderChosen = OrderBy.Nothing ;
 
 	private void EnterTrip(int TripId)
 	{
-
 		string a = $"/trips/{UserId}/{TripId}";
-
 		navigationManager.NavigateTo(a);
-
 	}
 
 	private void navigateToCreateTrip()
 	{
-
-
 		string b = $"/createTrip/{UserId}/newTrip";
-
 		navigationManager.NavigateTo(b);
 	}
 
-
-
 	protected async override Task OnInitializedAsync()
 	{
-
-		//Console.WriteLine("auth");
 		TotalTrips =await  tripService.CountUserTrips(UserId);
-		//Console.WriteLine(TotalTrips + " total");
 		if (TotalTrips != 0)
 		{
-			CurrentVisibleContent = await tripService.GetNineUserTrips(UserId, 1, 9);
+			CurrentVisibleContent = await tripService.GetNineUserTrips(UserId, 1, 9, (int)OrderChosen);
 
 			pages = (int)Math.Ceiling((double)TotalTrips / 9);
-			Console.WriteLine("pages: "+pages +" and trips: "+TotalTrips);
-
 		}
-
-
 	}
 
 	private async void  NextPage(int i)
 	{
-
-
-		CurrentVisibleContent = await tripService.GetNineUserTrips(UserId, i, 9);
-		Console.WriteLine("downloaded!!");
-
+		CurrentVisibleContent = await tripService.GetNineUserTrips(UserId, i, 9, (int)OrderChosen);
 		_selected = i ;
-		Console.WriteLine("next page: " + i);
 		StateHasChanged();
 	}
 
@@ -185,5 +197,18 @@
 		var options = new DialogOptions { CloseOnEscapeKey = true };
 
 		return DialogService.ShowAsync<DeleteTripDialog>("Delete trip",parameters, options);
+	}
+
+	private async void OrderTrips(OrderBy filter)
+	{
+		if(TotalTrips ==0)
+		{
+			return;
+		}
+		OrderChosen = filter;
+		CurrentVisibleContent = await tripService.GetNineUserTrips(UserId, _selected, 9, (int)OrderChosen);
+
+		pages = (int)Math.Ceiling((double)TotalTrips / 9);
+		StateHasChanged();
 	}
 }
