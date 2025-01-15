@@ -50,9 +50,9 @@ public class TripService : ITripService
 		return;
     }
 
-	public async Task<List<Trip>> GetNineUserTrips(int userId, int page, int trips, int orderBy, string name)
+	public async Task<List<Trip>> GetNineUserTrips(int userId, int page, int trips, int orderBy, string name, int searchOption)
 	{
-		return await _tripsRepository.GetNineUserTrips(userId, page, trips,  orderBy,name);
+		return await _tripsRepository.GetNineUserTrips(userId, page, trips,  orderBy,name, searchOption);
 	}
 
     public async Task EditTripDescription(string description, int tripId)

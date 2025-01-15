@@ -15,7 +15,7 @@ public interface ITripsRepository
 
 	public Task<List<Trip>> GetUserTrips(int userId);
 
-	public Task<List<Trip>> GetNineUserTrips(int userId, int page, int trips, int orderBy, string name);
+	public Task<List<Trip>> GetNineUserTrips(int userId, int page, int trips, int orderBy, string name, int searchOption);
 
 	public Task<Trip> FindTripById(int tripId);
 

@@ -90,7 +90,7 @@ namespace TravShell.Infrastructure.Repositories;
 		return;
     }
 
-	public async Task<List<Trip>> GetNineUserTrips(int userId, int page, int trips, int orderBy, string name)
+	public async Task<List<Trip>> GetNineUserTrips(int userId, int page, int trips, int orderBy, string name, int searchOption)
 	{	
 		List<TripViewModel> result = new List<TripViewModel>();
 
@@ -124,10 +124,21 @@ namespace TravShell.Infrastructure.Repositories;
 							.OrderByDescending(x => x.Name)
 							.Skip((page - 1) * trips).Take(trips).ToListAsync();
 			case 7:
-				return await _dbContext.Trips
-						
-							.Where(x => x.Name.ToLower().Contains(name.ToLower()) && x.User.Id == userId)
-							.Skip((page - 1) * trips).Take(trips).ToListAsync();
+
+				if (searchOption == 1)
+				{
+					return await _dbContext.Trips
+
+						.Where(x => x.Name.ToLower().Contains(name.ToLower()) && x.User.Id == userId)
+						.Skip((page - 1) * trips).Take(trips).ToListAsync();
+				}
+				else
+				{
+					return await _dbContext.Trips
+
+						.Where(x => x.City.ToLower().Contains(name.ToLower()) && x.User.Id == userId)
+						.Skip((page - 1) * trips).Take(trips).ToListAsync();
+				}
 			default:
 				return await _dbContext.Trips.Where(x => x.User.Id == userId).Skip((page - 1) * trips).Take(trips).ToListAsync();
 		}
