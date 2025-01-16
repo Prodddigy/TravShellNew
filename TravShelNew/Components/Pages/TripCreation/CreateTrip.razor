@@ -23,7 +23,7 @@
 	<h3>New trip!</h3>
 
 </div>
-	<EditForm Model="Model" OnValidSubmit="VerifyLocation" FormName="InitialTripCreationForm" style=" margin: auto;  width: 50%;
+	<EditForm Model="Model" on OnValidSubmit="VerifyLocation" FormName="InitialTripCreationForm" style=" margin: auto;  width: 50%;
   padding: 10px;">
 
 	<DataAnnotationsValidator />
@@ -31,22 +31,23 @@
 	<MudGrid>
 			<MudItem xs="12" sm="6">
 			<MudCard>
-				<MudCardContent>
-						<MudTextField Label="Trip name" @bind-Value="Model.Name" For="@(()=>Model.Name)" />
-						<MudDatePicker Label="Start date" @bind-Date="Model.Firstdate" PickerVariant="PickerVariant.Dialog" Class="mt-3" For="@(()=>Model.Firstdate)" />
-						<MudDatePicker Label="Last date" @bind-Date="Model.Lastdate" PickerVariant="PickerVariant.Dialog" Class="mt-3" For="@(()=>Model.Lastdate)" />
-						<MudAutocomplete T="string" Label="Search for places"
+					<MudCardContent @onclick="RevokeVerification">
+						<MudTextField   Label="Trip name" @bind-Value="Model.Name" For="@(()=>Model.Name)" />
+						<MudDatePicker Adornment="Adornment.None" Label="Start date" @bind-Date="Model.Firstdate" PickerVariant="PickerVariant.Dialog" Class="mt-3" For="@(()=>Model.Firstdate)" />
+						<MudDatePicker Adornment="Adornment.None" Label="Last date" @bind-Date="Model.Lastdate" PickerVariant="PickerVariant.Dialog" Class="mt-3" For="@(()=>Model.Lastdate)" />
+							<MudTooltip Text="Hint: You don't have to choose city, instead try a anything you want!">
+						<MudAutocomplete OnClearButtonClick="RevokeVerification"  @onclick="RevokeVerification"  T="string" Label="Search for places"
 										 Placeholder="Start typing..."
 										 SearchFunc="SearchPlacesAsync"
 										 Clearable="true"
 										 CoerceText="true"
 										 ResetValueOnEmptyText="true" @bind-Value="Model.City" For="@(()=>Model.City)" />
-
+						</MudTooltip>
 
 						<MudTextField Label="Short description" Immediate="true" Counter="40" MaxLength="40" @bind-Value="Model.ShortDescription" Class="mt-3" For="@(()=>Model.ShortDescription)" AutoGrow MaxLines="4" Variant="Variant.Text" />
 					
 						
-						<MudCheckBox Label="Public" @bind-Value="Model.IsPublic" Class="mt-3" For="@(()=>Model.IsPublic)" Color="Color.Primary" />
+						<MudCheckBox @onclick="RevokeVerification"  Label="Public" @bind-Value="Model.IsPublic" Class="mt-3" For="@(()=>Model.IsPublic)" Color="Color.Primary" />
 				</MudCardContent>
 
 					<MudCardActions>
@@ -239,6 +240,14 @@ else
 			return Enumerable.Empty<string>();
 
 		return await GoogleService.GetPlaceNamesAutocomplete(place,cancellationToken);
+	}
+
+	private  void RevokeVerification()
+	{
+		isNotVerified = true;
+		StateHasChanged();
+
+		Console.WriteLine("verifyrevoked");
 	}
 
 }

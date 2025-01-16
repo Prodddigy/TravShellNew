@@ -128,14 +128,12 @@ namespace TravShell.Infrastructure.Repositories;
 				if (searchOption == 1)
 				{
 					return await _dbContext.Trips
-
 						.Where(x => x.Name.ToLower().Contains(name.ToLower()) && x.User.Id == userId)
 						.Skip((page - 1) * trips).Take(trips).ToListAsync();
 				}
 				else
 				{
 					return await _dbContext.Trips
-
 						.Where(x => x.City.ToLower().Contains(name.ToLower()) && x.User.Id == userId)
 						.Skip((page - 1) * trips).Take(trips).ToListAsync();
 				}

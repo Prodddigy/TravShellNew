@@ -27,7 +27,7 @@
 	<MudRadio Value="2" Color="Color.Primary" Size="Size.Small">City</MudRadio>
 	</MudRadioGroup>
 
-	<MudTextField @bind-Value="SearchedName" Label="Outlined" Variant="Variant.Outlined"></MudTextField>
+	<MudTextField @bind-Value="SearchedName" Label="Search" Variant="Variant.Outlined"></MudTextField>
 	<MudFab Color="Color.Tertiary" StartIcon="@Icons.Material.Filled.Search" OnClick="()=>SearchTripsByCondition(SearchOptions.NameSearch)" />
 
 
@@ -53,37 +53,55 @@
 <MudContainer style=" margin: auto;  width: 60vw; min-width:400px; padding: 10px;" Class="border-8 border-solid mud-border-primary pa-4">
 <MudGrid>
 	<MudItem xs="12">
+	<MudPaper Outlined Class="border-dashed">
+	<div style="display: flex; overflow-x: auto; white-space: nowrap; gap: 8px; padding: 8px;">
+		<MudButton Variant="Variant.Filled" Style="flex-shrink: 0; padding: 10px 20px;">Button 1</MudButton>
+		<MudButton Variant="Variant.Filled" Style="flex-shrink: 0; padding: 10px 20px;">A Wider Button</MudButton>
+		<MudButton Variant="Variant.Filled" Style="flex-shrink: 0; padding: 10px 20px;">Another</MudButton>
+		<MudButton Variant="Variant.Filled" Style="flex-shrink: 0; padding: 10px 20px;">Scroll Me!</MudButton>
+		<MudButton Variant="Variant.Filled" Style="flex-shrink: 0; padding: 10px 20px;">Button 1</MudButton>
+		<MudButton Variant="Variant.Filled" Style="flex-shrink: 0; padding: 10px 20px;">A Wider Button</MudButton>
+		<MudButton Variant="Variant.Filled" Style="flex-shrink: 0; padding: 10px 20px;">Another</MudButton>
+		<MudButton Variant="Variant.Filled" Style="flex-shrink: 0; padding: 10px 20px;">Scroll Me!</MudButton>
+		<MudButton Variant="Variant.Filled" Style="flex-shrink: 0; padding: 10px 20px;">Button 1</MudButton>
+		<MudButton Variant="Variant.Filled" Style="flex-shrink: 0; padding: 10px 20px;">A Wider Button</MudButton>
+		<MudButton Variant="Variant.Filled" Style="flex-shrink: 0; padding: 10px 20px;">Another</MudButton>
+		<MudButton Variant="Variant.Filled" Style="flex-shrink: 0; padding: 10px 20px;">Scroll Me!</MudButton>
+	</div>
+	</MudPaper>
+
+	</MudItem>
+
+
+	<MudItem xs="12">
 		<MudGrid Justify="Justify.SpaceEvenly">
 			@foreach (var i in CurrentVisibleContent)
 			{
 				<MudItem xs="4">
-					<MudPaper Style="  aspect-ratio: 1 / 1; overflow: hidden; overflow-y:auto; overflow-wrap: break-word; padding: 10px; " Class="border-dashed border-2 mud-border-primary pa-4" Square="true">
+		<MudPaper Style="  aspect-ratio: 1 / 1; overflow: hidden; overflow-y:auto; overflow-wrap: break-word; padding: 10px; " Class="border-dashed border-2 mud-border-primary pa-4" Square="true">
 
 					<MudButton Class="d-flex flex-column align-center justify-center mud-width-full py-8" OnClick="()=>EnterTrip(i.Id)" Typo="Typo.h6" Align="center">
 
-							<MudText >
+					<MudText Style="white-space: normal;overflow-wrap: break-word; padding: 10px 15px;">
 								<b> @i.Name :</b>
 								@i.ShortDescription
 								@if(i.Lastdate< DateTime.Now)
 							{
 							<MudText Color="Color.Error" Inline="false">
-								
-								<p> From @i.Firstdate.ToShortDateString()
-								 To @i.Lastdate.ToShortDateString()
+								<p> From @i.Firstdate.ToShortDateString() </p>
+								<p> To @i.Lastdate.ToShortDateString() </p>
 									and is EXPIRED
-								</p>
 							</MudText>
 							}
 							else
 							{
 							<MudText Inline="false">
-								@i.ShortDescription
-								<p>From @i.Firstdate.ToShortDateString()
-								To @i.Lastdate.ToShortDateString()</p>
+							
+							<p> From @i.Firstdate.ToShortDateString() </p>
+								<p> To @i.Lastdate.ToShortDateString() </p>
 							</MudText>
 															
 							}
-
 								<p><b>@i.Days days long!</b></p>
 							</MudText>
 						
