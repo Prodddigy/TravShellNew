@@ -1,13 +1,12 @@
 ﻿@page "/trips/{UserId:int}/{TripId:int}"
 
-
-
 @rendermode InteractiveServer
 
 @attribute [Authorize]
 
 @inject DataContext dataContext
 @inject AuthenticationStateProvider ASP
+@inject NavigationManager navi
 
 @inject ISnackbar Snackbar
 
@@ -16,23 +15,33 @@
 @using TravShell.Core.Entities
 @using Markdig
 
-
 @if(IsAuth)
 {
     @*<h3>User id: @UserId and Trip id: @TripId</h3>*@
 
     if(TripExists)
     {
-
-
         <MudText Style="@($"color:{Colors.Purple.Darken4};")" Typo="Typo.h3"> Trip name: @TripName</MudText>  
    
-
         <MudContainer style=" margin: auto;  width: 60vw; min-width:400px; padding: 10px;">
-<MudCarousel Class="mud-width-full" @ref="_carousel" ItemsSource="@_source" Style="height:200px;" ShowArrows="true" ShowBullets="false" EnableSwipeGesture="false" AutoCycle="false" @bind-SelectedIndex="staticIndex">
+<MudGrid>
+    <MudItem>
+        @if(isPublic)
+        {
+            <MudText>UnPublish</MudText>
+                        <MudIconButton OnClick="()=>ChangeVisbility(false)" Icon="@Icons.Material.Filled.PublicOff" Color="Color.Tertiary" Size="Size.Large" />
+        }
+        else
+        {
+            <MudText>Publish</MudText>
+                        <MudIconButton OnClick="()=>ChangeVisbility(true)" Icon="@Icons.Material.Filled.Public" Color="Color.Tertiary" Size="Size.Large" />
+        }
+    </MudItem>
+        <MudItem xs="7" > 
+<MudCarousel Class="mud-width-full" @ref="_carousel" ItemsSource="@_source" Style="height:250px;" ShowArrows="true" ShowBullets="false" EnableSwipeGesture="false" AutoCycle="false" @bind-SelectedIndex="staticIndex">
     <ItemTemplate>
                     <div class="horizontal-scroll" style="height:100%; padding: 33px;">
-                        <MudText Typo="Typo.h4" Style="@($"color:{Colors.Purple.Darken3};")"> @context.First().StartDate.ToShortDateString() Day @(selectedIndex + 1) / @TripDays</MudText>
+    <MudText Typo="Typo.h4" Style="@($"color:{Colors.Purple.Darken3};")"> @context.First().StartDate.ToShortDateString() Day @(selectedIndex + 1) / @TripDays</MudText>
         @foreach (var attraction in @context)
         {
             <h1>@(context.IndexOf(attraction)+1)</h1>
@@ -64,6 +73,32 @@
     </NextButtonTemplate>
 
 </MudCarousel>
+</MudItem>
+
+
+<MudItem  xs="3">
+    <MudPaper Outlined Class="border-dashed" Height="250px" >
+        <MudText Align="Align.Center">Tags</MudText>
+        <div style="height:200px; display: flex; flex-direction:column; overflow-y: auto; white-space: nowrap; gap: 8px; padding: 8px;">
+            <MudButton  EndIcon="@Icons.Material.Filled.Delete" Variant="Variant.Filled" Style="flex-shrink: 0; padding: 10px 20px;">Button 1</MudButton>
+            <MudButton Variant="Variant.Filled" Style="flex-shrink: 0; padding: 10px 20px;">A Wider Button</MudButton>
+            <MudButton Variant="Variant.Filled" Style="flex-shrink: 0; padding: 10px 20px;">Another</MudButton>
+            <MudButton Variant="Variant.Filled" Style="flex-shrink: 0; padding: 10px 20px;">Scroll Me!</MudButton>
+            <MudButton Variant="Variant.Filled" Style="flex-shrink: 0; padding: 10px 20px;">Button 1</MudButton>
+            <MudButton Variant="Variant.Filled" Style="flex-shrink: 0; padding: 10px 20px;">A Wider Button</MudButton>
+            <MudButton Variant="Variant.Filled" Style="flex-shrink: 0; padding: 10px 20px;">Another</MudButton>
+            <MudButton Variant="Variant.Filled" Style="flex-shrink: 0; padding: 10px 20px;">Scroll Me!</MudButton>
+            <MudButton Variant="Variant.Filled" Style="flex-shrink: 0; padding: 10px 20px;">Button 1</MudButton>
+            <MudButton Variant="Variant.Filled" Style="flex-shrink: 0; padding: 10px 20px;">A Wider Button</MudButton>
+            <MudButton Variant="Variant.Filled" Style="flex-shrink: 0; padding: 10px 20px;">Another</MudButton>
+            <MudButton Variant="Variant.Filled" Style="flex-shrink: 0; padding: 10px 20px;">Scroll Me!</MudButton>
+        </div>
+    </MudPaper>
+
+
+</MudItem>
+
+</MudGrid>
 
 <MudGrid>
 
@@ -81,6 +116,10 @@
            <MudItem xs="5" >
               
                     <MudExpansionPanels>
+                        <MudExpansionPanel Text="New Tag">
+                            <MudTextField T="string" MaxLength="10" Label="Tag" Variant="Variant.Outlined" Counter="10" Immediate />
+                            <MudButton  Disabled="@editMode"  Variant="Variant.Filled" Color="Color.Success">Save</MudButton>
+                        </MudExpansionPanel>
                        <MudExpansionPanel Text="Edit desc." MaxHeight="1000" >
                             <MudTextField T="string" @bind-Value="tripDescription" Disabled="@editMode" Immediate="true" Counter="1000" MaxLength="1000" Label="Description" Variant="Variant.Outlined" Lines="5" FullWidth />
                             <MudToolBar Class="gap-4">
@@ -92,22 +131,16 @@
                         </MudExpansionPanel>
                     </MudExpansionPanels>
 
-
-                  <MudPaper Style="">
+                  <MudPaper>
 	                <MudText Style="max-height: 10em; overflow-y: auto;">
                             @(tripDescriptionMarkUp)
 
                     </MudText>
                     </MudPaper>
 
-                    @*    @((MarkupString)tripDescriptionMarkUp)*@
-
-                    
            </MudItem>
 
-        <MudItem xs="4" >
-                  
-        </MudItem>
+     
             </MudGrid>
             
         </MudContainer>
@@ -116,14 +149,11 @@
     {
         <h1>Trip @TripId does not exist</h1>
     }
-
 }
 else
 {
     <h1>Not Authorized</h1>
 }
-
-
 
 @code {
 
@@ -173,6 +203,7 @@ else
 
     MarkdownPipeline pipeline = default;
 
+    private bool isPublic = false;
 
     protected async override Task OnInitializedAsync()//zmniejszyć to!!!
     {
@@ -181,11 +212,9 @@ else
         if (authState.User.Identity.IsAuthenticated)
         {
             int userIdCheck = Int32.Parse(authState.User.Identity.Name);
-
             if(userIdCheck == UserId)
             {
                 IsAuth = true;
-
                 currentTrip = await tripsService.FindTripById(TripId);
 
                 pipeline = new MarkdownPipelineBuilder()
@@ -196,11 +225,10 @@ else
                 if(currentTrip.Description !=null)
                 {
                     tripDescription = currentTrip.Description;
-
+                    isPublic = currentTrip.IsPublic;
                     tripDescriptionMarkUp =(MarkupString) Markdig.Markdown.ToHtml(tripDescription, pipeline);
+                    StateHasChanged();
                 }
-
-
 
                 if(currentTrip == null)
                 {
@@ -210,7 +238,6 @@ else
 
                 TripName = currentTrip.Name;
                 int numOfAtt = await attractionsService.CountTripAttractions(TripId);
-                //Console.WriteLine(TotalTrips + " total");
                 if (numOfAtt != 0)
                 {
                     Attractions = await attractionsService.GetTripAttractionsOrderByStartDate(TripId);
@@ -240,14 +267,12 @@ else
                                 break;
                             }
                         }
-
                         if (Attractions.Last() == a)
                         {
                             AttractionMap.Add(tmp, tmpList);
                         }
                     }
 
-                    //            Console.WriteLine(AttractionMap.Keys.Count()+ " <---count");
                     foreach (var a in AttractionMap)
                     {
                         _source.Add(a.Value.OrderBy(x=>x.step).ToList());
@@ -275,7 +300,6 @@ else
 
                             },
 
-
                             Title = aa.Website != "Website is not available." ? $" <a target = '_blank' jstcache = '6' href = '{aa.Website}' tabindex = '0'> <span> Check the website!</span> </a> " : "<h1> No Website available </h1>",
                         });
                         }
@@ -299,7 +323,6 @@ else
         }
     }
 
-
     private bool editDescription()
     {
         editMode=false;
@@ -317,9 +340,7 @@ else
         StateHasChanged();
 
         Snackbar.Add($"Description has been saved!", Severity.Success);
-
     }
-
 
     private async void RefreshMap()
     {
@@ -327,11 +348,9 @@ else
         await googleMapRef.UpdateMarkersAsync(markers);
     }
 
-
     private async Task GoLeft()
     {
         selectedIndex--;
-
         if(selectedIndex<0)
         {
             markers = AllMarkers.Last();
@@ -344,17 +363,13 @@ else
 
         await googleMapRef.UpdateMarkersAsync(markers);
         await InvokeAsync(StateHasChanged);
-      //  Console.WriteLine("Left: " + selectedIndex);
     }
 
     private async Task GoRight()
     {
         selectedIndex++;
-
-
         if (selectedIndex >= TripDays)
         {
-
             selectedIndex = 0;
 
             markers = AllMarkers.First();
@@ -363,10 +378,8 @@ else
         {
             markers = AllMarkers[selectedIndex];
         }
-
         await googleMapRef.UpdateMarkersAsync(markers);
         await InvokeAsync(StateHasChanged);
-     //   Console.WriteLine("Right: "+ selectedIndex);
     }
 
 
@@ -374,49 +387,30 @@ else
     {
         if (currentTrip.Description != null)
         {
-           
-
-            tripDescriptionMarkUp =  (MarkupString)Markdig.Markdown.ToHtml(currentTrip.Description, pipeline);
+            tripDescriptionMarkUp = (MarkupString)Markdig.Markdown.ToHtml(currentTrip.Description, pipeline);
         }
+    }
 
+    private async void ChangeVisbility(bool isPublic)
+    {
+        await tripsService.ChangeTripVisibility(isPublic, TripId);
+        StateHasChanged();
+        navi.Refresh(true);
     }
 
 }
 <style>
     .horizontal-scroll {
-        white-space: nowrap; /* Prevents the text from wrapping to the next line */
-        overflow-x: auto; /* Enables horizontal scrolling */
-        width: 100%; /* You can adjust the width as necessary */
-        border: 1px solid #ccc; /* Optional: to make the container more visible */
-        padding: 10px; /* Optional: space between text and container */
-        
+        white-space: nowrap;
+        overflow-x: auto; 
+        width: 100%; 
+        border: 1px solid #ccc; 
+        padding: 10px; 
         position: relative;
-
-
-        height:80vh;
-       
+        height:80vh; 
     }
-
-        .horizontal-scroll span {
-            display: inline-block;
-            top:0px;
-          
-        }
-
-      
-
-    .box {
+    .horizontal-scroll span {
         display: inline-block;
-        margin-right: 10px;
-        border: 1px solid ;
-        border-color: rebeccapurple;
-        padding:10px;
-      box-sizing: border-box;
-        top:0;
-        height:100%;
-        margin-top:0px;
-        
+        top:0px;
     }
-
-
 </style>

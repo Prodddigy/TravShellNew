@@ -13,8 +13,11 @@ public class Tag
 	[DatabaseGenerated(DatabaseGeneratedOption.Identity)]
 	public int TagId { get; set; }
 
+	[Required]
+	[MaxLength(10)]
 	public string Name { get; set; }
-
+	[Required]
+	public int AuthorId { get; set; }
 
 
 }

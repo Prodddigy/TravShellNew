@@ -158,4 +158,18 @@ namespace TravShell.Infrastructure.Repositories;
             await _dbContext.SaveChangesAsync();
         }
     }
+
+    public async Task ChangeTripVisibility(bool isPublic, int tripId)
+	{
+		var trip = await _dbContext.Trips.Where(x=> x.Id== tripId).FirstOrDefaultAsync();
+
+		if (trip != null)
+		{
+			trip.IsPublic = isPublic;
+		}
+
+		await _dbContext.SaveChangesAsync();
+
+	}
+
 }

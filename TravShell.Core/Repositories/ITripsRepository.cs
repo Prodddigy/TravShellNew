@@ -28,5 +28,7 @@ public interface ITripsRepository
 	public Task EditTripDescription(string description, int tripId);
 
 	public Task<List<Trip>> SearchTripsByProvidedName(string name, int Id);
+
+	public Task ChangeTripVisibility(bool isPublic,int tripId);
 }
 

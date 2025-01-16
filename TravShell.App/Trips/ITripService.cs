@@ -28,5 +28,8 @@ public interface ITripService
 
 	public Task<List<Trip>> SearchTripsByProvidedName(string name, int Id);
 
+
+	public Task ChangeTripVisibility(bool isPublic, int tripId);
+
 }
 
