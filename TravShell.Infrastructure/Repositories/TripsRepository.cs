@@ -137,6 +137,11 @@ namespace TravShell.Infrastructure.Repositories;
 						.Where(x => x.City.ToLower().Contains(name.ToLower()) && x.User.UserId == userId)
 						.Skip((page - 1) * trips).Take(trips).ToListAsync();
 				}
+			case 8:
+
+				return await _dbContext.Trips.Where(x => x.User.UserId == userId)
+					.Where(x => x.Tags.Any(tag => tag.Name == name)).ToListAsync();
+					
 			default:
 				return await _dbContext.Trips.Where(x => x.User.UserId == userId).Skip((page - 1) * trips).Take(trips).ToListAsync();
 		}

@@ -10,13 +10,13 @@ public interface ITagService
 {
 
 
-    //Task<Tag> CreateTag(int userId, string tagname);
+    Task<Tag> CreateTag(int userId, string tagname);
 
-    //Task AttachTagToTrip(int tripId, Tag tag);
+    Task AttachTagToTrip(int tripId, Tag tag);
 
-    //Task DeleteTag(int tripId, Tag tag);
+    Task RemoveTagFromTrip(int tripId, Tag tag);
 
-    //Task<List<Tag>> GetTripTags(int userId, int tripId);
+    Task<List<Tag>> GetTripTags(int tripId);
 
     //Task<List<Tag>> GetAllTags();
 

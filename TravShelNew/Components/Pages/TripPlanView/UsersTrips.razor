@@ -35,7 +35,7 @@
 	<MudSpacer/>
 	<MudMenu FullWidth="true" ActivationEvent="@MouseEvent.MouseOver" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter">
 		<ActivatorContent>
-			<MudChip T="string" Icon="@Icons.Material.Filled.FilterAlt" Color="Color.Primary">OrderBy: @(OrderChosen+"")</MudChip>
+			<MudChip T="string" Icon="@Icons.Material.Filled.FilterAlt" Color="Color.Primary">OrderBy: @(OrderChosen+": "+SearchedName)</MudChip>
 		</ActivatorContent>
 		<ChildContent>
 			<MudMenuItem OnClick="()=>SearchTripsByCondition(SearchOptions.AtoZ)">From A to Z</MudMenuItem>
@@ -56,18 +56,12 @@
 	<MudItem xs="12">
 	<MudPaper Outlined Class="border-dashed">
 	<div style="display: flex; overflow-x: auto; white-space: nowrap; gap: 8px; padding: 8px;">
-		<MudButton Variant="Variant.Filled" Style="flex-shrink: 0; padding: 10px 20px;">Button 1</MudButton>
-		<MudButton Variant="Variant.Filled" Style="flex-shrink: 0; padding: 10px 20px;">A Wider Button</MudButton>
-		<MudButton Variant="Variant.Filled" Style="flex-shrink: 0; padding: 10px 20px;">Another</MudButton>
-		<MudButton Variant="Variant.Filled" Style="flex-shrink: 0; padding: 10px 20px;">Scroll Me!</MudButton>
-		<MudButton Variant="Variant.Filled" Style="flex-shrink: 0; padding: 10px 20px;">Button 1</MudButton>
-		<MudButton Variant="Variant.Filled" Style="flex-shrink: 0; padding: 10px 20px;">A Wider Button</MudButton>
-		<MudButton Variant="Variant.Filled" Style="flex-shrink: 0; padding: 10px 20px;">Another</MudButton>
-		<MudButton Variant="Variant.Filled" Style="flex-shrink: 0; padding: 10px 20px;">Scroll Me!</MudButton>
-		<MudButton Variant="Variant.Filled" Style="flex-shrink: 0; padding: 10px 20px;">Button 1</MudButton>
-		<MudButton Variant="Variant.Filled" Style="flex-shrink: 0; padding: 10px 20px;">A Wider Button</MudButton>
-		<MudButton Variant="Variant.Filled" Style="flex-shrink: 0; padding: 10px 20px;">Another</MudButton>
-		<MudButton Variant="Variant.Filled" Style="flex-shrink: 0; padding: 10px 20px;">Scroll Me!</MudButton>
+		@foreach(var t in Tags)
+		{
+	<MudButton OnClick="()=>SearchTripsByCondition(SearchOptions.Tag,t.Name)"  Variant="Variant.Filled" Style="flex-shrink: 0; padding: 10px 20px;"><b>#@t.Name</b></MudButton>
+		}
+	
+		
 	</div>
 	</MudPaper>
 
@@ -176,6 +170,8 @@
 
 	public string SearchedName="";
 
+	private List<Tag> Tags = new List<Tag>();
+
 	enum SearchOptions
 	{
 		Nothing=0,
@@ -185,7 +181,8 @@
 		Longest=4,
 		AtoZ = 5,
 		ZtoA = 6,
-		NameSearch = 7
+		NameSearch = 7,
+		Tag =8
 	}
 
 	private SearchOptions OrderChosen = SearchOptions.Nothing ;
@@ -262,12 +259,27 @@
 		StateHasChanged();
 	}
 
+
+	private async void SearchTripsByCondition(SearchOptions filter, string tagName)
+	{
+		if (TotalTrips == 0)
+			return;
+
+		OrderChosen = filter;
+		CurrentVisibleContent = await tripService.GetNineUserTrips(UserId, _selected, 9, (int)OrderChosen, tagName, SearchBarOption);
+
+		pages = (int)Math.Ceiling((double)TotalTrips / 9);
+		SearchedName = tagName;
+		StateHasChanged();
+	}
+
 	private async void GetAllUserTripTags()
 	{
 		var tags  = await tagService.GetAllUserTripTags(UserId); 
 		if(tags != null)
 		{
-			Console.WriteLine("number of tags: "+tags.Count());
+			Tags = tags;
+			StateHasChanged();
 		}
 	}
 

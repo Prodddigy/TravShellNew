@@ -11,6 +11,7 @@
 @inject ISnackbar Snackbar
 
 @using TravShell.App.Attractions
+@using TravShell.App.Tags
 @using TravShell.App.Trips
 @using TravShell.Core.Entities
 @using Markdig
@@ -80,18 +81,10 @@
     <MudPaper Outlined Class="border-dashed" Height="250px" >
         <MudText Align="Align.Center">Tags</MudText>
         <div style="height:200px; display: flex; flex-direction:column; overflow-y: auto; white-space: nowrap; gap: 8px; padding: 8px;">
-            <MudButton  EndIcon="@Icons.Material.Filled.Delete" Variant="Variant.Filled" Style="flex-shrink: 0; padding: 10px 20px;">Button 1</MudButton>
-            <MudButton Variant="Variant.Filled" Style="flex-shrink: 0; padding: 10px 20px;">A Wider Button</MudButton>
-            <MudButton Variant="Variant.Filled" Style="flex-shrink: 0; padding: 10px 20px;">Another</MudButton>
-            <MudButton Variant="Variant.Filled" Style="flex-shrink: 0; padding: 10px 20px;">Scroll Me!</MudButton>
-            <MudButton Variant="Variant.Filled" Style="flex-shrink: 0; padding: 10px 20px;">Button 1</MudButton>
-            <MudButton Variant="Variant.Filled" Style="flex-shrink: 0; padding: 10px 20px;">A Wider Button</MudButton>
-            <MudButton Variant="Variant.Filled" Style="flex-shrink: 0; padding: 10px 20px;">Another</MudButton>
-            <MudButton Variant="Variant.Filled" Style="flex-shrink: 0; padding: 10px 20px;">Scroll Me!</MudButton>
-            <MudButton Variant="Variant.Filled" Style="flex-shrink: 0; padding: 10px 20px;">Button 1</MudButton>
-            <MudButton Variant="Variant.Filled" Style="flex-shrink: 0; padding: 10px 20px;">A Wider Button</MudButton>
-            <MudButton Variant="Variant.Filled" Style="flex-shrink: 0; padding: 10px 20px;">Another</MudButton>
-            <MudButton Variant="Variant.Filled" Style="flex-shrink: 0; padding: 10px 20px;">Scroll Me!</MudButton>
+        @foreach(var t in Tags)
+        {
+    <MudButton OnClick="()=>RemoveTag(t)"  EndIcon="@Icons.Material.Filled.Delete" Variant="Variant.Filled" Style="flex-shrink: 0; padding: 10px 20px;"><b>#@t.Name</b></MudButton>
+        }
         </div>
     </MudPaper>
 
@@ -117,8 +110,8 @@
               
                     <MudExpansionPanels>
                         <MudExpansionPanel Text="New Tag">
-                            <MudTextField T="string" MaxLength="10" Label="Tag" Variant="Variant.Outlined" Counter="10" Immediate />
-                            <MudButton  Disabled="@editMode"  Variant="Variant.Filled" Color="Color.Success">Save</MudButton>
+                            <MudTextField T="string" @bind-Value="tagName" MaxLength="10" Label="Tag" Variant="Variant.Outlined" Counter="10" Immediate />
+                            <MudButton  OnClick="SaveAndAddTag" Variant="Variant.Filled" Color="Color.Success">Save</MudButton>
                         </MudExpansionPanel>
                        <MudExpansionPanel Text="Edit desc." MaxHeight="1000" >
                             <MudTextField T="string" @bind-Value="tripDescription" Disabled="@editMode" Immediate="true" Counter="1000" MaxLength="1000" Label="Description" Variant="Variant.Outlined" Lines="5" FullWidth />
@@ -163,6 +156,9 @@ else
     [Inject]
     public required ITripService tripsService { get; set; }
 
+    [Inject]
+    public required ITagService tagsService { get; set; }
+
     [Parameter]
     public int UserId { get; set; }
     [Parameter]
@@ -204,6 +200,11 @@ else
     MarkdownPipeline pipeline = default;
 
     private bool isPublic = false;
+
+    private string tagName="";
+
+    private List<Tag> Tags = new List<Tag>(); 
+
 
     protected async override Task OnInitializedAsync()//zmniejszyć to!!!
     {
@@ -316,6 +317,10 @@ else
                     TripDays = trip.Days;
                     center = new GoogleMapCenter(trip.latitude, trip.longitude);
                 }
+                GetAllTripTags();
+
+
+
                 StateHasChanged();
                 await Task.Delay(3);
                 await googleMapRef.RefreshAsync();
@@ -396,6 +401,39 @@ else
         await tripsService.ChangeTripVisibility(isPublic, TripId);
         StateHasChanged();
         navi.Refresh(true);
+    }
+
+    private async void SaveAndAddTag()
+    {
+        if (tagName.Trim() == "") return;
+        var t = await tagsService.CreateTag(UserId, tagName);
+
+        if(t != null)
+        {
+            await tagsService.AttachTagToTrip(TripId, t);
+
+            tagName="";
+            GetAllTripTags();
+        }
+    }
+
+    private async void GetAllTripTags()
+    {
+        var tags =  await tagsService.GetTripTags(TripId);
+        if(tags != null)
+        {
+            Tags = tags;
+            StateHasChanged();
+        }
+    }
+
+    private async void RemoveTag(Tag t)
+    {
+        if(t !=null)
+        {
+            await tagsService.RemoveTagFromTrip(TripId, t);
+            GetAllTripTags();
+        }
     }
 
 }

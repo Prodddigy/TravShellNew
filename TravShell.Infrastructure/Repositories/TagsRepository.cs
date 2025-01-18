@@ -19,19 +19,68 @@ public class TagsRepository : ITagsRepository
         _dbContext = dbContext;
     }
 
-    public Task AttachTagToTrip(int tripId, Tag tag)
+    public async Task AttachTagToTrip(int tripId, Tag tag)
     {
-        throw new NotImplementedException();
+        var t = await _dbContext.Trips.Where(x=>x.TripId ==  tripId && !x.Tags.Contains(tag)).FirstOrDefaultAsync();
+
+        if(tag != null && t !=null)
+        {
+            if(t.Tags == null)
+                t.Tags = new List<Tag>();
+
+            t.Tags.Add(tag);
+            await _dbContext.SaveChangesAsync();
+        }
     }
 
-    public Task<Tag> CreateTag(int userId, string tagname)
+    public async Task<Tag> CreateTag(int userId, string tagname)
     {
-        throw new NotImplementedException();
+        if(tagname.Trim() == "")
+        {
+            return null;
+        }
+
+        var isTagAvailable = await _dbContext.Tags.Where(x => x.Name == tagname.ToLower()).FirstOrDefaultAsync();
+
+        if (isTagAvailable == null)
+        {
+            Tag newTag = new Tag
+            {
+                Name = tagname.ToLower().Trim(),
+                AuthorId = userId,
+            };
+
+			await _dbContext.Tags.AddAsync(newTag);
+			await _dbContext.SaveChangesAsync();
+
+			return newTag;
+		}
+        return isTagAvailable;
     }
 
-    public Task DeleteTag(int tripId, Tag tag)
+    public async Task RemoveTagFromTrip(int tripId, Tag tag)
     {
-        throw new NotImplementedException();
+
+        
+
+	
+		var t = await _dbContext.Tags.Where(x=> x.TagId == tag.TagId).Include(x=> x.TripList).FirstOrDefaultAsync();
+        if (t == null) return;
+       
+        //var trip = await _dbContext.Trips.Where(x => x.TripId == tripId).FirstOrDefaultAsync();
+
+        //if (trip == null) return;
+
+        var trip = t.TripList.Where(x=> x.TripId == tripId).FirstOrDefault();
+		if (trip == null) return;
+
+		t.TripList.Remove(trip);
+
+        if (t.TripList.Count == 0)
+        {
+            _dbContext.Remove(t);
+        }
+        await _dbContext.SaveChangesAsync();
     }
 
     public async Task<List<Tag>> GetAllTags()
@@ -46,9 +95,15 @@ public class TagsRepository : ITagsRepository
 		 .Distinct().ToListAsync();
 	}
 
-    public async Task<List<Tag>> GetTripTags(int userId, int tripId)
+    public async Task<List<Tag>> GetTripTags( int tripId)
     {
-        throw new NotImplementedException();
+        var trip = await _dbContext.Trips.Where(x=> x.TripId == tripId).FirstOrDefaultAsync();
+
+        if (trip == null)
+            return null;
+       var tags =  await _dbContext.Trips.Where(x=>x.TripId == tripId).SelectMany(x=> x.Tags).ToListAsync();
+
+        return tags;
     }
 }
 

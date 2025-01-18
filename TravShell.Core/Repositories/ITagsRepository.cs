@@ -12,9 +12,9 @@ public interface ITagsRepository
 
     Task AttachTagToTrip(int tripId, Tag tag);
 
-    Task DeleteTag(int tripId, Tag tag);
+    Task RemoveTagFromTrip(int tripId, Tag tag);
 
-    Task<List<Tag>> GetTripTags(int userId, int tripId);
+    Task<List<Tag>> GetTripTags( int tripId);
 
     Task<List<Tag>> GetAllTags();
 
