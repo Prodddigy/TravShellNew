@@ -4,14 +4,12 @@ using System.ComponentModel.DataAnnotations;
 namespace TravShell.Core.Entities;
 public class Trip
 {
-
-	public int Id { get; set; }
+	[Key]
+	public int TripId { get; set; }
 	
 	[MinLength(6)]
 	[Required(AllowEmptyStrings = false, ErrorMessage = "Please provide Name for the Trip, try\" My own Cool trip\"")]
 	
-	
-
 	public string Name { get; set; }
 
 	public string ShortDescription { get; set; } = "";
@@ -37,6 +35,11 @@ public class Trip
 	public User User { get; set; }
 
 	public List<Attraction> Attractions { get; set; }
+
+
+	public List<Review> Reviews { get; set; }
+
+	public List<Tag> Tags { get; set; }
 
 
 

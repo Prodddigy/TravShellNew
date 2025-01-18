@@ -7,6 +7,8 @@
 @inject AuthenticationStateProvider ASP
 @inject NavigationManager navigationManager
 
+@inject DataContext dataContext
+
 <PageTitle>Home</PageTitle>
 
 <div class="row">
@@ -71,6 +73,8 @@
 			</AuthorizeView>
 	
 	</MudGrid>
+
+		@*<MudButton OnClick="CreateReviewTest"> Review</MudButton>*@
 	</MudContainer>
 
 </div>
@@ -114,7 +118,7 @@
 			if (user != null)
 			{
 				UserName = user.Forename;
-				UserId = user.Id;
+				UserId = user.UserId;
 				Console.WriteLine("idiiidid: "+UserId);
 			}
 		}
@@ -136,6 +140,50 @@
 		string b = $"/createTrip/{UserId}/newTrip";
 
 		navigationManager.NavigateTo(b);
+	}
+
+
+
+
+	public async void CreateReviewTest()
+	{
+
+		var t =  dataContext.Trips.First();
+
+		var u =  dataContext.Users.First();
+
+		Review review = new Review
+			{
+				StarReview = 5,
+				Trip = t,
+				User = u,
+				IsEdited = false,
+				Content = "Good trip!!!!"
+			};
+
+		await 	dataContext.Reviews.AddAsync(review);
+
+		await dataContext.SaveChangesAsync();
+
+		Console.WriteLine(" Review after creation: "+ review.ReviewId);
+		Console.WriteLine(" Review after creation and trip id: "+ review.Trip.TripId);
+		Console.WriteLine(" Review after creation and user id: " + review.User.UserId);
+
+		var rev =  dataContext.Reviews.First();
+		int revid = rev.ReviewId;
+		Console.WriteLine(" Review after fetching: " + review.ReviewId);
+
+		// dataContext.Reviews.Remove(rev);
+
+
+		// await dataContext.SaveChangesAsync();
+
+		// var isnull = dataContext.Reviews.Where(x => x.ReviewId == revid).FirstOrDefault();
+
+		// if(isnull == null)
+		// {
+		// 	Console.WriteLine("No review found!!!");
+		// }
 	}
 
 }

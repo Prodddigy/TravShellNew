@@ -19,6 +19,10 @@ public class Tag
 	[Required]
 	public int AuthorId { get; set; }
 
+	public List<Trip> TripList { get; set; }
+
+
+
 
 }
 

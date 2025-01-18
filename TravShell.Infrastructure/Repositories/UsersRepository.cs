@@ -53,7 +53,7 @@ public class UsersRepository :IUsersRepository
 
 	public async Task<User> FindUserByIdAsync(string id)
 	{
-		User? user = await _dbContext.Users.Where(x => x.Id == Int32.Parse(id)).FirstOrDefaultAsync();
+		User? user = await _dbContext.Users.Where(x => x.UserId == Int32.Parse(id)).FirstOrDefaultAsync();
 
 		return user;
 	}

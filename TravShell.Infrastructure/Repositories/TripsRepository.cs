@@ -21,17 +21,17 @@ namespace TravShell.Infrastructure.Repositories;
 
 	public async Task<int> CountUserTrips(int userId)
 	{
-		return  await _dbContext.Trips.CountAsync(x => x.User.Id == userId);
+		return  await _dbContext.Trips.CountAsync(x => x.User.UserId == userId);
 	}
 
 	public async Task<List<Trip>> GetUserTrips(int userId)
 	{
-		return await _dbContext.Trips.Where(x => x.User.Id == userId).ToListAsync();
+		return await _dbContext.Trips.Where(x => x.User.UserId == userId).ToListAsync();
 	}
 
     public async Task<Trip?> FindTripById(int tripId)
     {
-        return await _dbContext.Trips.Where(x => x.Id == tripId).FirstOrDefaultAsync();
+        return await _dbContext.Trips.Where(x => x.TripId == tripId).FirstOrDefaultAsync();
     }
 
 	public async Task<int> CreateOneDayTrip(TripViewModel Model, User user)
@@ -50,11 +50,11 @@ namespace TravShell.Infrastructure.Repositories;
 			IsPublic = Model.IsPublic
 			
 		};
-		Console.WriteLine(trip.Id + " identyfiacja!!!!");
+		Console.WriteLine(trip.TripId + " identyfiacja!!!!");
 		await _dbContext.Trips.AddAsync(trip);
 
 		await _dbContext.SaveChangesAsync();
-		return trip.Id;
+		return trip.TripId;
 	}
 
 	public async Task<int> CreateMultiDayTrip(TripViewModel Model, User user)
@@ -75,7 +75,7 @@ namespace TravShell.Infrastructure.Repositories;
 		await _dbContext.Trips.AddAsync(trip);
 		await _dbContext.SaveChangesAsync();
 
-		return trip.Id;
+		return trip.TripId;
 	}
 
 	public async Task RemoveTripById(int tripId)
@@ -97,30 +97,30 @@ namespace TravShell.Infrastructure.Repositories;
 		switch(orderBy)
 		{
 			case 0:
-				return await _dbContext.Trips.Where(x => x.User.Id == userId).Skip((page - 1) * trips).Take(trips).ToListAsync();
+				return await _dbContext.Trips.Where(x => x.User.UserId == userId).Skip((page - 1) * trips).Take(trips).ToListAsync();
 			case 1:
 
-				return await _dbContext.Trips.Where(x => x.User.Id == userId)
+				return await _dbContext.Trips.Where(x => x.User.UserId == userId)
 							.OrderBy(x => x.Firstdate)
 							.Skip((page - 1) * trips).Take(trips).ToListAsync();
 			case 2:
-				return await _dbContext.Trips.Where(x => x.User.Id == userId)
+				return await _dbContext.Trips.Where(x => x.User.UserId == userId)
 							.OrderByDescending(x => x.Firstdate)
 							.Skip((page - 1) * trips).Take(trips).ToListAsync();
 			case 3:
-				return await _dbContext.Trips.Where(x=> x.User.Id == userId)
+				return await _dbContext.Trips.Where(x=> x.User.UserId == userId)
 							.OrderBy(x=>x.Days)
 							.Skip((page - 1) * trips).Take(trips).ToListAsync();
 			case 4:
-				return await _dbContext.Trips.Where(x => x.User.Id == userId)
+				return await _dbContext.Trips.Where(x => x.User.UserId == userId)
 							.OrderByDescending(x => x.Days)
 							.Skip((page - 1) * trips).Take(trips).ToListAsync();
 			case 5:
-				return await _dbContext.Trips.Where(x => x.User.Id == userId)
+				return await _dbContext.Trips.Where(x => x.User.UserId == userId)
 							.OrderBy(x => x.Name)
 							.Skip((page - 1) * trips).Take(trips).ToListAsync();
 			case 6:
-				return await _dbContext.Trips.Where(x => x.User.Id == userId)
+				return await _dbContext.Trips.Where(x => x.User.UserId == userId)
 							.OrderByDescending(x => x.Name)
 							.Skip((page - 1) * trips).Take(trips).ToListAsync();
 			case 7:
@@ -128,29 +128,29 @@ namespace TravShell.Infrastructure.Repositories;
 				if (searchOption == 1)
 				{
 					return await _dbContext.Trips
-						.Where(x => x.Name.ToLower().Contains(name.ToLower()) && x.User.Id == userId)
+						.Where(x => x.Name.ToLower().Contains(name.ToLower()) && x.User.UserId == userId)
 						.Skip((page - 1) * trips).Take(trips).ToListAsync();
 				}
 				else
 				{
 					return await _dbContext.Trips
-						.Where(x => x.City.ToLower().Contains(name.ToLower()) && x.User.Id == userId)
+						.Where(x => x.City.ToLower().Contains(name.ToLower()) && x.User.UserId == userId)
 						.Skip((page - 1) * trips).Take(trips).ToListAsync();
 				}
 			default:
-				return await _dbContext.Trips.Where(x => x.User.Id == userId).Skip((page - 1) * trips).Take(trips).ToListAsync();
+				return await _dbContext.Trips.Where(x => x.User.UserId == userId).Skip((page - 1) * trips).Take(trips).ToListAsync();
 		}
 	}
 
 	public async Task<List<Trip>> SearchTripsByProvidedName(string name, int Id)
 	{
 		return await _dbContext.Trips
-			.Where(x => x.Name.Contains(name, StringComparison.OrdinalIgnoreCase) && x.Id ==Id ).ToListAsync();
+			.Where(x => x.Name.Contains(name, StringComparison.OrdinalIgnoreCase) && x.TripId ==Id ).ToListAsync();
 	}
 
 	public async Task EditTripDescription(string description, int tripId)
     {
-		var tripToedit = await _dbContext.Trips.Where(x => x.Id == tripId).FirstOrDefaultAsync();
+		var tripToedit = await _dbContext.Trips.Where(x => x.TripId == tripId).FirstOrDefaultAsync();
 
 		if(tripToedit != null)
 		{
@@ -161,7 +161,7 @@ namespace TravShell.Infrastructure.Repositories;
 
     public async Task ChangeTripVisibility(bool isPublic, int tripId)
 	{
-		var trip = await _dbContext.Trips.Where(x=> x.Id== tripId).FirstOrDefaultAsync();
+		var trip = await _dbContext.Trips.Where(x=> x.TripId== tripId).FirstOrDefaultAsync();
 
 		if (trip != null)
 		{

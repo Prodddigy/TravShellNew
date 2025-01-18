@@ -20,12 +20,12 @@ public class AttractionsRepository : IAttractionsRepository
 
 	public async Task<int> CountTripAttractions(int tripId)
 	{
-		return await _dbContext.Attractions.CountAsync(x => x.Trip.Id == tripId);
+		return await _dbContext.Attractions.CountAsync(x => x.Trip.TripId == tripId);
 	}
 
     public async Task<List<Attraction>> GetTripAttractionsOrderByStartDate(int tripId)
     {
-        return await _dbContext.Attractions.Where(x => x.Trip.Id == tripId)
+        return await _dbContext.Attractions.Where(x => x.Trip.TripId == tripId)
                                                 .OrderBy(x => x.StartDate)
                                                 .ToListAsync();
     }

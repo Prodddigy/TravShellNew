@@ -12,16 +12,16 @@
 <CascadingAuthenticationState>
 	<AuthorizeView>
 	<Authorized>
+    <MudNavLink OnClick="EnterCreateTrip" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Create">Create trip</MudNavLink>
+    <MudNavLink OnClick="EnterTrips" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.GridOn">Your trips</MudNavLink>
 
-    <MudNavLink OnClick="EnterTrips" Match="NavLinkMatch.Prefix">Trips</MudNavLink>
-
-    <MudNavLink Href="/logout"  Match="NavLinkMatch.Prefix">Logout</MudNavLink>
+                <MudNavLink Href="/logout" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Logout">Logout</MudNavLink>
 
             </Authorized>
 
             <NotAuthorized>
-                <MudNavLink Href="/login" Match="NavLinkMatch.Prefix">Login</MudNavLink>
-                <MudNavLink Href="/register" Match="NavLinkMatch.Prefix">Register</MudNavLink>
+                <MudNavLink Href="/login" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Login">Login</MudNavLink>
+                <MudNavLink Href="/register" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.AccountCircle">Register</MudNavLink>
             </NotAuthorized>
         </AuthorizeView>
     </CascadingAuthenticationState>
@@ -35,18 +35,20 @@
 
     private async void EnterTrips()
     {
-
         var authState = await ASP.GetAuthenticationStateAsync();
-
 
         if (authState.User.Identity.IsAuthenticated)
         {
+            navigationManager.NavigateTo($"/trips/{Int32.Parse(authState.User.Identity.Name)}");
+        }
+    }
 
-            //   UserId = Int32.Parse(authState.User.Identity.Name);
-
-
-
-                navigationManager.NavigateTo($"/trips/{Int32.Parse(authState.User.Identity.Name)}");
-            }
+    private async void EnterCreateTrip()
+    {
+        var authState = await ASP.GetAuthenticationStateAsync();
+        if (authState.User.Identity.IsAuthenticated)
+        {
+            navigationManager.NavigateTo($"/createTrip/{Int32.Parse(authState.User.Identity.Name)}/newTrip");
+        }
     }
 }

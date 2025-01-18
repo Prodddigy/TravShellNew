@@ -5,8 +5,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace TravShell.Core.Entities;
 public class User
 {
-
-	public int Id { get; set; }
+	[Key]
+	public int UserId { get; set; }
 	
 	public string Forename { get; set; } = string.Empty;
 	
@@ -19,6 +19,8 @@ public class User
 	public DateTime DOB {  get; set; } = DateTime.Now;
 
 	public List<Trip> TripList { get; set; }
+
+	public List<Review> ReviewList { get; set; }
 
 }
 

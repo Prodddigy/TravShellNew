@@ -22,6 +22,21 @@ namespace TravShell.Infrastructure.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("TagTrip", b =>
+                {
+                    b.Property<int>("TagsTagId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TripListTripId")
+                        .HasColumnType("int");
+
+                    b.HasKey("TagsTagId", "TripListTripId");
+
+                    b.HasIndex("TripListTripId");
+
+                    b.ToTable("TagTrip");
+                });
+
             modelBuilder.Entity("TravShell.Core.Entities.Attraction", b =>
                 {
                     b.Property<int>("Id")
@@ -76,13 +91,68 @@ namespace TravShell.Infrastructure.Migrations
                     b.ToTable("Attractions");
                 });
 
-            modelBuilder.Entity("TravShell.Core.Entities.Trip", b =>
+            modelBuilder.Entity("TravShell.Core.Entities.Review", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<int>("ReviewId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ReviewId"));
+
+                    b.Property<string>("Content")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<bool>("IsEdited")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("StarReview")
+                        .HasMaxLength(5)
+                        .HasColumnType("int");
+
+                    b.Property<int>("TripId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("ReviewId");
+
+                    b.HasIndex("TripId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Reviews");
+                });
+
+            modelBuilder.Entity("TravShell.Core.Entities.Tag", b =>
+                {
+                    b.Property<int>("TagId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("TagId"));
+
+                    b.Property<int>("AuthorId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.HasKey("TagId");
+
+                    b.ToTable("Tags");
+                });
+
+            modelBuilder.Entity("TravShell.Core.Entities.Trip", b =>
+                {
+                    b.Property<int>("TripId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("TripId"));
 
                     b.Property<string>("City")
                         .IsRequired()
@@ -121,7 +191,7 @@ namespace TravShell.Infrastructure.Migrations
                     b.Property<double>("longitude")
                         .HasColumnType("float");
 
-                    b.HasKey("Id");
+                    b.HasKey("TripId");
 
                     b.HasIndex("UserId");
 
@@ -130,11 +200,11 @@ namespace TravShell.Infrastructure.Migrations
 
             modelBuilder.Entity("TravShell.Core.Entities.User", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<int>("UserId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("UserId"));
 
                     b.Property<DateTime>("DOB")
                         .HasColumnType("datetime2");
@@ -155,9 +225,24 @@ namespace TravShell.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("Id");
+                    b.HasKey("UserId");
 
                     b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("TagTrip", b =>
+                {
+                    b.HasOne("TravShell.Core.Entities.Tag", null)
+                        .WithMany()
+                        .HasForeignKey("TagsTagId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("TravShell.Core.Entities.Trip", null)
+                        .WithMany()
+                        .HasForeignKey("TripListTripId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("TravShell.Core.Entities.Attraction", b =>
@@ -169,6 +254,25 @@ namespace TravShell.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Trip");
+                });
+
+            modelBuilder.Entity("TravShell.Core.Entities.Review", b =>
+                {
+                    b.HasOne("TravShell.Core.Entities.Trip", "Trip")
+                        .WithMany("Reviews")
+                        .HasForeignKey("TripId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("TravShell.Core.Entities.User", "User")
+                        .WithMany("ReviewList")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Trip");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("TravShell.Core.Entities.Trip", b =>
@@ -185,10 +289,14 @@ namespace TravShell.Infrastructure.Migrations
             modelBuilder.Entity("TravShell.Core.Entities.Trip", b =>
                 {
                     b.Navigation("Attractions");
+
+                    b.Navigation("Reviews");
                 });
 
             modelBuilder.Entity("TravShell.Core.Entities.User", b =>
                 {
+                    b.Navigation("ReviewList");
+
                     b.Navigation("TripList");
                 });
 #pragma warning restore 612, 618

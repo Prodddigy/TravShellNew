@@ -6,6 +6,7 @@
 
 @using Microsoft.AspNetCore.Authorization
 
+@using TravShell.App.Tags
 @using TravShell.App.Trips
 
 @inject DataContext dataContext
@@ -21,7 +22,7 @@
 		{
 <h3 class="align-content-center" > Trips count: @TotalTrips of user: @UserId</h3>
 <MudToolBar Class="gap-4" WrapContent="true">
-	<button type="button" class="btn btn-outline-success" @onclick="navigateToCreateTrip">Create a new trip</button>
+	
 	<MudRadioGroup @bind-Value="SearchBarOption">
     <MudRadio Value="1" Color="Color.Primary" Size="Size.Small">Name</MudRadio>
 	<MudRadio Value="2" Color="Color.Primary" Size="Size.Small">City</MudRadio>
@@ -80,7 +81,7 @@
 				<MudItem xs="4">
 		<MudPaper Style="  aspect-ratio: 1 / 1; overflow: hidden; overflow-y:auto; overflow-wrap: break-word; padding: 10px; " Class="border-dashed border-2 mud-border-primary pa-4" Square="true">
 
-					<MudButton Class="d-flex flex-column align-center justify-center mud-width-full py-8" OnClick="()=>EnterTrip(i.Id)" Typo="Typo.h6" Align="center">
+					<MudButton Class="d-flex flex-column align-center justify-center mud-width-full py-8" OnClick="()=>EnterTrip(i.TripId)" Typo="Typo.h6" Align="center">
 
 					<MudText Style="white-space: normal;overflow-wrap: break-word; padding: 10px 15px;">
 								<b> @i.Name :</b>
@@ -88,21 +89,30 @@
 								@if(i.Lastdate< DateTime.Now)
 							{
 							<MudText Color="Color.Error" Inline="false">
-								<p> From @i.Firstdate.ToShortDateString() </p>
-								<p> To @i.Lastdate.ToShortDateString() </p>
-									and is EXPIRED
+								<p> From @i.Firstdate.ToShortDateString()<br />To @i.Lastdate.ToShortDateString() <br/>EXPIRED</p>
+								
+									
 							</MudText>
 							}
 							else
 							{
 							<MudText Inline="false">
 							
-							<p> From @i.Firstdate.ToShortDateString() </p>
-								<p> To @i.Lastdate.ToShortDateString() </p>
+							<p> From @i.Firstdate.ToShortDateString() To @i.Lastdate.ToShortDateString()</p>
+								
 							</MudText>
 															
 							}
-								<p><b>@i.Days days long!</b></p>
+							@if(i.Days<1)
+							{
+							<p><b>@i.Days days long.</b></p>
+							}
+							else
+							{
+								<p><b>@i.Days day trip.</b></p>
+							}
+
+								
 							</MudText>
 						
 						</MudButton>
@@ -147,6 +157,9 @@
 	[Inject]
 	public required ITripService tripService { get; set; }
 
+	[Inject]
+	public required ITagService tagService { get; set; }
+
 	[Parameter]
 	public int UserId { get; set; } = default;
 
@@ -179,6 +192,8 @@
 
 	private int SearchBarOption = 1;
 
+	private int numOfUniqueTags = 0;
+
 	private void EnterTrip(int TripId)
 	{
 		string a = $"/trips/{UserId}/{TripId}";
@@ -199,6 +214,8 @@
 			CurrentVisibleContent = await tripService.GetNineUserTrips(UserId, 1, 9, (int)OrderChosen, "", SearchBarOption);
 
 			pages = (int)Math.Ceiling((double)TotalTrips / 9);
+
+			GetAllUserTripTags();
 		}
 	}
 
@@ -213,7 +230,7 @@
 	{
 		var parameters = new DialogParameters<DeleteTripDialog>
 		{
-			{ x => x.tripToDelete, trip.Id },
+			{ x => x.tripToDelete, trip.TripId },
 			{ x => x.tripName,trip.Name }
 		};
 
@@ -232,7 +249,7 @@
 			if (SearchedName.Trim() == "")
 				return;
 		}
-		
+
 		if(filter != SearchOptions.NameSearch )
 		{
 			SearchedName = "";
@@ -244,4 +261,14 @@
 		pages = (int)Math.Ceiling((double)TotalTrips / 9);
 		StateHasChanged();
 	}
+
+	private async void GetAllUserTripTags()
+	{
+		var tags  = await tagService.GetAllUserTripTags(UserId); 
+		if(tags != null)
+		{
+			Console.WriteLine("number of tags: "+tags.Count());
+		}
+	}
+
 }

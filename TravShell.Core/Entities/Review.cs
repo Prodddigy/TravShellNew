@@ -22,12 +22,12 @@ public class Review
 
 	public bool IsEdited { get; set; } = false;
 
-	
-	//[ForeignKey("TripId")]
-	//public Trip trip { get; set; }
+
+	[ForeignKey("TripId")]
+	public required Trip Trip { get; set; }
 
 
-	//[ForeignKey("UserId")]
-	//public User user { get; set; }
+	[ForeignKey("UserId")]
+	public required User User { get; set; }
 
 }
