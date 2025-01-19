@@ -7,15 +7,14 @@
 <MudNavMenu>
     <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.OtherHouses">Home</MudNavLink>
 
-
-    
 <CascadingAuthenticationState>
 	<AuthorizeView>
 	<Authorized>
     <MudNavLink OnClick="EnterCreateTrip" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Create">Create trip</MudNavLink>
     <MudNavLink OnClick="EnterTrips" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.GridOn">Your trips</MudNavLink>
+    <MudNavLink OnClick="EnterPublicTrips" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Public"> Public trips </MudNavLink>
 
-                <MudNavLink Href="/logout" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Logout">Logout</MudNavLink>
+    <MudNavLink Href="/logout" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Logout">Logout</MudNavLink>
 
             </Authorized>
 
@@ -26,13 +25,10 @@
         </AuthorizeView>
     </CascadingAuthenticationState>
 
-
 </MudNavMenu>
 
 
 @code{
-
-
     private async void EnterTrips()
     {
         var authState = await ASP.GetAuthenticationStateAsync();
@@ -49,6 +45,15 @@
         if (authState.User.Identity.IsAuthenticated)
         {
             navigationManager.NavigateTo($"/createTrip/{Int32.Parse(authState.User.Identity.Name)}/newTrip");
+        }
+    }
+
+    private async void EnterPublicTrips()
+    {
+        var authState = await ASP.GetAuthenticationStateAsync();
+        if(authState.User.Identity.IsAuthenticated)
+        {
+            navigationManager.NavigateTo($"/public-trips/{Int32.Parse(authState.User.Identity.Name)}");
         }
     }
 }

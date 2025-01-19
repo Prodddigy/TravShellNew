@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using TravShell.App.Attractions;
 using TravShell.App.GoogleAPI;
+using TravShell.App.PublicTrips;
 using TravShell.App.Reviews;
 using TravShell.App.Tags;
 using TravShell.App.Trips;
@@ -24,6 +25,7 @@ public static class Extensions
 		services.AddScoped<IGoogleService,GoogleService>();
 		services.AddScoped<ITagService, TagService>();
 		services.AddScoped<IReviewService, ReviewService>();
+		services.AddScoped<IPublicTripService, PublicTripService>();
 		return services;
 	}
 

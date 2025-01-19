@@ -14,8 +14,13 @@
 
 @inject DataContext dataContext
 @inject NavigationManager navigationManager
+@inject AuthenticationStateProvider ASP
+
 @attribute [Authorize]
 
+
+@if(IsAuth)
+{
 <NavigationLock ConfirmExternalNavigation="@NotSaved" OnBeforeInternalNavigation="@OnBeforeInternalNavigation"></NavigationLock>
 @if(IsLoading)
 { <MudContainer style=" margin: auto;  width: 60vw; min-width:400px; padding: 10px;">
@@ -138,8 +143,15 @@ else
         </ItemRenderer>
     </MudDropContainer>
     </MudContainer>
+    }
+
 
     @*</div>*@
+}
+else
+{
+    <h1>Not Authorized</h1>
+    <h1>Or Trip Does Not Exist</h1>
 }
 
 @code {
@@ -154,6 +166,8 @@ else
 
     [Inject]
     public required IGoogleService GoogleService { get; set; }
+
+    private bool IsAuth = true;
 
     [Parameter]
     public int UserId { get; set; }
@@ -205,14 +219,31 @@ else
     [Inject] IJSRuntime? JsRuntime { get; set; }
     private bool NotSaved { get; set; } = true;
 
+
+
+
     protected override async Task OnParametersSetAsync()
     {
+
         NotSaved = true;
         selectedAttractions = new List<AttractionViewModel>();
 
         if (trip == null)
         {
             trip = await TripsService.FindTripById(TripId);
+            if (trip == null) 
+            {
+                IsAuth = false;
+                StateHasChanged();
+                return;
+            }
+            Authenticate();
+
+            if (IsAuth == false)
+            {
+                return;
+            }
+
 
             currentDate = trip.Firstdate;
 
@@ -258,6 +289,34 @@ else
             _container = new();
         }
         RefreshContainer();
+    }
+
+    private async void Authenticate()
+    {
+
+
+        var authState = await ASP.GetAuthenticationStateAsync();
+
+        if (authState.User.Identity.IsAuthenticated)
+        {
+            if (Int32.Parse(authState.User.Identity.Name) == trip.User.UserId)
+            {
+                IsAuth = true;
+                StateHasChanged();
+            }
+            else
+            {
+                IsAuth = false;
+                StateHasChanged();
+                return;
+            }
+        }
+        else
+        {
+            IsAuth = false;
+            StateHasChanged();
+            return;
+        }
     }
 
     public async Task SimulateProgressAsync(string status)

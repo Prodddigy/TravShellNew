@@ -21,7 +21,7 @@
 		@if (Int32.Parse(context.User.Identity.Name) == UserId)
 		{
 <h3 class="align-content-center" > Trips count: @TotalTrips of user: @UserId</h3>
-<MudToolBar Class="gap-4" WrapContent="true">
+<MudToolBar Style="margin: auto;  width: 60vw; min-width:400px; padding: 10px;" Class="gap-4" WrapContent="true">
 	
 	<MudRadioGroup @bind-Value="SearchBarOption">
     <MudRadio Value="1" Color="Color.Primary" Size="Size.Small">Name</MudRadio>

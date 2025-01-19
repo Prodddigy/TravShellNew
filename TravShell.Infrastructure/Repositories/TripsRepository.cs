@@ -31,7 +31,7 @@ namespace TravShell.Infrastructure.Repositories;
 
     public async Task<Trip?> FindTripById(int tripId)
     {
-        return await _dbContext.Trips.Where(x => x.TripId == tripId).FirstOrDefaultAsync();
+        return await _dbContext.Trips.Include(x=>x.User).Where(x => x.TripId == tripId).FirstOrDefaultAsync();
     }
 
 	public async Task<int> CreateOneDayTrip(TripViewModel Model, User user)

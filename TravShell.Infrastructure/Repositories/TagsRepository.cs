@@ -85,8 +85,12 @@ public class TagsRepository : ITagsRepository
 
     public async Task<List<Tag>> GetAllTags()
     {
-        throw new NotImplementedException();
-    }
+        
+
+        return await _dbContext.Trips.Where(x => x.IsPublic == true).SelectMany(x => x.Tags).Distinct().ToListAsync();
+
+
+	}
 
     public async Task<List<Tag>> GetAllUserTripTags(int userId)
     {

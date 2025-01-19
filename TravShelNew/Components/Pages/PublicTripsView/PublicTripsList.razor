@@ -1,0 +1,280 @@
+﻿@page "/public-trips/{UserId:int}"
+
+@rendermode InteractiveServer
+
+@attribute [Authorize]
+
+@using Microsoft.AspNetCore.Authorization
+
+@using TravShell.App.PublicTrips
+@using TravShell.App.Tags
+@using TravShell.App.Trips
+
+@inject DataContext dataContext
+@inject NavigationManager navigationManager
+@inject AuthenticationStateProvider ASP
+
+@inject IDialogService DialogService
+
+<CascadingAuthenticationState>
+	<AuthorizeView>
+	<Authorized>
+		@if (Int32.Parse(context.User.Identity.Name) == UserId)
+		{
+<h3 class="align-content-center" > Community made trips!</h3>
+<MudToolBar Style="margin: auto;  width: 60vw; min-width:400px; padding: 10px;"  Class="gap-4" WrapContent="true">
+	
+	<MudRadioGroup @bind-Value="SearchBarOption">
+    <MudRadio Value="1" Color="Color.Primary" Size="Size.Small">Name</MudRadio>
+	<MudRadio Value="2" Color="Color.Primary" Size="Size.Small">City</MudRadio>
+	</MudRadioGroup>
+
+	<MudTextField @bind-Value="SearchedName" Label="Search" Variant="Variant.Outlined"></MudTextField>
+	<MudFab Color="Color.Tertiary" StartIcon="@Icons.Material.Filled.Search" OnClick="()=>SearchTripsByCondition(SearchOptions.NameSearch)" />
+
+
+	<MudSpacer/>
+	<MudMenu FullWidth="true" ActivationEvent="@MouseEvent.MouseOver" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter">
+		<ActivatorContent>
+			<MudChip T="string" Icon="@Icons.Material.Filled.FilterAlt" Color="Color.Primary">OrderBy: @(OrderChosen+": "+SearchedName)</MudChip>
+		</ActivatorContent>
+		<ChildContent>
+			<MudMenuItem OnClick="()=>SearchTripsByCondition(SearchOptions.AtoZ)">From A to Z</MudMenuItem>
+			<MudMenuItem OnClick="()=>SearchTripsByCondition(SearchOptions.ZtoA)">From Z to A</MudMenuItem>
+			<MudMenuItem OnClick="()=>SearchTripsByCondition(SearchOptions.Shortest)">Shortest trips</MudMenuItem>
+			<MudMenuItem OnClick="()=>SearchTripsByCondition(SearchOptions.Longest)">Longest trips</MudMenuItem>
+			<MudMenuItem >Best ratings</MudMenuItem>
+		</ChildContent>
+	</MudMenu>
+</MudToolBar>
+
+@if (CurrentVisibleContent != null)
+  {
+
+<MudContainer style=" margin: auto;  width: 60vw; min-width:400px; padding: 10px;" Class="border-8 border-solid mud-border-primary pa-4">
+<MudGrid>
+	<MudItem xs="12">
+	<MudPaper Outlined Class="border-dashed">
+	<div style="display: flex; overflow-x: auto; white-space: nowrap; gap: 8px; padding: 8px;">
+		@foreach(var t in Tags)
+		{
+	<MudButton OnClick="()=>SearchTripsByCondition(SearchOptions.Tag,t.Name)"  Variant="Variant.Filled" Style="flex-shrink: 0; padding: 10px 20px;"><b>#@t.Name</b></MudButton>
+		}
+	
+		
+	</div>
+	</MudPaper>
+
+	</MudItem>
+
+
+	<MudItem xs="12">
+		<MudGrid Justify="Justify.SpaceEvenly">
+			@foreach (var i in CurrentVisibleContent)
+			{
+				<MudItem xs="4">
+		<MudPaper Style="  aspect-ratio: 1 / 1; overflow: hidden; overflow-y:auto; overflow-wrap: break-word; padding: 10px; " Class="border-dashed border-2 mud-border-primary pa-4" Square="true">
+
+					<MudButton Class="d-flex flex-column align-center justify-center mud-width-full py-8" OnClick="()=>EnterTrip(i.TripId)" Typo="Typo.h6" Align="center">
+
+					<MudText Style="white-space: normal;overflow-wrap: break-word; padding: 10px 15px;">
+							<b> @i.Name :</b>
+							@i.ShortDescription
+															
+							@if(i.Days<1)
+							{
+							<p><b>@i.Days days long.</b></p>
+							}
+							else
+							{
+								<p><b>@i.Days day trip.</b></p>
+							}
+
+							@if(i.User.UserId == UserId)
+							{
+								<MudText Color="Color.Success" Typo="Typo.caption">This is your trip!</MudText>
+							}
+		
+							</MudText>
+						</MudButton>
+					</MudPaper>
+					@if(i.User.UserId != UserId)
+					{
+					<MudButton  Variant="Variant.Filled" Style="object-position: bottom; " Color="Color.Warning">Add</MudButton>
+					}
+				</MudItem>
+			}
+			@if (CurrentVisibleContent.Count() < 9)
+			{
+				for (var i = 0; i < (9 - CurrentVisibleContent.Count()); i++)
+				{
+					<MudItem xs="4">
+						<MudPaper Style="aspect-ratio: 1 / 1;overflow: hidden; text-overflow: ellipsis;" Class="border-dashed border-2 mud-border-primary pa-4" Square="true">
+
+				<MudButton Class="d-flex flex-column align-center justify-center mud-width-full py-8" OnClick="navigateToCreateTrip" Typo="Typo.h6" Align="Align.Center">Make a new trip!</MudButton>
+
+						</MudPaper>
+					</MudItem>
+				}
+			}
+		</MudGrid>
+	</MudItem>
+</MudGrid>
+
+</MudContainer>
+<MudContainer MaxWidth="MaxWidth.False" Style="display: flex; justify-content: center;">
+<MudPagination SelectedChanged="NextPage" Color="Color.Primary" Count="pages" />
+</MudContainer>
+
+  }		
+		}
+		else
+		{
+			<h3>This List is unavailable</h3>
+		}
+	</Authorized>
+	</AuthorizeView>
+</CascadingAuthenticationState>
+
+@code {
+	// [Inject]
+	// public required ITripService tripService { get; set; }
+
+	[Inject]
+	public required ITagService tagService { get; set; }
+
+	[Inject]
+	public required IPublicTripService publicTripsService { get; set; }
+
+	[Parameter]
+	public int UserId { get; set; } = default;
+
+	private int TotalTrips { get; set; }
+
+	private List<Trip> Trips { get; set; }
+
+	private int _selected = 1;
+	private List<Trip> content = new List<Trip>();
+	private List<Trip> downloadedContent = new List<Trip>();
+
+	private List<Trip> CurrentVisibleContent = new List<Trip>();
+	public int pages;
+
+	public string SearchedName="";
+
+	private List<Tag> Tags = new List<Tag>();
+
+	enum SearchOptions
+	{
+		Nothing=0,
+		Shortest=1,
+		Longest=2,
+		AtoZ = 3,
+		ZtoA = 4,
+		NameSearch = 5,
+		Tag =6
+	}
+
+	private SearchOptions OrderChosen = SearchOptions.Nothing ;
+
+	private int SearchBarOption = 1;
+
+	private int numOfUniqueTags = 0;
+
+	private void EnterTrip(int TripId) // CHANGE!!!!
+	{
+		string a = $"/trips/{UserId}/{TripId}";
+		navigationManager.NavigateTo(a);
+	}
+
+	private void navigateToCreateTrip()
+	{
+		string b = $"/createTrip/{UserId}/newTrip";
+		navigationManager.NavigateTo(b);
+	}
+
+	protected async override Task OnInitializedAsync()
+	{
+		TotalTrips = await publicTripsService.CountAllTrips();
+
+		Console.WriteLine("how many trips?: "+TotalTrips);
+		if (TotalTrips != 0)
+		{
+			CurrentVisibleContent =   //dataContext.Trips.OrderBy(x=>x.TripId).Skip(0).Take(9).ToList();
+
+await publicTripsService.GetNineTrips( 1, 9, (int)OrderChosen, "", SearchBarOption);
+
+			pages = (int)Math.Ceiling((double)TotalTrips / 9);
+
+			GetAllTripTags();
+		}
+	}
+
+	private async void  NextPage(int i)
+	{
+		CurrentVisibleContent = await publicTripsService.GetNineTrips( i, 9, (int)OrderChosen,SearchedName,SearchBarOption);
+		_selected = i ;
+		StateHasChanged();
+	}
+
+	// private Task OpenDeleteTripDialogAsync(Trip trip)
+	// {
+	// 	var parameters = new DialogParameters<DeleteTripDialog>
+	// 	{
+	// 		{ x => x.tripToDelete, trip.TripId },
+	// 		{ x => x.tripName,trip.Name }
+	// 	};
+
+	// 	var options = new DialogOptions { CloseOnEscapeKey = true };
+
+	// 	return DialogService.ShowAsync<DeleteTripDialog>("Delete trip",parameters, options);
+	// }
+
+	private async void SearchTripsByCondition(SearchOptions filter)
+	{
+		if(TotalTrips ==0)
+			return;
+
+		if (filter == SearchOptions.NameSearch && OrderChosen!= SearchOptions.NameSearch)
+		{
+			if (SearchedName.Trim() == "")
+				return;
+		}
+
+		if(filter != SearchOptions.NameSearch )
+		{
+			SearchedName = "";
+		}
+
+		OrderChosen = filter;
+		CurrentVisibleContent = await publicTripsService.GetNineTrips( _selected, 9, (int)OrderChosen, SearchedName.Trim(), SearchBarOption);
+
+		pages = (int)Math.Ceiling((double)TotalTrips / 9);
+		StateHasChanged();
+	}
+
+
+	private async void SearchTripsByCondition(SearchOptions filter, string tagName)
+	{
+		if (TotalTrips == 0)
+			return;
+
+		OrderChosen = filter;
+		CurrentVisibleContent = await publicTripsService.GetNineTrips( _selected, 9, (int)OrderChosen, tagName, SearchBarOption);
+
+		pages = (int)Math.Ceiling((double)TotalTrips / 9);
+		SearchedName = tagName;
+		StateHasChanged();
+	}
+
+	private async void GetAllTripTags()
+	{
+		var tags = await tagService.GetAllTags(); 
+		if(tags != null)
+		{
+			Tags = tags;
+			StateHasChanged();
+		}
+	}
+
+}

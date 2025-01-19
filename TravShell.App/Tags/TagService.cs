@@ -37,10 +37,10 @@ public class TagService : ITagService
 	//    throw new NotImplementedException();
 	//}
 
-	//public async Task<List<Tag>> GetAllTags()
-	//{
-	//    throw new NotImplementedException();
-	//}
+	public async Task<List<Tag>> GetAllTags()
+	{
+		return await _tagsRepository.GetAllTags();
+	}
 
 	public async Task<List<Tag>> GetAllUserTripTags(int userId)
     {

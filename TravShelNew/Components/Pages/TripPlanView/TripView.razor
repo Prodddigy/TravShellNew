@@ -212,11 +212,18 @@ else
 
         if (authState.User.Identity.IsAuthenticated)
         {
+            currentTrip = await tripsService.FindTripById(TripId);
+
+            if(currentTrip ==null)
+            {
+                TripExists = false;
+                return;
+            }
             int userIdCheck = Int32.Parse(authState.User.Identity.Name);
-            if(userIdCheck == UserId)
+            if(userIdCheck == currentTrip.User.UserId)
             {
                 IsAuth = true;
-                currentTrip = await tripsService.FindTripById(TripId);
+              
 
                 pipeline = new MarkdownPipelineBuilder()
                  .UseAdvancedExtensions() 

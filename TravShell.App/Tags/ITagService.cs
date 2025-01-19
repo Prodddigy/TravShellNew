@@ -18,7 +18,7 @@ public interface ITagService
 
     Task<List<Tag>> GetTripTags(int tripId);
 
-    //Task<List<Tag>> GetAllTags();
+    Task<List<Tag>> GetAllTags();
 
     Task<List<Tag>> GetAllUserTripTags(int userId);
 

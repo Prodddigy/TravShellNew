@@ -1,0 +1,454 @@
+﻿@page "/public-trips/{UserId:int}/{TripId:int}"
+
+@rendermode InteractiveServer
+
+@attribute [Authorize]
+
+@inject DataContext dataContext
+@inject AuthenticationStateProvider ASP
+@inject NavigationManager navi
+
+@inject ISnackbar Snackbar
+
+@using TravShell.App.Attractions
+@using TravShell.App.Tags
+@using TravShell.App.Trips
+@using TravShell.Core.Entities
+@using Markdig
+
+@if(IsAuth)
+{
+    @*<h3>User id: @UserId and Trip id: @TripId</h3>*@
+
+    if(TripExists)
+    {
+        <MudText Style="@($"color:{Colors.Purple.Darken4};")" Typo="Typo.h3"> Trip name: @TripName</MudText>  
+   
+        <MudContainer style=" margin: auto;  width: 60vw; min-width:400px; padding: 10px;">
+<MudGrid>
+    <MudItem>
+        @if(isPublic)
+        {
+            <MudText>Unpublish</MudText>
+                        <MudIconButton OnClick="()=>ChangeVisbility(false)" Icon="@Icons.Material.Filled.PublicOff" Color="Color.Error" Size="Size.Large" />
+        }
+        else
+        {
+            <MudText>Publish</MudText>
+                        <MudIconButton OnClick="()=>ChangeVisbility(true)" Icon="@Icons.Material.Filled.Public" Color="Color.Tertiary" Size="Size.Large" />
+        }
+    </MudItem>
+        <MudItem xs="7" > 
+<MudCarousel Class="mud-width-full" @ref="_carousel" ItemsSource="@_source" Style="height:250px;" ShowArrows="true" ShowBullets="false" EnableSwipeGesture="false" AutoCycle="false" @bind-SelectedIndex="staticIndex">
+    <ItemTemplate>
+                    <div class="horizontal-scroll" style="height:100%; padding: 33px;">
+    <MudText Typo="Typo.h4" Style="@($"color:{Colors.Purple.Darken3};")"> @context.First().StartDate.ToShortDateString() Day @(selectedIndex + 1) / @TripDays</MudText>
+        @foreach (var attraction in @context)
+        {
+            <h1>@(context.IndexOf(attraction)+1)</h1>
+          
+            <p> @attraction.Name</p>
+            <p>Opening at: @attraction.Opening_Hours</p>
+            <p>Address: @attraction.Vicinity</p>
+            <p>Rating: @attraction.Rating</p>
+            <p>Type: @attraction.Type</p>
+            <p>------------------------</p>
+        }
+        </div>
+
+    </ItemTemplate>
+    
+    <PreviousButtonTemplate>
+        <div @onclick="GoLeft" Class="mud-button-root mud-icon-button mud-icon-button-color-inherit mud-ripple mud-ripple-icon">
+            <span class="mud-icon-button-label">
+                <MudIcon  Class="mud-ripple mud-ripple-icon mud-icon-button-size-medium" Icon="@Icons.Material.Filled.SkipPrevious" Color="@Color.Inherit" />
+            </span>
+        </div>
+    </PreviousButtonTemplate>
+    <NextButtonTemplate>
+        <div @onclick="GoRight" Class="mud-button-root mud-icon-button mud-icon-button-color-inherit mud-ripple mud-ripple-icon">
+            <span class="mud-icon-button-label">
+                <MudIcon  Class="mud-ripple mud-ripple-icon mud-icon-button-size-medium" Icon="@Icons.Material.Filled.SkipNext" Color="@Color.Inherit" />
+            </span>
+        </div>
+    </NextButtonTemplate>
+
+</MudCarousel>
+</MudItem>
+
+
+<MudItem  xs="3">
+    <MudPaper Outlined Class="border-dashed" Height="250px" >
+        <MudText Align="Align.Center">Tags</MudText>
+        <div style="height:200px; display: flex; flex-direction:column; overflow-y: auto; white-space: nowrap; gap: 8px; padding: 8px;">
+        @foreach(var t in Tags)
+        {
+    <MudButton OnClick="()=>RemoveTag(t)"  EndIcon="@Icons.Material.Filled.Delete" Variant="Variant.Filled" Style="flex-shrink: 0; padding: 10px 20px;"><b>#@t.Name</b></MudButton>
+        }
+        </div>
+    </MudPaper>
+
+
+</MudItem>
+
+</MudGrid>
+
+<MudGrid>
+
+    <MudItem xs="7" > 
+<GoogleMap @ref="googleMapRef"
+           ApiKey="@TravShell.App.GoogleAPI.GoogleService.apiKey"
+           Center="@center"
+           Height="280"
+           Width="100"
+           Zoom="12"
+           Markers="markers" 
+        Clickable="true"/>
+    </MudItem>
+
+           <MudItem xs="5" >
+              
+                    <MudExpansionPanels>
+                        <MudExpansionPanel Text="New Tag">
+                            <MudTextField T="string" @bind-Value="tagName" MaxLength="10" Label="Tag" Variant="Variant.Outlined" Counter="10" Immediate />
+                            <MudButton  OnClick="SaveAndAddTag" Variant="Variant.Filled" Color="Color.Success">Save</MudButton>
+                        </MudExpansionPanel>
+                       <MudExpansionPanel Text="Edit desc." MaxHeight="1000" >
+                            <MudTextField T="string" @bind-Value="tripDescription" Disabled="@editMode" Immediate="true" Counter="1000" MaxLength="1000" Label="Description" Variant="Variant.Outlined" Lines="5" FullWidth />
+                            <MudToolBar Class="gap-4">
+
+                                <MudSwitch @bind-Value="editMode" Label="edit" Color="Color.Primary" />
+                                <MudButton OnClick="SaveDescription" Disabled="@editMode" hidden="@editMode" Variant="Variant.Filled" Color="Color.Success">Save </MudButton>
+                            </MudToolBar>
+                   
+                        </MudExpansionPanel>
+                    </MudExpansionPanels>
+
+                  <MudPaper>
+	                <MudText Style="max-height: 10em; overflow-y: auto;">
+                            @(tripDescriptionMarkUp)
+
+                    </MudText>
+                    </MudPaper>
+
+           </MudItem>
+
+     
+            </MudGrid>
+            
+        </MudContainer>
+    }
+    else
+    {
+        <h1>Trip @TripId does not exist</h1>
+    }
+}
+else
+{
+    <h1>Not Authorized</h1>
+}
+
+@code {
+
+    [Inject]
+    public required IAttractionService attractionsService { get; set; }
+
+    [Inject]
+    public required ITripService tripsService { get; set; }
+
+    [Inject]
+    public required ITagService tagsService { get; set; }
+
+    [Parameter]
+    public int UserId { get; set; }
+    [Parameter]
+    public int TripId { get; set; }
+
+    public List<Attraction> Attractions { get; set; } = default;
+
+    public Dictionary<DateTime, List<Attraction>> AttractionMap { get; set; } = new();
+
+    public int TripDays { get; set; }
+
+    GoogleMap googleMapRef = default!;
+
+    public GoogleMapCenter center /*= new GoogleMapCenter(37.50024109655184, -122.28528451834352)*/;
+    public List<GoogleMapMarker> markers = new();
+
+    public List<List<GoogleMapMarker>> AllMarkers = new();
+
+    public Trip currentTrip { get; set; }
+    public string TripName { get; set; } = "Loading...";
+
+    private MudCarousel<List<Attraction>> _carousel;
+    private IList<List<Attraction>> _source = new List<List<Attraction>>();
+
+    private int staticIndex = 0;
+
+    private int selectedIndex = 0;
+
+    private bool IsAuth = false;
+
+    private bool TripExists = true;
+
+    private bool editMode = true;
+
+    private string tripDescription = "";
+
+    private MarkupString? tripDescriptionMarkUp = (MarkupString)"";
+
+    MarkdownPipeline pipeline = default;
+
+    private bool isPublic = false;
+
+    private string tagName="";
+
+    private List<Tag> Tags = new List<Tag>(); 
+
+
+    protected async override Task OnInitializedAsync()//zmniejszyć to!!!
+    {
+        var authState = await ASP.GetAuthenticationStateAsync();
+
+        if (authState.User.Identity.IsAuthenticated)
+        {
+            int userIdCheck = Int32.Parse(authState.User.Identity.Name);
+            if(userIdCheck == UserId)
+            {
+                IsAuth = true;
+                currentTrip = await tripsService.FindTripById(TripId);
+
+                pipeline = new MarkdownPipelineBuilder()
+                 .UseAdvancedExtensions() 
+                    .UseEmojiAndSmiley()
+                   .Build();
+
+                if(currentTrip.Description !=null)
+                {
+                    tripDescription = currentTrip.Description;
+                    isPublic = currentTrip.IsPublic;
+                    tripDescriptionMarkUp =(MarkupString) Markdig.Markdown.ToHtml(tripDescription, pipeline);
+                    StateHasChanged();
+                }
+
+                if(currentTrip == null)
+                {
+                    TripExists = false;
+                    return;
+                }
+
+                TripName = currentTrip.Name;
+                int numOfAtt = await attractionsService.CountTripAttractions(TripId);
+                if (numOfAtt != 0)
+                {
+                    Attractions = await attractionsService.GetTripAttractionsOrderByStartDate(TripId);
+
+                    DateTime tmp = Attractions.First().StartDate;
+
+                    List<Attraction> tmpList = new();
+                    foreach(var a in Attractions)
+                    {
+                        if (a.StartDate == tmp )
+                        {
+                            tmpList.Add(a);
+                        }
+                        else
+                        {
+                            AttractionMap.Add(tmp, tmpList);
+
+                            tmp=a.StartDate;
+
+                            tmpList = new();
+
+                            tmpList.Add(a);
+
+                            if(Attractions.Last()==a)
+                            {
+                                AttractionMap.Add(tmp, tmpList);
+                                break;
+                            }
+                        }
+                        if (Attractions.Last() == a)
+                        {
+                            AttractionMap.Add(tmp, tmpList);
+                        }
+                    }
+
+                    foreach (var a in AttractionMap)
+                    {
+                        _source.Add(a.Value.OrderBy(x=>x.step).ToList());
+                    }
+
+                    int i = 1;
+                    foreach(var a in AttractionMap)
+                    {
+                        i = 1;
+
+                        var newMarkers = new List<GoogleMapMarker>();
+
+                        foreach(var aa in a.Value.OrderBy(x=>x.step).ToList())
+                        {
+                            newMarkers.Add(new GoogleMapMarker()
+                        {
+                            Position = new GoogleMapMarkerPosition(aa.latitude, aa.longitude),
+
+                            PinElement = new PinElement
+                            {
+                                Glyph = (i++) + "",
+                                GlyphColor = "white",
+                                Background = "Purple",
+                                BorderColor="Black"
+
+                            },
+
+                            Title = aa.Website != "Website is not available." ? $" <a target = '_blank' jstcache = '6' href = '{aa.Website}' tabindex = '0'> <span> Check the website!</span> </a> " : "<h1> No Website available </h1>",
+                        });
+                        }
+                        AllMarkers.Add(newMarkers);
+
+                    }
+                    markers = AllMarkers[0];
+                }
+
+                var trip = await tripsService.FindTripById(TripId);
+
+                if(trip != null)
+                {
+                    TripDays = trip.Days;
+                    center = new GoogleMapCenter(trip.latitude, trip.longitude);
+                }
+                GetAllTripTags();
+
+
+
+                StateHasChanged();
+                await Task.Delay(3);
+                await googleMapRef.RefreshAsync();
+            }
+        }
+    }
+
+    private bool editDescription()
+    {
+        editMode=false;
+        StateHasChanged();
+
+        return editMode;
+    }
+
+    private async void SaveDescription()
+    {
+        await tripsService.EditTripDescription(tripDescription.ToString(), TripId);
+        editMode = true;
+
+        UpdateHTMLAsync();
+        StateHasChanged();
+
+        Snackbar.Add($"Description has been saved!", Severity.Success);
+    }
+
+    private async void RefreshMap()
+    {
+        await googleMapRef.RefreshAsync();
+        await googleMapRef.UpdateMarkersAsync(markers);
+    }
+
+    private async Task GoLeft()
+    {
+        selectedIndex--;
+        if(selectedIndex<0)
+        {
+            markers = AllMarkers.Last();
+            selectedIndex = TripDays - 1;
+        }
+        else
+        {
+            markers = AllMarkers[selectedIndex];
+        }
+
+        await googleMapRef.UpdateMarkersAsync(markers);
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task GoRight()
+    {
+        selectedIndex++;
+        if (selectedIndex >= TripDays)
+        {
+            selectedIndex = 0;
+
+            markers = AllMarkers.First();
+        }
+        else
+        {
+            markers = AllMarkers[selectedIndex];
+        }
+        await googleMapRef.UpdateMarkersAsync(markers);
+        await InvokeAsync(StateHasChanged);
+    }
+
+
+    protected void UpdateHTMLAsync()
+    {
+        if (currentTrip.Description != null)
+        {
+            tripDescriptionMarkUp = (MarkupString)Markdig.Markdown.ToHtml(currentTrip.Description, pipeline);
+        }
+    }
+
+    private async void ChangeVisbility(bool isPublic)
+    {
+        await tripsService.ChangeTripVisibility(isPublic, TripId);
+        StateHasChanged();
+        navi.Refresh(true);
+    }
+
+    private async void SaveAndAddTag()
+    {
+        if (tagName.Trim() == "") return;
+        var t = await tagsService.CreateTag(UserId, tagName);
+
+        if(t != null)
+        {
+            await tagsService.AttachTagToTrip(TripId, t);
+
+            tagName="";
+            GetAllTripTags();
+        }
+    }
+
+    private async void GetAllTripTags()
+    {
+        var tags =  await tagsService.GetTripTags(TripId);
+        if(tags != null)
+        {
+            Tags = tags;
+            StateHasChanged();
+        }
+    }
+
+    private async void RemoveTag(Tag t)
+    {
+        if(t !=null)
+        {
+            await tagsService.RemoveTagFromTrip(TripId, t);
+            GetAllTripTags();
+        }
+    }
+
+}
+<style>
+    .horizontal-scroll {
+        white-space: nowrap;
+        overflow-x: auto; 
+        width: 100%; 
+        border: 1px solid #ccc; 
+        padding: 10px; 
+        position: relative;
+        height:80vh; 
+    }
+    .horizontal-scroll span {
+        display: inline-block;
+        top:0px;
+    }
+</style>
