@@ -12,7 +12,9 @@ public interface IPublicTripsRepository
 
 	public Task<List<Trip>> GetNineTrips(int page, int trips, int orderBy, string name, int searchOption);
 
-	//public Task<List<Tag>> GetAllTripTags();
+    //public Task<List<Tag>> GetAllTripTags();
+
+    public Task<Trip> CopyTripToUserTrips(int trip, int userId,int newOwnerId, DateTime? newStartDate);
 
 }
 

@@ -1,0 +1,103 @@
+﻿@using TravShell.App.PublicTrips
+
+@inject ISnackbar Snackbar
+
+@inject NavigationManager navigationManager
+
+<MudDialog>
+    <TitleContent>
+        Copy 
+    </TitleContent>
+    <DialogContent>
+        Do you want to add @tripName trip to your list?<br/>
+        Choose starting date and system will generate next dates.
+        <MudForm>
+            <MudDatePicker @bind-Date="startDate" OnClick="unVerify" Adornment="Adornment.None" PickerVariant="PickerVariant.Dialog" Required Label="Start date" />
+            <MudButton OnClick="verifyDate">Verify</MudButton>
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">No</MudButton>
+        <MudButton Disabled = "notVerified" Color="Color.Primary" OnClick="Submit">Yes</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+
+    // [Inject]
+    // public required I
+
+
+    [Inject]
+    public required IPublicTripService publicTripsService { get; set; }
+
+    [CascadingParameter]
+    private MudDialogInstance MudDialog { get; set; }
+
+    [Parameter]
+    public int tripToCopy { get; set; }
+
+    [Parameter]
+    public string tripName { get; set; }
+
+    [Parameter]
+    public int ownerId { get; set; }
+
+    [Parameter]
+    public int newOwnerId { get; set; }
+
+    [Parameter]
+    public int days { get; set; }
+
+    public DateTime? startDate { get; set; } = null;
+
+    public bool notVerified { get; set; } = true;
+    private async void Submit()
+    {
+        if(startDate != null)
+        {
+
+
+            var result = await publicTripsService.CopyTripToUserTrips(tripToCopy, ownerId, newOwnerId, startDate);
+            if(result ==null)
+            {
+                MudDialog.Close(DialogResult.Ok(true));
+                Snackbar.Add($"Something went wrong or the trip is no longer available.", Severity.Error);
+                return;
+            }
+
+            // navigationManager.Refresh(true);
+            MudDialog.Close(DialogResult.Ok(true));
+            Snackbar.Add($"{tripName} has been added to your trips.", Severity.Success);
+            // trip.User.UserId
+
+        }
+    }
+
+    private void verifyDate()
+    {
+        if(startDate == null)
+        {
+            return;
+        }
+
+        if(startDate.Value.Date>=DateTime.Now.Date)
+        {
+            notVerified = false;
+
+        }
+        else
+        {
+            Snackbar.Add($"Your trip can not be in past...", Severity.Error);
+        }
+    }
+
+    private void unVerify()
+    {
+        notVerified = true;
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+       
+
+}

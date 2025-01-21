@@ -20,7 +20,75 @@ public class PublicTripsRepository : IPublicTripsRepository
 		_dbContext = dbContext;
 	}
 
-	public async Task<int> CountAllTrips()
+    public async Task<Trip> CopyTripToUserTrips(int trip, int userId,int newOwnerId, DateTime? newStartDate)
+    {
+		var tripCheck = await _dbContext.Trips.Where(x => x.IsPublic == true && x.User.UserId == userId)
+						.Include(x=> x.Attractions).FirstOrDefaultAsync();
+
+		var newUser = await _dbContext.Users.Where(x => x.UserId == newOwnerId).FirstOrDefaultAsync();
+		if (tripCheck != null && newUser != null)
+		{
+			
+			Trip t = new Trip
+			{
+				City = tripCheck.City,
+				Days = tripCheck.Days,
+				Description = tripCheck.Description,
+				IsPublic = false,
+				latitude = tripCheck.latitude,
+				longitude = tripCheck.longitude,
+				ShortDescription = tripCheck.ShortDescription,
+				Name = tripCheck.Name,
+				User = newUser,
+				Firstdate = newStartDate.Value,
+				Lastdate =  newStartDate.Value.AddDays(tripCheck.Days -1),
+			};
+
+			await _dbContext.Trips.AddAsync(t);
+			//await _dbContext.SaveChangesAsync();	
+			List<Attraction> newAtts = new List<Attraction>();
+			DateTime tmpDate = tripCheck.Attractions.OrderBy(x => x.StartDate).First().StartDate;
+			DateTime newDateToSet = newStartDate.Value;
+
+
+            foreach (var att in  tripCheck.Attractions.OrderBy(x=>x.StartDate).ToList())
+			{
+				if(att.StartDate != tmpDate)
+				{
+					newDateToSet = newDateToSet.AddDays(1);
+				tmpDate = 	tmpDate.AddDays(1);
+				}
+
+				newAtts.Add(new Attraction
+				{
+					PlaceCode = att.PlaceCode,
+					Name = att.Name,
+					Vicinity = att.Vicinity,
+					Rating = att.Rating,
+					Opening_Hours = att.Opening_Hours,
+					Website = att.Website,
+					Type = att.Type,
+					StartDate = newDateToSet,
+					step = att.step,
+					latitude = att.latitude,
+					longitude = att.longitude,
+					Trip = t
+				});
+			}
+			await _dbContext.Attractions.AddRangeAsync(newAtts);
+
+			await _dbContext.SaveChangesAsync();
+
+			return t;
+
+		}
+
+
+		return null;
+
+    }
+
+    public async Task<int> CountAllTrips()
 	{
 		return await _dbContext.Trips.Where(x => x.IsPublic == true).CountAsync();
 	}

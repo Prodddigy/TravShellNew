@@ -100,7 +100,7 @@
 					</MudPaper>
 					@if(i.User.UserId != UserId)
 					{
-					<MudButton  Variant="Variant.Filled" Style="object-position: bottom; " Color="Color.Warning">Add</MudButton>
+					<MudButton OnClick="()=>OpenCopyTripDialogAsync(i)" Variant="Variant.Filled" Style="object-position: bottom; " Color="Color.Warning">Add</MudButton>
 					}
 				</MudItem>
 			}
@@ -217,18 +217,21 @@ await publicTripsService.GetNineTrips( 1, 9, (int)OrderChosen, "", SearchBarOpti
 		StateHasChanged();
 	}
 
-	// private Task OpenDeleteTripDialogAsync(Trip trip)
-	// {
-	// 	var parameters = new DialogParameters<DeleteTripDialog>
-	// 	{
-	// 		{ x => x.tripToDelete, trip.TripId },
-	// 		{ x => x.tripName,trip.Name }
-	// 	};
+	private Task OpenCopyTripDialogAsync(Trip trip)
+	{
+		var parameters = new DialogParameters<CopyTripDialog>
+		{
+			{ x => x.tripToCopy, trip.TripId },
+			{ x => x.tripName,trip.Name },
+			{ x => x.newOwnerId, UserId },
+			{ x => x.ownerId, trip.User.UserId },
+			{ x => x.days , trip.Days}
+		};
 
-	// 	var options = new DialogOptions { CloseOnEscapeKey = true };
+		var options = new DialogOptions { CloseOnEscapeKey = true };
 
-	// 	return DialogService.ShowAsync<DeleteTripDialog>("Delete trip",parameters, options);
-	// }
+		return DialogService.ShowAsync<CopyTripDialog>("Add this trip",parameters, options);
+	}
 
 	private async void SearchTripsByCondition(SearchOptions filter)
 	{

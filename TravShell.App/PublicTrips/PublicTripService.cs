@@ -17,12 +17,17 @@ public class PublicTripService : IPublicTripService
 		_publicTripsRepository = publicTripsRepository;
 	}
 
-	//public Task<Trip> CopyTripToUserTrips(Trip trip, int userId)
-	//{
-	//	throw new NotImplementedException();
-	//}
+    public async Task<Trip> CopyTripToUserTrips(int trip, int userId,int newOwnerId, DateTime? newStartDate)
+    {
+       return await _publicTripsRepository.CopyTripToUserTrips(trip, userId, newOwnerId, newStartDate);	
+    }
 
-	public async Task<int> CountAllTrips()
+    //public Task<Trip> CopyTripToUserTrips(Trip trip, int userId)
+    //{
+    //	throw new NotImplementedException();
+    //}
+
+    public async Task<int> CountAllTrips()
 	{
 		return await _publicTripsRepository.CountAllTrips();
 	}

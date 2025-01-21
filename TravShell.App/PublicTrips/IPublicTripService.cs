@@ -15,7 +15,7 @@ public interface IPublicTripService
 
 	//public Task<Trip> FindTripById(int tripId);
 
-	//public Task<Trip> CopyTripToUserTrips(Trip trip, int userId);
+	public Task<Trip> CopyTripToUserTrips(int tripId, int userId,int newOwnerId, DateTime? newStartDate);
 
 	//public Task<List<Tag>> GetAllTripTags();
 }
