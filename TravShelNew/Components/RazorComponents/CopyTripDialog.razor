@@ -67,6 +67,8 @@
             }
 
             // navigationManager.Refresh(true);
+
+            Console.WriteLine(result.Name + "  trip added");
             MudDialog.Close(DialogResult.Ok(true));
             Snackbar.Add($"{tripName} has been added to your trips.", Severity.Success);
             // trip.User.UserId

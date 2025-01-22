@@ -32,7 +32,19 @@ else
 						<MudTextField Label="Password" InputType="InputType.Password" Class="mt-3" @bind-Value="Model.Password" For="@(()=>Model.Password)" />
 					</MudCardContent>
 					<MudCardActions>
-						<MudButton ButtonType="MudBlazor.ButtonType.Submit" Disabled="IsLogging" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto"> Login </MudButton>
+						<MudButton ButtonType="MudBlazor.ButtonType.Submit" Disabled="IsLogging" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">
+						@if(IsLogging)
+							{
+								<MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+							}
+							else
+							{
+								<MudText>Login </MudText>
+							}
+
+							
+							
+						</MudButton>
 					</MudCardActions>
 				</MudCard>
 			</MudItem>

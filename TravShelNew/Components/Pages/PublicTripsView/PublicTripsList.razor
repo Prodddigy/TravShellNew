@@ -181,9 +181,9 @@
 
 	private int numOfUniqueTags = 0;
 
-	private void EnterTrip(int TripId) // CHANGE!!!!
+	private void EnterTrip(int TripId) 
 	{
-		string a = $"/trips/{UserId}/{TripId}";
+		string a = $"/public-trips/{UserId}/{TripId}";
 		navigationManager.NavigateTo(a);
 	}
 
@@ -200,9 +200,7 @@
 		Console.WriteLine("how many trips?: "+TotalTrips);
 		if (TotalTrips != 0)
 		{
-			CurrentVisibleContent =   //dataContext.Trips.OrderBy(x=>x.TripId).Skip(0).Take(9).ToList();
-
-await publicTripsService.GetNineTrips( 1, 9, (int)OrderChosen, "", SearchBarOption);
+			CurrentVisibleContent =  await publicTripsService.GetNineTrips( 1, 9, (int)OrderChosen, "", SearchBarOption);
 
 			pages = (int)Math.Ceiling((double)TotalTrips / 9);
 

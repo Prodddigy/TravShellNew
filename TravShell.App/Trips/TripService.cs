@@ -69,5 +69,10 @@ public class TripService : ITripService
     {
 		await _tripsRepository.ChangeTripVisibility(isPublic, tripId);
     }
+
+    public async Task<Trip> FindPublicTripById(int tripId)
+    {
+       return await _tripsRepository.FindPublicTripById(tripId);
+    }
 }
 

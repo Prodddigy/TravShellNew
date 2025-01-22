@@ -22,7 +22,7 @@ public class PublicTripsRepository : IPublicTripsRepository
 
     public async Task<Trip> CopyTripToUserTrips(int trip, int userId,int newOwnerId, DateTime? newStartDate)
     {
-		var tripCheck = await _dbContext.Trips.Where(x => x.IsPublic == true && x.User.UserId == userId)
+		var tripCheck = await _dbContext.Trips.Where(x => x.IsPublic == true && x.User.UserId == userId && x.TripId == trip)
 						.Include(x=> x.Attractions).FirstOrDefaultAsync();
 
 		var newUser = await _dbContext.Users.Where(x => x.UserId == newOwnerId).FirstOrDefaultAsync();

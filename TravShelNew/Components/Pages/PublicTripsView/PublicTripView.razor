@@ -27,16 +27,7 @@
         <MudContainer style=" margin: auto;  width: 60vw; min-width:400px; padding: 10px;">
 <MudGrid>
     <MudItem>
-        @if(isPublic)
-        {
-            <MudText>Unpublish</MudText>
-                        <MudIconButton OnClick="()=>ChangeVisbility(false)" Icon="@Icons.Material.Filled.PublicOff" Color="Color.Error" Size="Size.Large" />
-        }
-        else
-        {
-            <MudText>Publish</MudText>
-                        <MudIconButton OnClick="()=>ChangeVisbility(true)" Icon="@Icons.Material.Filled.Public" Color="Color.Tertiary" Size="Size.Large" />
-        }
+      
     </MudItem>
         <MudItem xs="7" > 
 <MudCarousel Class="mud-width-full" @ref="_carousel" ItemsSource="@_source" Style="height:250px;" ShowArrows="true" ShowBullets="false" EnableSwipeGesture="false" AutoCycle="false" @bind-SelectedIndex="staticIndex">
@@ -83,7 +74,7 @@
         <div style="height:200px; display: flex; flex-direction:column; overflow-y: auto; white-space: nowrap; gap: 8px; padding: 8px;">
         @foreach(var t in Tags)
         {
-    <MudButton OnClick="()=>RemoveTag(t)"  EndIcon="@Icons.Material.Filled.Delete" Variant="Variant.Filled" Style="flex-shrink: 0; padding: 10px 20px;"><b>#@t.Name</b></MudButton>
+    <MudButton Variant="Variant.Filled" Style="flex-shrink: 0; padding: 10px 20px;"><b>#@t.Name</b></MudButton>
         }
         </div>
     </MudPaper>
@@ -107,7 +98,7 @@
     </MudItem>
 
            <MudItem xs="5" >
-              
+              @*
                     <MudExpansionPanels>
                         <MudExpansionPanel Text="New Tag">
                             <MudTextField T="string" @bind-Value="tagName" MaxLength="10" Label="Tag" Variant="Variant.Outlined" Counter="10" Immediate />
@@ -123,6 +114,7 @@
                    
                         </MudExpansionPanel>
                     </MudExpansionPanels>
+            *@
 
                   <MudPaper>
 	                <MudText Style="max-height: 10em; overflow-y: auto;">
@@ -140,7 +132,7 @@
     }
     else
     {
-        <h1>Trip @TripId does not exist</h1>
+        <h1>Trip @TripId does not exist, or is not public.</h1>
     }
 }
 else
@@ -212,16 +204,20 @@ else
 
         if (authState.User.Identity.IsAuthenticated)
         {
-            int userIdCheck = Int32.Parse(authState.User.Identity.Name);
-            if(userIdCheck == UserId)
-            {
+            
                 IsAuth = true;
-                currentTrip = await tripsService.FindTripById(TripId);
+                currentTrip = await tripsService.FindPublicTripById(TripId);
 
                 pipeline = new MarkdownPipelineBuilder()
                  .UseAdvancedExtensions() 
                     .UseEmojiAndSmiley()
                    .Build();
+
+                if (currentTrip == null)
+                {
+                    TripExists = false;
+                    return;
+                }
 
                 if(currentTrip.Description !=null)
                 {
@@ -231,11 +227,7 @@ else
                     StateHasChanged();
                 }
 
-                if(currentTrip == null)
-                {
-                    TripExists = false;
-                    return;
-                }
+               
 
                 TripName = currentTrip.Name;
                 int numOfAtt = await attractionsService.CountTripAttractions(TripId);
@@ -324,7 +316,7 @@ else
                 StateHasChanged();
                 await Task.Delay(3);
                 await googleMapRef.RefreshAsync();
-            }
+            
         }
     }
 

@@ -177,4 +177,8 @@ namespace TravShell.Infrastructure.Repositories;
 
 	}
 
+    public async Task<Trip> FindPublicTripById(int tripId)
+    {
+        return await _dbContext.Trips.Include(x => x.User).Where(x => x.TripId == tripId && x.IsPublic ==true).FirstOrDefaultAsync();
+    }
 }
