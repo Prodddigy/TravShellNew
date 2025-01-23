@@ -24,13 +24,28 @@
     {
         <MudText Style="@($"color:{Colors.Purple.Darken4};")" Typo="Typo.h3"> Trip name: @TripName</MudText>  
    
-        <MudContainer style=" margin: auto;  width: 60vw; min-width:400px; padding: 10px;">
+        <MudContainer style=" margin: auto;  width: 80vw; min-width:400px; padding: 10px;">
 <MudGrid>
-    <MudItem>
+    <MudItem >
+        <MudExpansionPanels  Style="width:200px;">
+                       
+                       <MudExpansionPanel Text="Write Review" MaxHeight="1000" >
+                            <MudTextField T="string" @bind-Value="tripDescription" Disabled="@editMode" Immediate="true" Counter="50" MaxLength="50" Label="Description" Variant="Variant.Outlined" Lines="5" FullWidth />
+                            <MudRating SelectedValue="1" FullIcon="@Icons.Material.Filled.Favorite" EmptyIcon="@Icons.Material.Filled.FavoriteBorder" Color="Color.Secondary" />
+                            <MudToolBar Class="gap-4">
+
+                                <MudSwitch @bind-Value="editMode" Label="Write review" Color="Color.Primary" />
+                                <MudButton  Disabled="@editMode" hidden="@editMode" Variant="Variant.Filled" Color="Color.Success">Save </MudButton>
+                            </MudToolBar>
+                   
+                        </MudExpansionPanel>
+                    </MudExpansionPanels>
+
+                 
       
     </MudItem>
-        <MudItem xs="7" > 
-<MudCarousel Class="mud-width-full" @ref="_carousel" ItemsSource="@_source" Style="height:250px;" ShowArrows="true" ShowBullets="false" EnableSwipeGesture="false" AutoCycle="false" @bind-SelectedIndex="staticIndex">
+        <MudItem > 
+<MudCarousel Class="mud-width-full" @ref="_carousel" ItemsSource="@_source" Style="height:250px; width:450px" ShowArrows="true" ShowBullets="false" EnableSwipeGesture="false" AutoCycle="false" @bind-SelectedIndex="staticIndex">
     <ItemTemplate>
                     <div class="horizontal-scroll" style="height:100%; padding: 33px;">
     <MudText Typo="Typo.h4" Style="@($"color:{Colors.Purple.Darken3};")"> @context.First().StartDate.ToShortDateString() Day @(selectedIndex + 1) / @TripDays</MudText>
@@ -68,8 +83,8 @@
 </MudItem>
 
 
-<MudItem  xs="3">
-    <MudPaper Outlined Class="border-dashed" Height="250px" >
+<MudItem  >
+        <MudPaper Outlined Class="border-dashed" Height="250px" Style="width:200px;" >
         <MudText Align="Align.Center">Tags</MudText>
         <div style="height:200px; display: flex; flex-direction:column; overflow-y: auto; white-space: nowrap; gap: 8px; padding: 8px;">
         @foreach(var t in Tags)
@@ -85,8 +100,20 @@
 </MudGrid>
 
 <MudGrid>
+    <MudItem>
+                    <MudPaper Outlined Class="border-dashed" Height="250px" Style="width:200px;">
+                        <MudText Align="Align.Center">Reviews</MudText>
+                        <div style="height:200px; display: flex; flex-direction:column; overflow-y: auto; white-space: nowrap; gap: 8px; padding: 8px;">
+                            @foreach (var t in Tags)
+                            {
+                                <MudButton Variant="Variant.Filled" Style="flex-shrink: 0; padding: 10px 20px;"><b>#@t.Name</b></MudButton>
+                            }
+                        </div>
+                    </MudPaper>
 
-    <MudItem xs="7" > 
+    </MudItem>
+    <MudItem xs="7" >
+     
 <GoogleMap @ref="googleMapRef"
            ApiKey="@TravShell.App.GoogleAPI.GoogleService.apiKey"
            Center="@center"
@@ -116,11 +143,22 @@
                     </MudExpansionPanels>
             *@
 
-                  <MudPaper>
-	                <MudText Style="max-height: 10em; overflow-y: auto;">
+                  <MudPaper >
+                      <MudText Typo="Typo.h4" GutterBottom>Description</MudText>
+                        @if ((tripDescriptionMarkUp.Value.ToString()).Trim() == "")
+                     {
+                            <MudText Label="Description" a Style="max-height: 10em; overflow-y: auto;">
+                                No description. :(
+
+                            </MudText>
+                     }
+                     else
+                     {
+	                <MudText Label="Description" Style="max-height: 10em; overflow-y: auto;">
                             @(tripDescriptionMarkUp)
 
                     </MudText>
+                     }
                     </MudPaper>
 
            </MudItem>

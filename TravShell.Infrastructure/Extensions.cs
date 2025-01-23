@@ -22,8 +22,8 @@ public static class Extensions
         services.AddScoped<IAttractionsRepository, AttractionsRepository>();
 		services.AddScoped<ITagsRepository, TagsRepository>();
 		services.AddScoped<IPublicTripsRepository, PublicTripsRepository>();
-		//services.AddScoped<IReviewsRepository, ReviewsRepository>();
-        return services;
+		services.AddScoped<IReviewsRepository, ReviewsRepository>();
+		return services;
 	}
 
 }

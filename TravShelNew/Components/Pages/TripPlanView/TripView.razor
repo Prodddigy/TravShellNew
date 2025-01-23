@@ -29,12 +29,12 @@
     <MudItem>
         @if(isPublic)
         {
-            <MudText>Unpublish</MudText>
+            <MudText Style="width:10px;">Unpublish</MudText>
                         <MudIconButton OnClick="()=>ChangeVisbility(false)" Icon="@Icons.Material.Filled.PublicOff" Color="Color.Error" Size="Size.Large" />
         }
         else
         {
-            <MudText>Publish</MudText>
+            <MudText Style="width:10px;">Publish</MudText>
                         <MudIconButton OnClick="()=>ChangeVisbility(true)" Icon="@Icons.Material.Filled.Public" Color="Color.Tertiary" Size="Size.Large" />
         }
     </MudItem>
@@ -125,6 +125,7 @@
                     </MudExpansionPanels>
 
                   <MudPaper>
+                        <MudText Typo="Typo.h5" GutterBottom>Description</MudText>
 	                <MudText Style="max-height: 10em; overflow-y: auto;">
                             @(tripDescriptionMarkUp)
 
@@ -403,11 +404,13 @@ else
         }
     }
 
-    private async void ChangeVisbility(bool isPublic)
+    private async void ChangeVisbility(bool publicModifier)
     {
-        await tripsService.ChangeTripVisibility(isPublic, TripId);
+        await tripsService.ChangeTripVisibility(publicModifier, TripId);
+
+        isPublic = publicModifier;
         StateHasChanged();
-        navi.Refresh(true);
+        // navi.Refresh(true);
     }
 
     private async void SaveAndAddTag()
