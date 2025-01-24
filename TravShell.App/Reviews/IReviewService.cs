@@ -14,7 +14,7 @@ public interface IReviewService
 
     public Task<Review> UpdateReview(int userId, int tripId, string content, int rating);
 
-    public Task<List<Review>> GetFourTripReviews(int tripId,int take);
+    public Task<List<Review>> GetFourTripReviews(int tripId,int skip);
 
 }
 

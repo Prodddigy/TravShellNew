@@ -11,6 +11,8 @@
 @inject ISnackbar Snackbar
 
 @using TravShell.App.Attractions
+@using TravShell.App.PublicTrips
+@using TravShell.App.Reviews
 @using TravShell.App.Tags
 @using TravShell.App.Trips
 @using TravShell.Core.Entities
@@ -104,9 +106,9 @@
                     <MudPaper Outlined Class="border-dashed" Height="250px" Style="width:200px;">
                         <MudText Align="Align.Center">Reviews</MudText>
                         <div style="height:200px; display: flex; flex-direction:column; overflow-y: auto; white-space: nowrap; gap: 8px; padding: 8px;">
-                            @foreach (var t in Tags)
+                            @foreach (var r in Reviews)
                             {
-                                <MudButton Variant="Variant.Filled" Style="flex-shrink: 0; padding: 10px 20px;"><b>#@t.Name</b></MudButton>
+                                <MudButton Variant="Variant.Filled" Style="flex-shrink: 0; padding: 10px 20px;"><b>review</b></MudButton>
                             }
                         </div>
                     </MudPaper>
@@ -189,6 +191,9 @@ else
     [Inject]
     public required ITagService tagsService { get; set; }
 
+    [Inject]
+    public required IReviewService reviewsService { get; set; }
+
     [Parameter]
     public int UserId { get; set; }
     [Parameter]
@@ -235,6 +240,12 @@ else
 
     private List<Tag> Tags = new List<Tag>(); 
 
+    private List<Review> Reviews = new List<Review>();
+
+    private Review currentUserReview = null;
+
+    private int reviewSkip = 0;
+
 
     protected async override Task OnInitializedAsync()//zmniejszyć to!!!
     {
@@ -242,83 +253,85 @@ else
 
         if (authState.User.Identity.IsAuthenticated)
         {
-            
-                IsAuth = true;
-                currentTrip = await tripsService.FindPublicTripById(TripId);
 
-                pipeline = new MarkdownPipelineBuilder()
-                 .UseAdvancedExtensions() 
-                    .UseEmojiAndSmiley()
-                   .Build();
+            IsAuth = true;
+            currentTrip = await tripsService.FindPublicTripById(TripId);
 
-                if (currentTrip == null)
+            pipeline = new MarkdownPipelineBuilder()
+             .UseAdvancedExtensions() 
+                .UseEmojiAndSmiley()
+               .Build();
+
+            if (currentTrip == null)
+            {
+                TripExists = false;
+                return;
+            }
+
+            if(currentTrip.Description !=null)
+            {
+                tripDescription = currentTrip.Description;
+                isPublic = currentTrip.IsPublic;
+                tripDescriptionMarkUp =(MarkupString) Markdig.Markdown.ToHtml(tripDescription, pipeline);
+                StateHasChanged();
+            }
+
+
+           // GetFourTripReviews(reviewSkip);
+
+
+            TripName = currentTrip.Name;
+            int numOfAtt = await attractionsService.CountTripAttractions(TripId);
+            if (numOfAtt != 0)
+            {
+                Attractions = await attractionsService.GetTripAttractionsOrderByStartDate(TripId);
+
+                DateTime tmp = Attractions.First().StartDate;
+
+                List<Attraction> tmpList = new();
+                foreach(var a in Attractions)
                 {
-                    TripExists = false;
-                    return;
-                }
-
-                if(currentTrip.Description !=null)
-                {
-                    tripDescription = currentTrip.Description;
-                    isPublic = currentTrip.IsPublic;
-                    tripDescriptionMarkUp =(MarkupString) Markdig.Markdown.ToHtml(tripDescription, pipeline);
-                    StateHasChanged();
-                }
-
-               
-
-                TripName = currentTrip.Name;
-                int numOfAtt = await attractionsService.CountTripAttractions(TripId);
-                if (numOfAtt != 0)
-                {
-                    Attractions = await attractionsService.GetTripAttractionsOrderByStartDate(TripId);
-
-                    DateTime tmp = Attractions.First().StartDate;
-
-                    List<Attraction> tmpList = new();
-                    foreach(var a in Attractions)
+                    if (a.StartDate == tmp )
                     {
-                        if (a.StartDate == tmp )
-                        {
-                            tmpList.Add(a);
-                        }
-                        else
+                        tmpList.Add(a);
+                    }
+                    else
+                    {
+                        AttractionMap.Add(tmp, tmpList);
+
+                        tmp=a.StartDate;
+
+                        tmpList = new();
+
+                        tmpList.Add(a);
+
+                        if(Attractions.Last()==a)
                         {
                             AttractionMap.Add(tmp, tmpList);
-
-                            tmp=a.StartDate;
-
-                            tmpList = new();
-
-                            tmpList.Add(a);
-
-                            if(Attractions.Last()==a)
-                            {
-                                AttractionMap.Add(tmp, tmpList);
-                                break;
-                            }
-                        }
-                        if (Attractions.Last() == a)
-                        {
-                            AttractionMap.Add(tmp, tmpList);
+                            break;
                         }
                     }
-
-                    foreach (var a in AttractionMap)
+                    if (Attractions.Last() == a)
                     {
-                        _source.Add(a.Value.OrderBy(x=>x.step).ToList());
+                        AttractionMap.Add(tmp, tmpList);
                     }
+                }
 
-                    int i = 1;
-                    foreach(var a in AttractionMap)
+                foreach (var a in AttractionMap)
+                {
+                    _source.Add(a.Value.OrderBy(x=>x.step).ToList());
+                }
+
+                int i = 1;
+                foreach(var a in AttractionMap)
+                {
+                    i = 1;
+
+                    var newMarkers = new List<GoogleMapMarker>();
+
+                    foreach(var aa in a.Value.OrderBy(x=>x.step).ToList())
                     {
-                        i = 1;
-
-                        var newMarkers = new List<GoogleMapMarker>();
-
-                        foreach(var aa in a.Value.OrderBy(x=>x.step).ToList())
-                        {
-                            newMarkers.Add(new GoogleMapMarker()
+                        newMarkers.Add(new GoogleMapMarker()
                         {
                             Position = new GoogleMapMarkerPosition(aa.latitude, aa.longitude),
 
@@ -333,28 +346,29 @@ else
 
                             Title = aa.Website != "Website is not available." ? $" <a target = '_blank' jstcache = '6' href = '{aa.Website}' tabindex = '0'> <span> Check the website!</span> </a> " : "<h1> No Website available </h1>",
                         });
-                        }
-                        AllMarkers.Add(newMarkers);
-
                     }
-                    markers = AllMarkers[0];
+                    AllMarkers.Add(newMarkers);
+
                 }
+                markers = AllMarkers[0];
+            }
 
-                var trip = await tripsService.FindTripById(TripId);
+            var trip = await tripsService.FindTripById(TripId);
 
-                if(trip != null)
-                {
-                    TripDays = trip.Days;
-                    center = new GoogleMapCenter(trip.latitude, trip.longitude);
-                }
-                GetAllTripTags();
+            if(trip != null)
+            {
+                TripDays = trip.Days;
+                center = new GoogleMapCenter(trip.latitude, trip.longitude);
+            }
+           await GetAllTripTags();
+
+            await GetFourTripReviews(reviewSkip);
 
 
+            StateHasChanged();
+            await Task.Delay(3);
+            await googleMapRef.RefreshAsync();
 
-                StateHasChanged();
-                await Task.Delay(3);
-                await googleMapRef.RefreshAsync();
-            
         }
     }
 
@@ -426,28 +440,7 @@ else
         }
     }
 
-    private async void ChangeVisbility(bool isPublic)
-    {
-        await tripsService.ChangeTripVisibility(isPublic, TripId);
-        StateHasChanged();
-        navi.Refresh(true);
-    }
-
-    private async void SaveAndAddTag()
-    {
-        if (tagName.Trim() == "") return;
-        var t = await tagsService.CreateTag(UserId, tagName);
-
-        if(t != null)
-        {
-            await tagsService.AttachTagToTrip(TripId, t);
-
-            tagName="";
-            GetAllTripTags();
-        }
-    }
-
-    private async void GetAllTripTags()
+    private async Task  GetAllTripTags()
     {
         var tags =  await tagsService.GetTripTags(TripId);
         if(tags != null)
@@ -457,12 +450,14 @@ else
         }
     }
 
-    private async void RemoveTag(Tag t)
+    private async Task GetFourTripReviews(int skip)
     {
-        if(t !=null)
+        var revs = await reviewsService.GetFourTripReviews(TripId,skip);
+
+        if(revs != null)
         {
-            await tagsService.RemoveTagFromTrip(TripId, t);
-            GetAllTripTags();
+            Reviews.AddRange(revs);
+
         }
     }
 

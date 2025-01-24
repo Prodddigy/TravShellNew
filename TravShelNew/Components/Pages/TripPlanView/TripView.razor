@@ -45,13 +45,13 @@
     <MudText Typo="Typo.h4" Style="@($"color:{Colors.Purple.Darken3};")"> @context.First().StartDate.ToShortDateString() Day @(selectedIndex + 1) / @TripDays</MudText>
         @foreach (var attraction in @context)
         {
-            <h1>@(context.IndexOf(attraction)+1)</h1>
+            <MudChip T="string"  Color="Color.Primary"><MudText Typo="Typo.h4">@(context.IndexOf(attraction)+1)</MudText></MudChip>
           
             <p> @attraction.Name</p>
-            <p>Opening at: @attraction.Opening_Hours</p>
-            <p>Address: @attraction.Vicinity</p>
-            <p>Rating: @attraction.Rating</p>
-            <p>Type: @attraction.Type</p>
+            <p><MudChip T="string" Variant="Variant.Outlined" Color="Color.Info">Opening at:</MudChip> @attraction.Opening_Hours</p>
+            <p><MudChip T="string" Variant="Variant.Outlined" Color="Color.Success">Address:</MudChip> @attraction.Vicinity</p>
+            <p><MudChip T="string" Variant="Variant.Outlined" Color="Color.Warning">Rating:</MudChip> @attraction.Rating</p>
+                                    <p><MudChip T="string" Variant="Variant.Outlined" Color="Color.Error">Type:</MudChip> @attraction.Type</p>
             <p>------------------------</p>
         }
         </div>
@@ -227,7 +227,8 @@ else
               
 
                 pipeline = new MarkdownPipelineBuilder()
-                 .UseAdvancedExtensions() 
+                .UseAdvancedExtensions() 
+                .DisableHtml()
                     .UseEmojiAndSmiley()
                    .Build();
 
@@ -325,8 +326,8 @@ else
                     TripDays = trip.Days;
                     center = new GoogleMapCenter(trip.latitude, trip.longitude);
                 }
-                GetAllTripTags();
-
+               await GetAllTripTags();
+               //tutaj problem
 
 
                 StateHasChanged();
@@ -423,11 +424,11 @@ else
             await tagsService.AttachTagToTrip(TripId, t);
 
             tagName="";
-            GetAllTripTags();
+           await GetAllTripTags();
         }
     }
 
-    private async void GetAllTripTags()
+    private async Task GetAllTripTags()
     {
         var tags =  await tagsService.GetTripTags(TripId);
         if(tags != null)
@@ -442,7 +443,7 @@ else
         if(t !=null)
         {
             await tagsService.RemoveTagFromTrip(TripId, t);
-            GetAllTripTags();
+          await  GetAllTripTags();
         }
     }
 

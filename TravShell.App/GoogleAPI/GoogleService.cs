@@ -84,10 +84,10 @@ public class GoogleService : IGoogleService
 
         using (HttpClient client = new HttpClient())
         {
-            HttpResponseMessage response = await client.GetAsync(placesApi);
-            if (response.IsSuccessStatusCode)
+            HttpResponseMessage httpRespMess = await client.GetAsync(placesApi);
+            if (httpRespMess.IsSuccessStatusCode)
             {
-                string result = await response.Content.ReadAsStringAsync();
+                string result = await httpRespMess.Content.ReadAsStringAsync();
 
                 JObject parsed = JObject.Parse(result);
 
@@ -121,8 +121,8 @@ public class GoogleService : IGoogleService
             }
             else
             {
-                string result = await response.Content.ReadAsStringAsync();
-                Console.WriteLine("Google API response error: " + response.StatusCode);
+                string result = await httpRespMess.Content.ReadAsStringAsync();
+                Console.WriteLine("Google API response error: " + httpRespMess.StatusCode);
              
             }
         }
@@ -141,11 +141,11 @@ public class GoogleService : IGoogleService
             using (HttpClient client = new HttpClient())
             {
 
-                HttpResponseMessage response = await client.GetAsync(du);
+                HttpResponseMessage httpRespMess = await client.GetAsync(du);
 
-                if (response.IsSuccessStatusCode)
+                if (httpRespMess.IsSuccessStatusCode)
                 {
-                    string result = await response.Content.ReadAsStringAsync();
+                    string result = await httpRespMess.Content.ReadAsStringAsync();
 
                     JObject details = JObject.Parse(result);
                     var placeResult = details["result"];
@@ -158,7 +158,6 @@ public class GoogleService : IGoogleService
                     {
                         int i = 0;
                    
-
                         foreach (var period in openingHours["periods"])
                         {
                             string openTime = period["open"]?["time"]?.ToString();
@@ -198,7 +197,7 @@ public class GoogleService : IGoogleService
                 }
                 else
                 {
-                    Console.WriteLine("Google API response error: " + response.StatusCode);
+                    Console.WriteLine("Google API response error: " + httpRespMess.StatusCode);
                 }
             }
         }

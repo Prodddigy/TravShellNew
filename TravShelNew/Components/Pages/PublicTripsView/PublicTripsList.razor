@@ -94,7 +94,7 @@
 							{
 								<MudText Color="Color.Success" Typo="Typo.caption">This is your trip!</MudText>
 							}
-		
+							<MudRating SelectedValue="4" Disabled FullIcon="@Icons.Material.Filled.Favorite" EmptyIcon="@Icons.Material.Filled.FavoriteBorder" Color="Color.Secondary" />
 							</MudText>
 						</MudButton>
 					</MudPaper>
@@ -197,14 +197,14 @@
 	{
 		TotalTrips = await publicTripsService.CountAllTrips();
 
-		Console.WriteLine("how many trips?: "+TotalTrips);
+		//Console.WriteLine("how many trips?: "+TotalTrips);
 		if (TotalTrips != 0)
 		{
 			CurrentVisibleContent =  await publicTripsService.GetNineTrips( 1, 9, (int)OrderChosen, "", SearchBarOption);
 
 			pages = (int)Math.Ceiling((double)TotalTrips / 9);
 
-			GetAllTripTags();
+			await GetAllTripTags();
 		}
 	}
 
@@ -268,7 +268,7 @@
 		StateHasChanged();
 	}
 
-	private async void GetAllTripTags()
+	private async Task GetAllTripTags()
 	{
 		var tags = await tagService.GetAllTags(); 
 		if(tags != null)
@@ -277,5 +277,4 @@
 			StateHasChanged();
 		}
 	}
-
 }

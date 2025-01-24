@@ -30,25 +30,66 @@ public class ReviewsRepository : IReviewsRepository
             return null;
         }
 
+        if(reviewedTrip.Reviews ==null)
+        {
+            reviewedTrip.Reviews = new List<Review>();
+        }
+        
+        if(reviewedTrip.Reviews.Where(x=> x.User.UserId ==userId).FirstOrDefault() != null)
+        {
+            return await UpdateReview( userId, tripId, content, rating);
+        }
+
+        Review review = new Review
+        {
+            Content = content,
+            IsEdited = false,
+            StarReview = rating,
+            Trip = reviewedTrip,
+            User = Reviewer
+
+
+        };
+        await _dbContext.Reviews.AddAsync(review);
+        await _dbContext.SaveChangesAsync();
+
+        return review;
+    }
+
+    public async Task<List<Review>> GetFourTripReviews(int tripId, int take)
+    {
+        Console.WriteLine("before count");
+        var reviewCount = await _dbContext.Reviews.Where(x => x.Trip.TripId == tripId).CountAsync();
+        Console.WriteLine("after count: "+reviewCount );
+
+        if (reviewCount != 0)
+        {
+
+            var reviews = await _dbContext.Reviews.Where(x => x.Trip.TripId == tripId).Include(x => x.User)
+                                .Skip(take).Take(4).ToListAsync();
+            return reviews;
+        }
         return null;
-
-
-
     }
 
-    public Task<List<Review>> GetFourTripReviews(int tripId, int take)
+    public async Task<Review> GetUserReview(int userId, int tripId)
     {
-        throw new NotImplementedException();
+        var review = await _dbContext.Reviews.Where(x => x.User.UserId == userId && x.Trip.TripId == tripId)
+                                                .FirstOrDefaultAsync();
+
+        return review;
     }
 
-    public Task<Review> GetUserReview(int userId, int tripId)
+    public async Task<Review> UpdateReview(int userId, int tripId, string content, int rating)
     {
-        throw new NotImplementedException();
-    }
+        var review  = await _dbContext.Reviews.Where(x=>x.User.UserId == userId && x.Trip.TripId == tripId)
+                                                                    .FirstOrDefaultAsync();
+        review.Content = content;
+        review.StarReview = rating;
 
-    public Task<Review> UpdateReview(int userId, int tripId, string content, int rating)
-    {
-        throw new NotImplementedException();
+        await _dbContext.SaveChangesAsync();
+
+        return review;
     }
 }
 

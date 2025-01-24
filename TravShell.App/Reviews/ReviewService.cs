@@ -21,9 +21,9 @@ public class ReviewService : IReviewService
         throw new NotImplementedException();
     }
 
-    public Task<List<Review>> GetFourTripReviews(int tripId, int take)
+    public async Task<List<Review>> GetFourTripReviews(int tripId, int take)
     {
-        throw new NotImplementedException();
+        return  await _reviewsRepository.GetFourTripReviews(tripId, take);
     }
 
     public Task<Review> GetUserReview(int userId, int tripId)

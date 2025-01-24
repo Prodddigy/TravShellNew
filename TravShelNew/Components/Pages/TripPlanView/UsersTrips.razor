@@ -213,7 +213,7 @@
 
 			pages = (int)Math.Ceiling((double)TotalTrips / 9);
 
-			GetAllUserTripTags();
+			await GetAllUserTripTags();
 		}
 	}
 
@@ -262,7 +262,7 @@
 
 
 	private async void SearchTripsByCondition(SearchOptions filter, string tagName)
-	{
+	{//change void to Task???
 		if (TotalTrips == 0)
 			return;
 
@@ -274,7 +274,7 @@
 		StateHasChanged();
 	}
 
-	private async void GetAllUserTripTags()
+	private async Task GetAllUserTripTags()
 	{
 		var tags  = await tagService.GetAllUserTripTags(UserId); 
 		if(tags != null)
