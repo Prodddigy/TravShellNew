@@ -51,17 +51,47 @@
     <ItemTemplate>
                     <div class="horizontal-scroll" style="height:100%; padding: 33px;">
     <MudText Typo="Typo.h4" Style="@($"color:{Colors.Purple.Darken3};")"> @context.First().StartDate.ToShortDateString() Day @(selectedIndex + 1) / @TripDays</MudText>
-        @foreach (var attraction in @context)
+    
+    <MudTimeline TimelineOrientation="TimelineOrientation.Vertical" TimelinePosition="TimelinePosition.Left" Reverse="false">
+
+    @foreach (var attraction in @context)
         {
-            <h1>@(context.IndexOf(attraction)+1)</h1>
-          
-            <p> @attraction.Name</p>
-            <p>Opening at: @attraction.Opening_Hours</p>
-            <p>Address: @attraction.Vicinity</p>
-            <p>Rating: @attraction.Rating</p>
-            <p>Type: @attraction.Type</p>
-            <p>------------------------</p>
+            <MudTimelineItem Color="Color.Primary" Size="Size.Large">
+                <ItemDot>
+                    <MudText Typo="Typo.h4">@(context.IndexOf(attraction) + 1)</MudText>
+                </ItemDot>
+                <ItemContent>
+                    @attraction.Name
+                </ItemContent>
+            </MudTimelineItem>
+       
+            <MudTimelineItem Color="Color.Info" Size="Size.Medium">
+                <ItemContent>
+                    <MudChip T="string" Variant="Variant.Outlined" Color="Color.Info">Opening at:</MudChip> @attraction.Opening_Hours
+                </ItemContent>
+            </MudTimelineItem>
+
+            <MudTimelineItem Color="Color.Success" Size="Size.Medium">
+                <ItemContent>
+                    <MudChip T="string" Variant="Variant.Outlined" Color="Color.Success">Address:</MudChip> @attraction.Vicinity
+                </ItemContent>
+            </MudTimelineItem>
+
+
+            <MudTimelineItem Color="Color.Warning" Size="Size.Medium">
+                <ItemContent>
+                    <MudChip T="string" Variant="Variant.Outlined" Color="Color.Warning">Rating:</MudChip> @attraction.Rating
+                </ItemContent>
+            </MudTimelineItem>
+
+
+            <MudTimelineItem Color="Color.Error" Size="Size.Medium">
+                <ItemContent>
+                    <MudChip T="string" Variant="Variant.Outlined" Color="Color.Error">Type:</MudChip> @attraction.Type
+                </ItemContent>
+            </MudTimelineItem>
         }
+        </MudTimeline>
         </div>
 
     </ItemTemplate>
