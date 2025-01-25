@@ -30,12 +30,12 @@
         @if(isPublic)
         {
             <MudText Style="width:10px;">Unpublish</MudText>
-                        <MudIconButton OnClick="()=>ChangeVisbility(false)" Icon="@Icons.Material.Filled.PublicOff" Color="Color.Error" Size="Size.Large" />
+                        <MudIconButton Disabled="IsPublishProcess" OnClick="async ()=> await ChangeVisbility(false)" Icon="@Icons.Material.Filled.PublicOff" Color="Color.Error" Size="Size.Large" />
         }
         else
         {
             <MudText Style="width:10px;">Publish</MudText>
-                        <MudIconButton OnClick="()=>ChangeVisbility(true)" Icon="@Icons.Material.Filled.Public" Color="Color.Tertiary" Size="Size.Large" />
+                        <MudIconButton Disabled="IsPublishProcess" OnClick="async ()=> await ChangeVisbility(true)" Icon="@Icons.Material.Filled.Public" Color="Color.Tertiary" Size="Size.Large" />
         }
     </MudItem>
         <MudItem xs="7" > 
@@ -48,9 +48,9 @@
 
     @foreach (var attraction in @context)
         {
-            <MudTimelineItem Color="Color.Primary" Size="Size.Large">
+            <MudTimelineItem Color="Color.Transparent" Size="Size.Large">
                 <ItemDot>
-                    <MudText Typo="Typo.h4">@(context.IndexOf(attraction)+1)</MudText>
+                    <MudText Style="@($"color:{Colors.Purple.Darken3};")" Typo="Typo.h4">@(context.IndexOf(attraction)+1)</MudText>
                 </ItemDot>
                 <ItemContent>
                        @attraction.Name
@@ -236,7 +236,9 @@ else
 
     private string tagName="";
 
-    private List<Tag> Tags = new List<Tag>(); 
+    private List<Tag> Tags = new List<Tag>();
+
+    private bool IsPublishProcess = false;
 
 
     protected async override Task OnInitializedAsync()//zmniejszyć to!!!
@@ -256,7 +258,7 @@ else
             if(userIdCheck == currentTrip.User.UserId)
             {
                 IsAuth = true;
-              
+
 
                 pipeline = new MarkdownPipelineBuilder()
                 .UseAdvancedExtensions() 
@@ -358,8 +360,8 @@ else
                     TripDays = trip.Days;
                     center = new GoogleMapCenter(trip.latitude, trip.longitude);
                 }
-               await GetAllTripTags();
-               //tutaj problem
+                await GetAllTripTags();
+                //tutaj problem
 
 
                 StateHasChanged();
@@ -437,11 +439,15 @@ else
         }
     }
 
-    private async void ChangeVisbility(bool publicModifier)
+    private async Task ChangeVisbility(bool publicModifier)
     {
+        IsPublishProcess = true;
+        StateHasChanged();
+
         await tripsService.ChangeTripVisibility(publicModifier, TripId);
 
         isPublic = publicModifier;
+        IsPublishProcess = false;
         StateHasChanged();
         // navi.Refresh(true);
     }

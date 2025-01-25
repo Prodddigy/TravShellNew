@@ -47,15 +47,15 @@
 <MudCarousel Class="mud-width-full" @ref="_carousel" ItemsSource="@_source" Style="height:250px; width:450px" ShowArrows="true" ShowBullets="false" EnableSwipeGesture="false" AutoCycle="false" @bind-SelectedIndex="staticIndex">
     <ItemTemplate>
                     <div class="horizontal-scroll" style="height:100%; padding: 33px;">
-    <MudText Typo="Typo.h4" Style="@($"color:{Colors.Purple.Darken3};")"> @context.First().StartDate.ToShortDateString() Day @(selectedIndex + 1) / @TripDays</MudText>
+    <MudText Typo="Typo.h4" Style="@($"color:{Colors.Purple.Darken3};")">Day @(selectedIndex + 1) / @TripDays</MudText>
     
     <MudTimeline TimelineOrientation="TimelineOrientation.Vertical" TimelinePosition="TimelinePosition.Left" Reverse="false">
 
     @foreach (var attraction in @context)
         {
-            <MudTimelineItem Color="Color.Primary" Size="Size.Large">
-                <ItemDot>
-                    <MudText Typo="Typo.h4">@(context.IndexOf(attraction) + 1)</MudText>
+            <MudTimelineItem Color="Color.Transparent" Size="Size.Large">
+                <ItemDot >
+                    <MudText Style="@($"color:{Colors.Purple.Darken3};")" Typo="Typo.h4">@(context.IndexOf(attraction) + 1)</MudText>
                 </ItemDot>
                 <ItemContent>
                     @attraction.Name

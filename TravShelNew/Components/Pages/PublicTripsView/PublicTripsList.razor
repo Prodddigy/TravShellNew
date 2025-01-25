@@ -43,7 +43,7 @@
 			<MudMenuItem OnClick="()=>SearchTripsByCondition(SearchOptions.ZtoA)">From Z to A</MudMenuItem>
 			<MudMenuItem OnClick="()=>SearchTripsByCondition(SearchOptions.Shortest)">Shortest trips</MudMenuItem>
 			<MudMenuItem OnClick="()=>SearchTripsByCondition(SearchOptions.Longest)">Longest trips</MudMenuItem>
-			<MudMenuItem >Best ratings</MudMenuItem>
+			<MudMenuItem OnClick="()=>SearchTripsByCondition(SearchOptions.BestRating)" >Best ratings</MudMenuItem>
 		</ChildContent>
 	</MudMenu>
 </MudToolBar>
@@ -93,8 +93,10 @@
 							@if(i.User.UserId == UserId)
 							{
 								<MudText Color="Color.Success" Typo="Typo.caption">This is your trip!</MudText>
+
+							
 							}
-							<MudRating SelectedValue="4" ReadOnly="true" FullIcon="@Icons.Material.Filled.Favorite" EmptyIcon="@Icons.Material.Filled.FavoriteBorder" Color="Color.Secondary" />
+							<MudRating SelectedValue="@( i.Reviews.Count() != 0?(int)i.Reviews.Average(x=>x.StarReview):0)" ReadOnly="true" FullIcon="@Icons.Material.Filled.Favorite" EmptyIcon="@Icons.Material.Filled.FavoriteBorder" Color="Color.Secondary" />
 							</MudText>
 						</MudButton>
 					</MudPaper>
@@ -172,7 +174,8 @@
 		AtoZ = 3,
 		ZtoA = 4,
 		NameSearch = 5,
-		Tag =6
+		Tag =6,
+		BestRating =7
 	}
 
 	private SearchOptions OrderChosen = SearchOptions.Nothing ;
@@ -277,4 +280,10 @@
 			StateHasChanged();
 		}
 	}
+
+	// private int CalculateAVGStars()
+	// {
+		
+
+	// }
 }

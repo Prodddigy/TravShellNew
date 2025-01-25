@@ -103,41 +103,48 @@ public class PublicTripsRepository : IPublicTripsRepository
 		switch (orderBy)
 		{
 			case 0:
-				return await _dbContext.Trips.Where(x=>x.IsPublic==true).Include(x=>x.User).OrderBy(x=>x.TripId).Skip((page - 1) * trips).Take(trips).ToListAsync();
+				return await _dbContext.Trips.Where(x=>x.IsPublic==true).Include(x=>x.User).Include(x => x.Reviews)
+                    .OrderBy(x=>x.TripId).Skip((page - 1) * trips).Take(trips).ToListAsync();
 			case 1:
-				return await _dbContext.Trips.Where(x => x.IsPublic == true).Include(x => x.User)
-							.OrderBy(x => x.Days)
+				return await _dbContext.Trips.Where(x => x.IsPublic == true).Include(x => x.User).Include(x => x.Reviews)
+                            .OrderBy(x => x.Days)
 							.Skip((page - 1) * trips).Take(trips).ToListAsync();
 			case 2:
-				return await _dbContext.Trips.Where(x => x.IsPublic == true).Include(x => x.User)
-							.OrderByDescending(x => x.Days)
+				return await _dbContext.Trips.Where(x => x.IsPublic == true).Include(x => x.User).Include(x => x.Reviews)
+                            .OrderByDescending(x => x.Days)
 							.Skip((page - 1) * trips).Take(trips).ToListAsync();
 			case 3:
-				return await _dbContext.Trips.Where(x => x.IsPublic == true).Include(x => x.User)
-							.OrderBy(x => x.Name)
+				return await _dbContext.Trips.Where(x => x.IsPublic == true).Include(x => x.User).Include(x => x.Reviews)
+                            .OrderBy(x => x.Name)
 							.Skip((page - 1) * trips).Take(trips).ToListAsync();
 			case 4:
-				return await _dbContext.Trips.Where(x => x.IsPublic == true).Include(x => x.User)
-							.OrderByDescending(x => x.Name)
+				return await _dbContext.Trips.Where(x => x.IsPublic == true).Include(x => x.User).Include(x => x.Reviews)
+                            .OrderByDescending(x => x.Name)
 							.Skip((page - 1) * trips).Take(trips).ToListAsync();
 			case 5:
 
 				if (searchOption == 1)
 				{
 					return await _dbContext.Trips.Where(x => x.IsPublic == true).Include(x => x.User)
-						.Where(x => x.Name.ToLower().Contains(name.ToLower()))
-						.Skip((page - 1) * trips).Take(trips).ToListAsync();
+						.Where(x => x.Name.ToLower().Contains(name.ToLower())).Include(x => x.Reviews)
+                        .Skip((page - 1) * trips).Take(trips).ToListAsync();
 				}
 				else
 				{
 					return await _dbContext.Trips.Where(x => x.IsPublic == true).Include(x => x.User)
-						.Where(x => x.City.ToLower().Contains(name.ToLower()))
-						.Skip((page - 1) * trips).Take(trips).ToListAsync();
+						.Where(x => x.City.ToLower().Contains(name.ToLower())).Include(x => x.Reviews)
+                        .Skip((page - 1) * trips).Take(trips).ToListAsync();
 				}
 			case 6:
 
 				return await _dbContext.Trips.Where(x => x.IsPublic == true).Include(x => x.User)
-					.Where(x => x.Tags.Any(tag => tag.Name == name)).ToListAsync();
+					.Where(x => x.Tags.Any(tag => tag.Name == name)).Include(x => x.Reviews)
+                    .Skip((page - 1) * trips).Take(trips).ToListAsync();
+			case 7:
+				return await _dbContext.Trips.Where(x => x.IsPublic == true).Include(x => x.User).Include(x => x.Reviews)
+					.OrderByDescending(x =>( x.Reviews.Count != 0) ? x.Reviews.Average(x => x.StarReview) :0).
+					Skip((page - 1) * trips).Take(trips).ToListAsync();
+
 
 			default:
 				return await _dbContext.Trips.Where(x => x.IsPublic == true).Include(x => x.User).Skip((page - 1) * trips).Take(trips).ToListAsync();
