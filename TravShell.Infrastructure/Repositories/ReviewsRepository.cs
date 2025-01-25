@@ -58,9 +58,9 @@ public class ReviewsRepository : IReviewsRepository
 
     public async Task<List<Review>> GetFourTripReviews(int tripId, int take)
     {
-        Console.WriteLine("before count");
+       // Console.WriteLine("before count");
         var reviewCount = await _dbContext.Reviews.Where(x => x.Trip.TripId == tripId).CountAsync();
-        Console.WriteLine("after count: "+reviewCount );
+       // Console.WriteLine("after count: "+reviewCount );
 
         if (reviewCount != 0)
         {

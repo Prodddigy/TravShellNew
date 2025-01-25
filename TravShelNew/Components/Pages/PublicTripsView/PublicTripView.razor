@@ -140,12 +140,20 @@
                 
                 @foreach (var r in Reviews)
                 {
-                    <MudButton Variant="Variant.Filled" Style="flex-shrink: 0; padding: 10px 20px;"><b>review</b></MudButton>
-                    <MudPaper>
-
+                    
+                    <MudPaper Outlined="true">
+                        <MudChip T="string" Color="Color.Primary">@r.User.Forename</MudChip>
+                        <MudText Style="white-space: normal;overflow-wrap: break-word; padding: 10px 15px;" Align="Align.Left">
+                                        @((MarkupString)Markdig.Markdown.ToHtml(r.Content, pipeline))
+                                    </MudText>
+                 <MudRating ReadOnly="true" SelectedValue="r.StarReview" FullIcon="@Icons.Material.Filled.Favorite" EmptyIcon="@Icons.Material.Filled.FavoriteBorder" Color="Color.Secondary" />
                 </MudPaper>
+             
+
                 }
+                 <MudButton Color="Color.Tertiary" Variant="Variant.Filled" OnClick="async ()=>await GetFourTripReviews(reviewSkip)">More</MudButton>
             </div>
+            
         </MudPaper>
 
     </MudItem>
@@ -497,7 +505,7 @@ else
     {
         var revs = await reviewsService.GetFourTripReviews(TripId,skip);
 
-        if(revs != null)
+        if(revs != null && revs.Count() !=0)
         {
             Reviews.AddRange(revs);
             StateHasChanged();
@@ -507,12 +515,19 @@ else
 
     private async void SaveReview()
     {
+        if(userReviewDesc.Trim() == "" ||userRating==0)
+        {
+            Snackbar.Add($"Review is not complete", Severity.Warning);
+            return;
+        }
+
         editMode = true;
 
         StateHasChanged();
         var newReview = await reviewsService.CreateReview(UserId, TripId, userReviewDesc, userRating);
         if(newReview != null)
         {
+            Reviews.RemoveAll(x => x.User.UserId == newReview.User.UserId);
             Reviews.Add(newReview);
             StateHasChanged();
             Snackbar.Add($"New review has been saved!", Severity.Success);
