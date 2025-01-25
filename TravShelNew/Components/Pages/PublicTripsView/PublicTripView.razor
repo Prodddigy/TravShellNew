@@ -31,20 +31,17 @@
     <MudItem >
         <MudExpansionPanels  Style="width:200px;">
                        
-                       <MudExpansionPanel Text="Write Review" MaxHeight="1000" >
-                            <MudTextField T="string" @bind-Value="tripDescription" Disabled="@editMode" Immediate="true" Counter="50" MaxLength="50" Label="Description" Variant="Variant.Outlined" Lines="5" FullWidth />
-                            <MudRating SelectedValue="1" FullIcon="@Icons.Material.Filled.Favorite" EmptyIcon="@Icons.Material.Filled.FavoriteBorder" Color="Color.Secondary" />
-                            <MudToolBar Class="gap-4">
+        <MudExpansionPanel Text="Write a review" MaxHeight="1000" >
+            <MudTextField OnKeyUp="enableSave"  T="string" @bind-Value="userReviewDesc"  Immediate="true" Counter="50" MaxLength="50" Label="Review" Variant="Variant.Outlined" Lines="5" FullWidth />
+            <MudRating  @bind-SelectedValue="userRating" FullIcon="@Icons.Material.Filled.Favorite" EmptyIcon="@Icons.Material.Filled.FavoriteBorder" Color="Color.Secondary" />
+            <MudToolBar Class="gap-4">
 
-                                <MudSwitch @bind-Value="editMode" Label="Write review" Color="Color.Primary" />
-                                <MudButton  Disabled="@editMode" hidden="@editMode" Variant="Variant.Filled" Color="Color.Success">Save </MudButton>
-                            </MudToolBar>
+                <MudButton OnClick="SaveReview"  Disabled="@editMode"  Variant="Variant.Filled" Color="Color.Success">Save </MudButton>
+            </MudToolBar>
                    
-                        </MudExpansionPanel>
-                    </MudExpansionPanels>
+        </MudExpansionPanel>
+    </MudExpansionPanels>
 
-                 
-      
     </MudItem>
         <MudItem > 
 <MudCarousel Class="mud-width-full" @ref="_carousel" ItemsSource="@_source" Style="height:250px; width:450px" ShowArrows="true" ShowBullets="false" EnableSwipeGesture="false" AutoCycle="false" @bind-SelectedIndex="staticIndex">
@@ -133,15 +130,23 @@
 
 <MudGrid>
     <MudItem>
-                    <MudPaper Outlined Class="border-dashed" Height="250px" Style="width:200px;">
-                        <MudText Align="Align.Center">Reviews</MudText>
-                        <div style="height:200px; display: flex; flex-direction:column; overflow-y: auto; white-space: nowrap; gap: 8px; padding: 8px;">
-                            @foreach (var r in Reviews)
-                            {
-                                <MudButton Variant="Variant.Filled" Style="flex-shrink: 0; padding: 10px 20px;"><b>review</b></MudButton>
-                            }
-                        </div>
-                    </MudPaper>
+        <MudPaper Outlined Class="border-dashed" Height="250px" Style="width:200px;">
+            <MudText Align="Align.Center">Reviews</MudText>
+            <div style="height:200px; display: flex; flex-direction:column; overflow-y: auto; white-space: nowrap; gap: 8px; padding: 8px;">
+               @if(Reviews.Count() ==0)
+               {
+ <MudButton Variant="Variant.Filled" Style="flex-shrink: 0; padding: 10px 20px;"><b>No reviews</b></MudButton>
+               }
+                
+                @foreach (var r in Reviews)
+                {
+                    <MudButton Variant="Variant.Filled" Style="flex-shrink: 0; padding: 10px 20px;"><b>review</b></MudButton>
+                    <MudPaper>
+
+                </MudPaper>
+                }
+            </div>
+        </MudPaper>
 
     </MudItem>
     <MudItem xs="7" >
@@ -276,6 +281,10 @@ else
 
     private int reviewSkip = 0;
 
+    private string userReviewDesc = "";
+
+    private int userRating = 0;
+
 
     protected async override Task OnInitializedAsync()//zmniejszyć to!!!
     {
@@ -289,6 +298,7 @@ else
 
             pipeline = new MarkdownPipelineBuilder()
              .UseAdvancedExtensions() 
+             .DisableHtml()
                 .UseEmojiAndSmiley()
                .Build();
 
@@ -307,7 +317,7 @@ else
             }
 
 
-           // GetFourTripReviews(reviewSkip);
+            //GetFourTripReviews(reviewSkip);
 
 
             TripName = currentTrip.Name;
@@ -390,7 +400,10 @@ else
                 TripDays = trip.Days;
                 center = new GoogleMapCenter(trip.latitude, trip.longitude);
             }
-           await GetAllTripTags();
+            await GetAllTripTags();
+
+
+            await GetCurrentUserReview();
 
             await GetFourTripReviews(reviewSkip);
 
@@ -487,8 +500,47 @@ else
         if(revs != null)
         {
             Reviews.AddRange(revs);
-
+            StateHasChanged();
+            reviewSkip += 4;
         }
+    }
+
+    private async void SaveReview()
+    {
+        editMode = true;
+
+        StateHasChanged();
+        var newReview = await reviewsService.CreateReview(UserId, TripId, userReviewDesc, userRating);
+        if(newReview != null)
+        {
+            Reviews.Add(newReview);
+            StateHasChanged();
+            Snackbar.Add($"New review has been saved!", Severity.Success);
+        }
+        else
+        {
+            Snackbar.Add($"Review not saved, something went wrong...", Severity.Error);
+        }
+    }
+
+    private async Task GetCurrentUserReview()
+    {
+        currentUserReview = await reviewsService.GetUserReview(UserId, TripId);
+
+        if(currentUserReview != null)
+        {
+            userReviewDesc = currentUserReview.Content;
+
+            userRating = currentUserReview.StarReview;
+            StateHasChanged();
+        }
+    }
+
+
+    private void enableSave()
+    {
+        editMode = false;
+        StateHasChanged();
     }
 
 }

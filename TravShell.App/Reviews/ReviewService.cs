@@ -16,9 +16,9 @@ public class ReviewService : IReviewService
         _reviewsRepository = reviewsRepository;
     }
 
-    public Task<Review> CreateReview(int userId, int tripId, string content, int rating)
+    public async Task<Review> CreateReview(int userId, int tripId, string content, int rating)
     {
-        throw new NotImplementedException();
+        return await _reviewsRepository.CreateReview(userId, tripId, content, rating);
     }
 
     public async Task<List<Review>> GetFourTripReviews(int tripId, int take)
@@ -26,9 +26,9 @@ public class ReviewService : IReviewService
         return  await _reviewsRepository.GetFourTripReviews(tripId, take);
     }
 
-    public Task<Review> GetUserReview(int userId, int tripId)
+    public async Task<Review> GetUserReview(int userId, int tripId)
     {
-        throw new NotImplementedException();
+        return await _reviewsRepository.GetUserReview(userId, tripId);
     }
 
     public Task<Review> UpdateReview(int userId, int tripId, string content, int rating)
