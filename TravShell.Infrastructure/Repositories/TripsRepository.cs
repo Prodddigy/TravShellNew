@@ -80,12 +80,25 @@ namespace TravShell.Infrastructure.Repositories;
 
 	public async Task RemoveTripById(int tripId)
     {
-       var trip =  await FindTripById(tripId);
+       var trip = await _dbContext.Trips.Include(x => x.User).Where(x => x.TripId == tripId).Include(x=>x.Reviews)
+			.FirstOrDefaultAsync(); 
 
         if (trip != null)
 		{
-			 _dbContext.Trips.Remove(trip);
+			//var tmpRevs = trip.Reviews;
+
+			if (trip.Reviews.Count() != 0)
+			{
+				_dbContext.Reviews.RemoveRange(trip.Reviews);
+                await _dbContext.SaveChangesAsync();
+            }
+
+			
+
+
+			_dbContext.Trips.Remove(trip);
 			await _dbContext.SaveChangesAsync();
+			//cant remove a trip if the trip has reviews
 		}
 		return;
     }

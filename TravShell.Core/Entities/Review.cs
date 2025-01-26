@@ -24,10 +24,10 @@ public class Review
 
 
 	[ForeignKey("TripId")]
-	public required Trip Trip { get; set; }
+	public  Trip Trip { get; set; }
 
 
 	[ForeignKey("UserId")]
-	public required User User { get; set; }
+	public  User User { get; set; }
 
 }

@@ -34,7 +34,7 @@ namespace TravShell.Infrastructure.Migrations
 
                     b.HasIndex("TripListTripId");
 
-                    b.ToTable("TagTrip");
+                    b.ToTable("TagTrip", (string)null);
                 });
 
             modelBuilder.Entity("TravShell.Core.Entities.Attraction", b =>
@@ -88,7 +88,7 @@ namespace TravShell.Infrastructure.Migrations
 
                     b.HasIndex("TripId");
 
-                    b.ToTable("Attractions");
+                    b.ToTable("Attractions", (string)null);
                 });
 
             modelBuilder.Entity("TravShell.Core.Entities.Review", b =>
@@ -122,7 +122,7 @@ namespace TravShell.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Reviews");
+                    b.ToTable("Reviews", (string)null);
                 });
 
             modelBuilder.Entity("TravShell.Core.Entities.Tag", b =>
@@ -143,7 +143,7 @@ namespace TravShell.Infrastructure.Migrations
 
                     b.HasKey("TagId");
 
-                    b.ToTable("Tags");
+                    b.ToTable("Tags", (string)null);
                 });
 
             modelBuilder.Entity("TravShell.Core.Entities.Trip", b =>
@@ -195,7 +195,7 @@ namespace TravShell.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Trips");
+                    b.ToTable("Trips", (string)null);
                 });
 
             modelBuilder.Entity("TravShell.Core.Entities.User", b =>
@@ -227,7 +227,7 @@ namespace TravShell.Infrastructure.Migrations
 
                     b.HasKey("UserId");
 
-                    b.ToTable("Users");
+                    b.ToTable("Users", (string)null);
                 });
 
             modelBuilder.Entity("TagTrip", b =>
