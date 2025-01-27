@@ -170,24 +170,7 @@
     </MudItem>
 
            <MudItem xs="5" >
-              @*
-                    <MudExpansionPanels>
-                        <MudExpansionPanel Text="New Tag">
-                            <MudTextField T="string" @bind-Value="tagName" MaxLength="10" Label="Tag" Variant="Variant.Outlined" Counter="10" Immediate />
-                            <MudButton  OnClick="SaveAndAddTag" Variant="Variant.Filled" Color="Color.Success">Save</MudButton>
-                        </MudExpansionPanel>
-                       <MudExpansionPanel Text="Edit desc." MaxHeight="1000" >
-                            <MudTextField T="string" @bind-Value="tripDescription" Disabled="@editMode" Immediate="true" Counter="1000" MaxLength="1000" Label="Description" Variant="Variant.Outlined" Lines="5" FullWidth />
-                            <MudToolBar Class="gap-4">
-
-                                <MudSwitch @bind-Value="editMode" Label="edit" Color="Color.Primary" />
-                                <MudButton OnClick="SaveDescription" Disabled="@editMode" hidden="@editMode" Variant="Variant.Filled" Color="Color.Success">Save </MudButton>
-                            </MudToolBar>
-                   
-                        </MudExpansionPanel>
-                    </MudExpansionPanels>
-            *@
-
+            
                   <MudPaper >
                       <MudText Typo="Typo.h4" GutterBottom>Description</MudText>
                         @if ((tripDescriptionMarkUp.Value.ToString()).Trim() == "")
@@ -324,10 +307,6 @@ else
                 StateHasChanged();
             }
 
-
-            //GetFourTripReviews(reviewSkip);
-
-
             TripName = currentTrip.Name;
             int numOfAtt = await attractionsService.CountTripAttractions(TripId);
             if (numOfAtt != 0)
@@ -423,24 +402,24 @@ else
         }
     }
 
-    private bool editDescription()
-    {
-        editMode=false;
-        StateHasChanged();
+    // private bool editDescription()
+    // {
+    //     editMode=false;
+    //     StateHasChanged();
 
-        return editMode;
-    }
+    //     return editMode;
+    // }
 
-    private async void SaveDescription()
-    {
-        await tripsService.EditTripDescription(tripDescription.ToString(), TripId);
-        editMode = true;
+    // private async void SaveDescription()
+    // {
+    //     await tripsService.EditTripDescription(tripDescription.ToString(), TripId);
+    //     editMode = true;
 
-        UpdateHTMLAsync();
-        StateHasChanged();
+    //     UpdateHTMLAsync();
+    //     StateHasChanged();
 
-        Snackbar.Add($"Description has been saved!", Severity.Success);
-    }
+    //     Snackbar.Add($"Description has been saved!", Severity.Success);
+    // }
 
     private async void RefreshMap()
     {

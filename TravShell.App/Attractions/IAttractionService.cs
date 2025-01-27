@@ -13,5 +13,7 @@ public interface IAttractionService
 	Task<List<Attraction>> GetTripAttractionsOrderByStartDate(int tripId);
 
 	Task SaveAttractionList(List<AttractionViewModel> attractions);
+
+	Task RemoveAttractions(List<Attraction> attractions);	
 }
 

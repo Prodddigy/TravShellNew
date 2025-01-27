@@ -113,7 +113,7 @@
 					
 					</MudPaper>
 					<MudButton OnClick="()=>OpenDeleteTripDialogAsync(i)" Variant="Variant.Filled" Style="object-position: bottom; " Color="Color.Error">Delete</MudButton>
-					<MudButton Variant="Variant.Filled" Style="object-position: bottom; " Color="Color.Success">Edit</MudButton>
+					<MudButton OnClick="()=>navigateToEditTrip(i.TripId)" Variant="Variant.Filled" Style="object-position: bottom; " Color="Color.Success">Edit</MudButton>
 				</MudItem>
 			}
 			@if (CurrentVisibleContent.Count() < 9)
@@ -202,6 +202,12 @@
 	{
 		string b = $"/createTrip/{UserId}/newTrip";
 		navigationManager.NavigateTo(b);
+	}
+
+	private void navigateToEditTrip(int tripId)
+	{
+		string c = $"/{UserId}/trip={tripId}/createDay";
+		navigationManager.NavigateTo(c);
 	}
 
 	protected async override Task OnInitializedAsync()

@@ -15,5 +15,7 @@ public interface IAttractionsRepository
 
 	Task SaveAttractionList(List<AttractionViewModel> attractions);
 
+	Task RemoveAttractions(List<Attraction> attractions);
+
 }
 

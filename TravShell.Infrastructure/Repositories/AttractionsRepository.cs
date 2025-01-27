@@ -30,6 +30,15 @@ public class AttractionsRepository : IAttractionsRepository
                                                 .ToListAsync();
     }
 
+    public async Task RemoveAttractions(List<Attraction> attractions)
+    {
+        if(attractions != null || attractions.Count() >0)
+        {
+             _dbContext.Attractions.RemoveRange(attractions);
+            await _dbContext.SaveChangesAsync();
+        }
+    }
+
     public async Task SaveAttractionList(List<AttractionViewModel> attractions)
     {List<Attraction> newList= new List<Attraction>();
 

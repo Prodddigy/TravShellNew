@@ -51,19 +51,15 @@ else
 
         @if (trip == null || currentDate == trip.Lastdate)
         {
-                
                     <MudButton OnClick="SaveDayAttractions" Disabled="WaitForGoogle" ButtonType="MudBlazor.ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary">
                 Finish trip
-            </MudButton>
-             
+            </MudButton>  
         }
         else
-        {
-                
+        {  
                 <MudButton OnClick="SaveDayAttractions" Disabled="WaitForGoogle" ButtonType="MudBlazor.ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary">
                 Next Day
-            </MudButton>
-                
+            </MudButton>  
         }
    
         <MudPopover Open="@IsPopup" Fixed="true" Class="px-4 pt-4">
@@ -219,12 +215,8 @@ else
     [Inject] IJSRuntime? JsRuntime { get; set; }
     private bool NotSaved { get; set; } = true;
 
-
-
-
     protected override async Task OnParametersSetAsync()
     {
-
         NotSaved = true;
         selectedAttractions = new List<AttractionViewModel>();
 
@@ -280,6 +272,7 @@ else
         {
             PopulateAllDropZones();
         }
+       
 
         await SimulateProgressAsync("Get ready 100%");
 
@@ -289,12 +282,12 @@ else
             _container = new();
         }
         RefreshContainer();
+        await IsEditMode();
+
     }
 
     private async void Authenticate()
     {
-
-
         var authState = await ASP.GetAuthenticationStateAsync();
 
         if (authState.User.Identity.IsAuthenticated)
@@ -541,6 +534,16 @@ else
         }
         else
         {
+
+
+            var oldAtts = await AttractionService.GetTripAttractionsOrderByStartDate(TripId);
+            if(oldAtts != null && oldAtts.Count() >0)
+            {
+                await AttractionService.RemoveAttractions(oldAtts);
+            }
+
+
+
             await AttractionService.SaveAttractionList(selectedAttractions);
             Tourist_Attractions = new List<AttractionViewModel>();
             Restaurants = new List<AttractionViewModel>();
@@ -568,7 +571,7 @@ else
             Status = "Loading tourist attractions... 0%";
 
             NotSaved = false;
-            navigationManager.NavigateTo($"/trips/{UserId}");
+            navigationManager.NavigateTo($"/trips/{UserId}/{TripId}");
         }
 
         if (!isDayRepeated)
@@ -600,7 +603,7 @@ else
             foreach (var att in selectedAttractions.Where(x => x.StartDate == currentDate).ToList())
             {
                 var marker = CreateMapMarker(att);
-      
+
                 markers.Add(marker);
 
                 var tmpAVM = CopyAttraction(att);
@@ -614,11 +617,11 @@ else
             PopulateDropzone(nList, "0");
 
             PopulateAllDropZones();
-       
+
             await googleMapRef.UpdateMarkersAsync(markers);
 
             RefreshContainer();
-             StateHasChanged();
+            StateHasChanged();
             await Task.Delay(1);
         }
     }
@@ -695,32 +698,83 @@ else
             }
         }
     }
+
+
+    public async Task IsEditMode()
+    {
+        var attractions = await AttractionService.GetTripAttractionsOrderByStartDate(trip.TripId);
+
+        if (attractions.Count() > 0)
+        {
+            foreach (var savedAtt in attractions)
+            {
+                selectedAttractions.Add(new AttractionViewModel
+                    {
+                        PlaceCode = savedAtt.PlaceCode,
+                        Name = savedAtt.Name,
+                        Vicinity = savedAtt.Vicinity,
+                        Rating = savedAtt.Rating,
+                        Opening_Hours = savedAtt.Opening_Hours,
+                        Website = savedAtt.Website,
+                        Type = savedAtt.Type,
+                        StartDate = savedAtt.StartDate,
+                        step = savedAtt.step,
+                        latitude = savedAtt.latitude,
+                        longitude = savedAtt.longitude,
+                        Trip = trip,
+                        Marker = null,
+                        dropzone = "0"
+                    });
+            }
+
+            List<AttractionViewModel> nList = new();
+            foreach (var att in selectedAttractions.Where(x => x.StartDate == currentDate).ToList())
+            {
+                var marker = CreateMapMarker(att);
+
+                markers.Add(marker);
+
+                var tmpAVM = CopyAttraction(att);
+                tmpAVM.Marker = marker;
+                nList.Add(tmpAVM);
+            }
+
+            selectedAttractions.RemoveAll(x => x.StartDate == currentDate);
+            _dropzoneItems.Clear();
+            LastAttIndex = 0;
+            PopulateDropzone(nList, "0");
+
+            PopulateAllDropZones();
+
+            await googleMapRef.UpdateMarkersAsync(markers);
+            NoSelectedTrips = false;
+            RefreshContainer();
+            StateHasChanged();
+            await Task.Delay(1);
+        }
+    }
 }
-
-
     <style>
 
     .top-column {
         width: 100%;
-        margin-bottom: 20px; /* Adds space between the top column and the bottom columns */
+        margin-bottom: 20px; 
         display: flex;
-        flex-direction: column; /* Ensures buttons stack vertically */
-         /* You can adjust this value */
-        overflow-y: auto; /* Enables vertical scrolling for the top column if needed */
-
+        flex-direction: column; 
+        overflow-y: auto; 
         height: 50vh;
     }
 
     .columns-container {
         display: flex;
-        justify-content: space-between; /* Ensures the columns are opposite each other */
+        justify-content: space-between; 
         width: 100%;
     }
 
     .column {
-        width: 30%; /* Adjust the width of the columns as needed */
-        max-height: 300px; /* Set a max height to trigger the scrollbar */
-        overflow-y: auto; /* Enables the vertical scroll bar */
+        width: 30%; 
+        max-height: 300px;
+        overflow-y: auto; 
         border: 1px solid #ccc;
         padding: 10px;
     }

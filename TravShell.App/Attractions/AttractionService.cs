@@ -27,7 +27,12 @@ public class AttractionService :IAttractionService
         return await _attractionsRepository.GetTripAttractionsOrderByStartDate(tripId);
     }
 
-   public async Task SaveAttractionList(List<AttractionViewModel> attractions)
+    public async Task RemoveAttractions(List<Attraction> attractions)
+    {
+         await _attractionsRepository.RemoveAttractions(attractions);
+    }
+
+    public async Task SaveAttractionList(List<AttractionViewModel> attractions)
     {
          await _attractionsRepository.SaveAttractionList(attractions);
     }
