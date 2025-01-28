@@ -6,6 +6,7 @@
 
 @using Microsoft.AspNetCore.Authorization
 
+@using TravShell.App.Attractions
 @using TravShell.App.Tags
 @using TravShell.App.Trips
 
@@ -20,7 +21,7 @@
 	<Authorized>
 		@if (Int32.Parse(context.User.Identity.Name) == UserId)
 		{
-<h3 class="align-content-center" > Trips count: @TotalTrips of user: @UserId</h3>
+<h3 class="align-content-center" > Wow! You have: @TotalTrips trips!</h3>
 <MudToolBar Style="margin: auto;  width: 60vw; min-width:400px; padding: 10px;" Class="gap-4" WrapContent="true">
 	
 	<MudRadioGroup @bind-Value="SearchBarOption">
@@ -38,6 +39,7 @@
 			<MudChip T="string" Icon="@Icons.Material.Filled.FilterAlt" Color="Color.Primary">OrderBy: @(OrderChosen+": "+SearchedName)</MudChip>
 		</ActivatorContent>
 		<ChildContent>
+			<MudMenuItem OnClick="()=>SearchTripsByCondition(SearchOptions.Nothing)">Nothing</MudMenuItem>
 			<MudMenuItem OnClick="()=>SearchTripsByCondition(SearchOptions.AtoZ)">From A to Z</MudMenuItem>
 			<MudMenuItem OnClick="()=>SearchTripsByCondition(SearchOptions.ZtoA)">From Z to A</MudMenuItem>
 			<MudMenuItem OnClick="()=>SearchTripsByCondition(SearchOptions.Upcoming)">Upcoming trips</MudMenuItem>
@@ -154,6 +156,9 @@
 
 	[Inject]
 	public required ITagService tagService { get; set; }
+
+	[Inject]
+	public required IAttractionService attractionService { get; set; }
 
 	[Parameter]
 	public int UserId { get; set; } = default;
@@ -288,6 +293,11 @@
 			Tags = tags;
 			StateHasChanged();
 		}
+	}
+
+	private async Task<int> CheckTripCompleteness(int tripId)
+	{
+		return await attractionService.CountTripAttractions(tripId);
 	}
 
 }

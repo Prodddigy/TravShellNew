@@ -21,6 +21,12 @@
 @if(IsAuth)
 {
     @*<h3>User id: @UserId and Trip id: @TripId</h3>*@
+    @if (!IsTripComplete)
+    {
+        <h1>This trip is incomplete, if you are the author - please edit or delete it</h1>
+    }
+    else
+    {
 
     if(TripExists)
     {
@@ -200,6 +206,7 @@
     {
         <h1>Trip @TripId does not exist, or is not public.</h1>
     }
+    }
 }
 else
 {
@@ -276,6 +283,8 @@ else
 
     private int userRating = 0;
 
+    private bool IsTripComplete = false;
+
 
     protected async override Task OnInitializedAsync()//zmniejszyć to!!!
     {
@@ -309,9 +318,13 @@ else
 
             TripName = currentTrip.Name;
             int numOfAtt = await attractionsService.CountTripAttractions(TripId);
-            if (numOfAtt != 0)
+            if (numOfAtt == 0)
             {
-                Attractions = await attractionsService.GetTripAttractionsOrderByStartDate(TripId);
+                return;
+            }
+            IsTripComplete = true;
+
+            Attractions = await attractionsService.GetTripAttractionsOrderByStartDate(TripId);
 
                 DateTime tmp = Attractions.First().StartDate;
 
@@ -378,7 +391,7 @@ else
 
                 }
                 markers = AllMarkers[0];
-            }
+            
 
             var trip = await tripsService.FindTripById(TripId);
 

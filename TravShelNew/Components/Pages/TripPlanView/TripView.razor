@@ -19,13 +19,19 @@
 @if(IsAuth)
 {
     @*<h3>User id: @UserId and Trip id: @TripId</h3>*@
+     @if(!IsTripComplete)
+    {
+        <h1>This trip is incomplete, please edit or delte it.</h1>
+    }
+    else
+    {
 
     if(TripExists)
     {
         <MudText Style="@($"color:{Colors.Purple.Darken4};")" Typo="Typo.h3"> Trip name: @TripName</MudText>  
    
         <MudContainer style=" margin: auto;  width: 60vw; min-width:400px; padding: 10px;">
-<MudGrid>
+    <MudGrid>
     <MudItem>
         @if(isPublic)
         {
@@ -173,7 +179,8 @@
     }
     else
     {
-        <h1>Trip @TripId does not exist</h1>
+        <h1>Trip @TripId does not exist.</h1>
+    }
     }
 }
 else
@@ -240,6 +247,8 @@ else
 
     private bool IsPublishProcess = false;
 
+    private bool IsTripComplete = false;
+
 
     protected async override Task OnInitializedAsync()//zmniejszyć to!!!
     {
@@ -258,7 +267,6 @@ else
             if(userIdCheck == currentTrip.User.UserId)
             {
                 IsAuth = true;
-
 
                 pipeline = new MarkdownPipelineBuilder()
                 .UseAdvancedExtensions() 
@@ -282,56 +290,65 @@ else
 
                 TripName = currentTrip.Name;
                 int numOfAtt = await attractionsService.CountTripAttractions(TripId);
-                if (numOfAtt != 0)
+                if (numOfAtt == 0)
                 {
-                    Attractions = await attractionsService.GetTripAttractionsOrderByStartDate(TripId);
+                    // Console.WriteLine("no atts");
+                    return;
+                }
+                IsTripComplete = true;
+                Attractions = await attractionsService.GetTripAttractionsOrderByStartDate(TripId);
+               // IsTripComplete =  CheckTripCompleteness();
 
-                    DateTime tmp = Attractions.First().StartDate;
+                // if(IsTripComplete == false)
+                // {
+                //     return;
+                // }
+                DateTime tmp = Attractions.First().StartDate;
 
-                    List<Attraction> tmpList = new();
-                    foreach(var a in Attractions)
+                List<Attraction> tmpList = new();
+                foreach(var a in Attractions)
+                {
+                    if (a.StartDate == tmp )
                     {
-                        if (a.StartDate == tmp )
-                        {
-                            tmpList.Add(a);
-                        }
-                        else
+                        tmpList.Add(a);
+                    }
+                    else
+                    {
+                        AttractionMap.Add(tmp, tmpList);
+
+                        tmp=a.StartDate;
+
+                        tmpList = new();
+
+                        tmpList.Add(a);
+
+                        if(Attractions.Last()==a)
                         {
                             AttractionMap.Add(tmp, tmpList);
-
-                            tmp=a.StartDate;
-
-                            tmpList = new();
-
-                            tmpList.Add(a);
-
-                            if(Attractions.Last()==a)
-                            {
-                                AttractionMap.Add(tmp, tmpList);
-                                break;
-                            }
-                        }
-                        if (Attractions.Last() == a)
-                        {
-                            AttractionMap.Add(tmp, tmpList);
+                            break;
                         }
                     }
-
-                    foreach (var a in AttractionMap)
+                    if (Attractions.Last() == a)
                     {
-                        _source.Add(a.Value.OrderBy(x=>x.step).ToList());
+                        AttractionMap.Add(tmp, tmpList);
                     }
+                }
 
-                    int i = 1;
-                    foreach(var a in AttractionMap)
+                foreach (var a in AttractionMap)
+                {
+                    _source.Add(a.Value.OrderBy(x=>x.step).ToList());
+                }
+
+                int i = 1;
+                foreach(var a in AttractionMap)
+                {
+                    i = 1;
+
+                    var newMarkers = new List<GoogleMapMarker>();
+
+                    foreach(var aa in a.Value.OrderBy(x=>x.step).ToList())
                     {
-                        i = 1;
-
-                        var newMarkers = new List<GoogleMapMarker>();
-
-                        foreach(var aa in a.Value.OrderBy(x=>x.step).ToList())
-                        {
-                            newMarkers.Add(new GoogleMapMarker()
+                        newMarkers.Add(new GoogleMapMarker()
                         {
                             Position = new GoogleMapMarkerPosition(aa.latitude, aa.longitude),
 
@@ -346,12 +363,12 @@ else
 
                             Title = aa.Website != "Website is not available." ? $" <a target = '_blank' jstcache = '6' href = '{aa.Website}' tabindex = '0'> <span> Check the website!</span> </a> " : "<h1> No Website available </h1>",
                         });
-                        }
-                        AllMarkers.Add(newMarkers);
-
                     }
-                    markers = AllMarkers[0];
+                    AllMarkers.Add(newMarkers);
+
                 }
+                markers = AllMarkers[0];
+
 
                 var trip = await tripsService.FindTripById(TripId);
 
@@ -361,8 +378,6 @@ else
                     center = new GoogleMapCenter(trip.latitude, trip.longitude);
                 }
                 await GetAllTripTags();
-                //tutaj problem
-
 
                 StateHasChanged();
                 await Task.Delay(3);
@@ -449,7 +464,6 @@ else
         isPublic = publicModifier;
         IsPublishProcess = false;
         StateHasChanged();
-        // navi.Refresh(true);
     }
 
     private async void SaveAndAddTag()
@@ -462,7 +476,7 @@ else
             await tagsService.AttachTagToTrip(TripId, t);
 
             tagName="";
-           await GetAllTripTags();
+            await GetAllTripTags();
         }
     }
 
@@ -481,10 +495,26 @@ else
         if(t !=null)
         {
             await tagsService.RemoveTagFromTrip(TripId, t);
-          await  GetAllTripTags();
+            await  GetAllTripTags();
         }
     }
 
+    private bool CheckTripCompleteness()
+    {
+        //var dates = Attractions.Select(x => x.StartDate).Distinct().ToList();
+        Console.WriteLine(Attractions.Count()+ " att count");
+
+        for(var i = 0; i < currentTrip.Days; i++)
+        {
+            Console.WriteLine(currentTrip.Firstdate.AddDays(i) + " last date "+ currentTrip.Lastdate);
+            if(Attractions.Where(x => x.StartDate == currentTrip.Firstdate.AddDays(i)).Count()<=0)
+            {
+
+                return false;
+            }
+        }
+        return true;
+    }
 }
 <style>
     .horizontal-scroll {
