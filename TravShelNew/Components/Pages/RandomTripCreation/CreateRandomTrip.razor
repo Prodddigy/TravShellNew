@@ -25,6 +25,11 @@
 	<h3>New randomized trip!</h3>
 
 </div>
+
+@if(!IsCreating)
+	{
+		
+	
 	<EditForm Model="Model" OnValidSubmit="VerifyLocation" FormName="InitialTripCreationForm" style=" margin: auto;  width: 50%;
   padding: 10px;">
 
@@ -84,6 +89,19 @@
 
 		</MudGrid>
 	</EditForm>
+	}
+	else
+	{
+
+	<MudContainer style=" margin: auto;  width: 60vw; min-width:400px; padding: 10px;">
+		<MudProgressLinear Color="Color.Primary" Buffer="true" Value="@Value" BufferValue="@BufferValue" Class="my-7">
+
+		</MudProgressLinear>
+		<MudText Typo="Typo.subtitle1" Color="Color.Dark">
+			<b>@Status</b>
+		</MudText>
+	</MudContainer>
+	}
 }
 else
 {
@@ -122,7 +140,7 @@ else
 	public GoogleMapCenter center = new GoogleMapCenter(51.919438, 19.145136);
 	public List<GoogleMapMarker> markers = new();
 
-	public List<AttractionViewModel> SelectedAttractions = new(); 
+	//public List<AttractionViewModel> SelectedAttractions = new(); 
 
 	public List<AttractionViewModel> touristAtts = new();
 
@@ -137,6 +155,15 @@ else
 
 	private int trip_id = -1;
 	private Trip trip = null;
+
+	private bool IsCreating = false;
+
+	private int Value =0;
+	private int BufferValue = 0;
+
+	private string Status = "Loading tourist attractions... 0%";
+
+	[Inject] IJSRuntime? JsRuntime { get; set; }
 
 	protected override async Task OnParametersSetAsync()
 	{
@@ -201,6 +228,8 @@ else
 	{
 		if (Model.Firstdate >= DateTime.Now.Date && Model.Lastdate.Value.Date >= Model.Firstdate.Value.Date)
 		{
+
+
 			// var trip_id = -1;
 
 			if (Model.Firstdate.Value.Date < Model.Lastdate.Value.Date)//Multiple day trip
@@ -213,20 +242,37 @@ else
 				}
 				else
 				{
+
+					IsCreating = true;
+					StateHasChanged();
 					errorMessage = null;
 
 					var newModel = await GoogleService.GetCoordinates(Model);
 
 					trip_id = await TripsService.CreateMultiDayTrip(newModel, user);
 					trip = await TripsService.FindTripById(trip_id);
-					await GetPlaces(AttractionType.Accommodation);
-					await GetPlaces(AttractionType.Restaurant);
 					await GetPlaces(AttractionType.Attraction);
+
+					await SimulateProgressAsync("Loading restaurants... 30%");
+
+					await GetPlaces(AttractionType.Restaurant);
+
+					await SimulateProgressAsync("Loading accommodations... 60%");
+					await GetPlaces(AttractionType.Accommodation);
+					await SimulateProgressAsync("Randomizing ... 80%");
 					await MultiDayRandomize();
 					if(trip ==null)
 					{
+						IsCreating = false;
+						StateHasChanged();
 						return;
 					}
+
+					IsCreating = false;
+					Value = 0;
+					BufferValue = 0;
+					IsCreating = false;
+					Status = "Loading tourist attractions... 0%";
 					navigationManager.NavigateTo($"/trips/{UserId}/{trip_id}");
 				}
 
@@ -236,21 +282,35 @@ else
 			{
 				errorMessage = null;
 
+				IsCreating = true;
+				StateHasChanged();
+
 				var newModel = (await GoogleService.GetCoordinates(Model));
 
 				trip_id = await TripsService.CreateOneDayTrip(Model, user);
 
 				trip = await TripsService.FindTripById(trip_id);
-
-				await GetPlaces(AttractionType.Accommodation);
-				await GetPlaces(AttractionType.Restaurant);
 				await GetPlaces(AttractionType.Attraction);
+
+				await SimulateProgressAsync("Loading restaurants... 30%");
+
+				await GetPlaces(AttractionType.Restaurant);
+
+				await SimulateProgressAsync("Loading accommodations... 60%");
+				await GetPlaces(AttractionType.Accommodation);
+				await SimulateProgressAsync("Randomizing ... 80%");
 
 				await SingleDayRandomize();
 				if (trip == null)
 				{
+					IsCreating = false;
+					StateHasChanged();
 					return;
 				}
+				Value =0;
+				BufferValue = 0;
+				IsCreating = false;
+				Status = "Loading tourist attractions... 0%";
 				navigationManager.NavigateTo($"/trips/{UserId}/{trip_id}");
 			}
 			else
@@ -264,6 +324,8 @@ else
 		}	
 	}
 
+
+
 	private async Task<IEnumerable<string>> SearchPlacesAsync(string place, CancellationToken cancellationToken)
 	{
 		if (string.IsNullOrWhiteSpace(place))
@@ -276,6 +338,21 @@ else
 	{
 		isNotVerified = true;
 		StateHasChanged();
+	}
+
+	public async Task SimulateProgressAsync(string status)
+	{
+		Status = status;
+		Value += 30;
+		BufferValue += 35;
+		StateHasChanged();
+		await Task.Delay(500);
+		// if (Value >= 100)
+		// {
+		// 	IsCreating = false;
+		// 	StateHasChanged();
+		// 	await Task.Delay(500);
+		// }
 	}
 
 	private async Task GetPlaces(AttractionType type)
@@ -311,10 +388,10 @@ else
 		var restSize = restaurants.Count();
 		var accoSize = accommodations.Count();
 		//accommodations[0] = new AttractionViewModel();
-		if(attsSize<(Model.Days*2))
+		if(attsSize<(trip.Days*2))
 		{
 			await TripsService.RemoveTripById(trip_id);
-			errorMessage = "To little attractions and restaurants in chosen place";
+			errorMessage = "To little attractions in chosen place";
 			trip = null;
 			return;
 		}
@@ -420,10 +497,10 @@ else
 		var restSize = restaurants.Count();
 		var accoSize = accommodations.Count();
 		//accommodations[0] = new AttractionViewModel();
-		if (attsSize < (Model.Days * 2))
+		if (attsSize < (trip.Days * 2))
 		{
 			await TripsService.RemoveTripById(trip_id);
-			errorMessage = "To little attractions and restaurants in chosen place";
+			errorMessage = "To little attractions in chosen place";
 			trip = null;
 			return;
 		}
@@ -441,7 +518,7 @@ else
 		int tmpStep = 0;
 		if (accoSize != 0)
 		{
-			tmpAttraction = accommodations[chosenAccommodation];
+			tmpAttraction = accommodations[chosenAccommodation].Copy();
 
 			tmpAttraction.step = tmpStep++;
 			tmpAttraction.StartDate = Model.Firstdate.Value;
@@ -451,7 +528,7 @@ else
 
 		// do
 		// {
-		tmpAttraction = touristAtts[random.Next(0, (attsSize - 1))];
+		tmpAttraction = touristAtts[random.Next(0, (attsSize - 1))].Copy();
 		// if(chosenAttractions.Where(x=>x.PlaceCode ==tmpAttraction.PlaceCode).FirstOrDefault()==null)
 		// {
 		tmpAttraction.step = tmpStep++;
@@ -466,7 +543,7 @@ else
 		// } while (true);
 		if (restSize != 0)
 		{
-			tmpAttraction = restaurants[random.Next(0, (restSize - 1))];
+			tmpAttraction = restaurants[random.Next(0, (restSize - 1))].Copy();
 			// if(chosenAttractions.Where(x=>x.PlaceCode ==tmpAttraction.PlaceCode).FirstOrDefault()==null)
 			// {
 			tmpAttraction.step = tmpStep++;
@@ -476,7 +553,7 @@ else
 			//	touristAtts.RemoveAll(x => x.PlaceCode == tmpAttraction.PlaceCode);
 		}
 
-		tmpAttraction = touristAtts[random.Next(0, (attsSize - 1))];
+		tmpAttraction = touristAtts[random.Next(0, (attsSize - 1))].Copy();
 		// if(chosenAttractions.Where(x=>x.PlaceCode ==tmpAttraction.PlaceCode).FirstOrDefault()==null)
 		// {
 		tmpAttraction.step = tmpStep++;
@@ -487,7 +564,7 @@ else
 
 		if (restSize != 0)
 		{
-			tmpAttraction = restaurants[random.Next(0, (restSize - 1))];
+			tmpAttraction = restaurants[random.Next(0, (restSize - 1))].Copy();
 			// if(chosenAttractions.Where(x=>x.PlaceCode ==tmpAttraction.PlaceCode).FirstOrDefault()==null)
 			// {
 			tmpAttraction.step = tmpStep++;
