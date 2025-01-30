@@ -93,9 +93,6 @@ namespace TravShell.Infrastructure.Repositories;
                 await _dbContext.SaveChangesAsync();
             }
 
-			
-
-
 			_dbContext.Trips.Remove(trip);
 			await _dbContext.SaveChangesAsync();
 			//cant remove a trip if the trip has reviews
@@ -189,7 +186,6 @@ namespace TravShell.Infrastructure.Repositories;
 		await _dbContext.SaveChangesAsync();
 
 	}
-
     public async Task<Trip> FindPublicTripById(int tripId)
     {
         return await _dbContext.Trips.Include(x => x.User).Where(x => x.TripId == tripId && x.IsPublic ==true).FirstOrDefaultAsync();

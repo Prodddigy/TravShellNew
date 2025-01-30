@@ -1,0 +1,502 @@
+﻿@page "/createRandomTrip/{UserId:int}/newTrip"
+
+@rendermode InteractiveServer
+@using RazorComponents
+@using Microsoft.AspNetCore.Authorization
+@using System.Globalization
+@using TravShell.App.Attractions
+@using TravShell.App.GoogleAPI
+@using TravShell.App.Trips
+
+@using GoogleApi.Entities.Common;
+@using GoogleApi.Entities.Common.Enums;
+@using GoogleApi.Entities.Places.QueryAutoComplete.Request;
+@using GoogleApi;
+@using GoogleApi.Entities.Places.AutoComplete.Request;
+
+@attribute [Authorize]
+@inject DataContext dataContext
+@inject NavigationManager navigationManager
+@inject AuthenticationStateProvider ASP
+
+@if(IsAuth)
+{
+	<div class="mb-3 text-center flex-column">
+	<h3>New randomized trip!</h3>
+
+</div>
+	<EditForm Model="Model" OnValidSubmit="VerifyLocation" FormName="InitialTripCreationForm" style=" margin: auto;  width: 50%;
+  padding: 10px;">
+
+		<DataAnnotationsValidator />
+
+		<MudGrid>
+			<MudItem xs="12" sm="6">
+				<MudCard>
+					<MudCardContent @onclick="RevokeVerification">
+						<MudTextField Label="Trip name" @bind-Value="Model.Name" For="@(()=>Model.Name)" />
+						<MudDatePicker Adornment="Adornment.None" Label="Start date" @bind-Date="Model.Firstdate" PickerVariant="PickerVariant.Dialog" Class="mt-3" For="@(()=>Model.Firstdate)" />
+						<MudDatePicker Adornment="Adornment.None" Label="Last date" @bind-Date="Model.Lastdate" PickerVariant="PickerVariant.Dialog" Class="mt-3" For="@(()=>Model.Lastdate)" />
+						<MudTooltip Text="Hint: You don't have to choose city, instead try anything you want!">
+							<MudAutocomplete OnClearButtonClick="RevokeVerification" @onclick="RevokeVerification" T="string" Label="Search for places"
+											 Placeholder="Start typing..."
+											 SearchFunc="SearchPlacesAsync"
+											 Clearable="true"
+											 CoerceText="true"
+											 ResetValueOnEmptyText="true" @bind-Value="Model.City" For="@(()=>Model.City)" />
+						</MudTooltip>
+
+						<MudTextField Label="Short description" Immediate="true" Counter="40" MaxLength="40" @bind-Value="Model.ShortDescription" Class="mt-3" For="@(()=>Model.ShortDescription)" AutoGrow MaxLines="4" Variant="Variant.Text" />
+
+
+						<MudCheckBox @onclick="RevokeVerification" Label="Public" @bind-Value="Model.IsPublic" Class="mt-3" For="@(()=>Model.IsPublic)" Color="Color.Primary" />
+					</MudCardContent>
+
+					<MudCardActions>
+						<MudButton ButtonType="MudBlazor.ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto"> Verify details </MudButton>
+					</MudCardActions>
+
+				</MudCard>
+
+
+			</MudItem>
+
+
+			<MudItem xs="12" sm="6">
+				<MudPaper Class="pa-4 mud-height-full">
+					<GoogleMap @ref="googleMapRef"
+							   ApiKey="@TravShell.App.GoogleAPI.GoogleService.apiKey"
+							   Center="@center"
+							   Height="350"
+							   Width="100"
+							   Zoom="@zoom"
+							   Markers="markers" />
+					<MudButton Disabled="isNotVerified" OnClick="SaveTrip" Variant="Variant.Filled" Size="Size.Small" Color="Color.Success">Start planning!</MudButton>
+
+				</MudPaper>
+			</MudItem>
+
+			<MudItem xs="12">
+				<MudText Typo="Typo.body2" Align="Align.Center">
+					<MudText Color="Color.Error">@errorMessage</MudText>
+				</MudText>
+			</MudItem>
+
+		</MudGrid>
+	</EditForm>
+}
+else
+{
+	<h1>Restricted Area</h1>
+}
+
+@code {
+	[Inject]
+	public required IUserService UserService { get; set; }
+
+	[Inject]
+	public required ITripService TripsService { get; set; }
+
+	[Inject]
+	public required IGoogleService GoogleService { get; set; }
+
+	[Inject]
+	public required IAttractionService AttractionService { get; set; }
+
+	[SupplyParameterFromForm]
+	public TripViewModel Model { get; set; } = new();
+
+	[Parameter]
+	public int UserId { get; set; }
+
+	[Parameter]
+	public int TripId { get; set; } = -1;
+
+	public bool isNotVerified { get; set; } = true;
+	public int zoom = 5;
+
+	public User user { get; set; }
+
+	GoogleMap googleMapRef = default!;
+
+	public GoogleMapCenter center = new GoogleMapCenter(51.919438, 19.145136);
+	public List<GoogleMapMarker> markers = new();
+
+	public List<AttractionViewModel> SelectedAttractions = new(); 
+
+	public List<AttractionViewModel> touristAtts = new();
+
+	public List<AttractionViewModel> restaurants = new();
+
+	public List<AttractionViewModel> accommodations = new();
+
+
+	public string? errorMessage { get; set; }
+
+	private bool IsAuth = false;
+
+	private int trip_id = -1;
+	private Trip trip = null;
+
+	protected override async Task OnParametersSetAsync()
+	{
+		var authState = await ASP.GetAuthenticationStateAsync();
+
+		if (authState.User.Identity.IsAuthenticated)
+		{
+			int userIdcheck = Int32.Parse(authState.User.Identity.Name);
+
+			if(UserId ==userIdcheck )
+			{
+				user = await UserService.FindUserByIdAsync(UserId + "");
+				IsAuth = true;
+			}
+		}
+	}
+
+	private async Task<bool> SetLocationOnMap()
+	{
+		if (Model.City != "" && Model.City != null)
+		{
+			var model = await GoogleService.GetCoordinates(Model);
+			if(model == null)
+			{
+				errorMessage = "No such place found as: " + Model.City;
+
+				return true;
+			}
+			markers.Clear();
+			markers.Add(
+				new GoogleMapMarker()
+					{
+						Position = new GoogleMapMarkerPosition(model.latitude, model.longitude),
+						Title = model.City
+					});
+
+			center = new GoogleMapCenter(model.latitude, model.longitude);
+			errorMessage = "";
+
+			zoom = 8;
+			return false;
+
+		}else
+		{
+			return true;
+		}
+	}
+
+	private async Task VerifyLocation()
+	{
+		bool tmp = await SetLocationOnMap();
+
+		isNotVerified = tmp;
+
+		StateHasChanged();
+		await Task.Delay(3);
+		await googleMapRef.UpdateMarkersAsync(markers);
+		await googleMapRef.RefreshAsync();
+	}
+
+	public async Task SaveTrip()
+	{
+		if (Model.Firstdate >= DateTime.Now.Date && Model.Lastdate.Value.Date >= Model.Firstdate.Value.Date)
+		{
+			// var trip_id = -1;
+
+			if (Model.Firstdate.Value.Date < Model.Lastdate.Value.Date)//Multiple day trip
+			{
+
+				if ( ((Model.Lastdate.Value.Date-Model.Firstdate.Value.Date).Days+1) >7)
+				{
+					errorMessage = "Trip is too long. It can't be longer than 7 days!";
+
+				}
+				else
+				{
+					errorMessage = null;
+
+					var newModel = await GoogleService.GetCoordinates(Model);
+
+					trip_id = await TripsService.CreateMultiDayTrip(newModel, user);
+					trip = await TripsService.FindTripById(trip_id);
+					await GetPlaces(AttractionType.Accommodation);
+					await GetPlaces(AttractionType.Restaurant);
+					await GetPlaces(AttractionType.Attraction);
+					await MultiDayRandomize();
+					if(trip ==null)
+					{
+						return;
+					}
+					navigationManager.NavigateTo($"/trips/{UserId}/{trip_id}");
+				}
+
+
+			}
+			else if (Model.Firstdate.Value.Date == Model.Lastdate.Value.Date) //one day trip
+			{
+				errorMessage = null;
+
+				var newModel = (await GoogleService.GetCoordinates(Model));
+
+				trip_id = await TripsService.CreateOneDayTrip(Model, user);
+
+				trip = await TripsService.FindTripById(trip_id);
+
+				await GetPlaces(AttractionType.Accommodation);
+				await GetPlaces(AttractionType.Restaurant);
+				await GetPlaces(AttractionType.Attraction);
+
+				await SingleDayRandomize();
+				if (trip == null)
+				{
+					return;
+				}
+				navigationManager.NavigateTo($"/trips/{UserId}/{trip_id}");
+			}
+			else
+			{
+				errorMessage = "Dates are mixed up";
+			}
+		}
+		else
+		{
+			errorMessage = "Dates are in the past. First: "+Model.Firstdate.Value.Date.ToShortDateString()+". Second: "+Model.Lastdate.Value.Date.ToShortDateString()+".";
+		}	
+	}
+
+	private async Task<IEnumerable<string>> SearchPlacesAsync(string place, CancellationToken cancellationToken)
+	{
+		if (string.IsNullOrWhiteSpace(place))
+			return Enumerable.Empty<string>();
+
+		return await GoogleService.GetPlaceNamesAutocomplete(place,cancellationToken);
+	}
+
+	private void RevokeVerification()
+	{
+		isNotVerified = true;
+		StateHasChanged();
+	}
+
+	private async Task GetPlaces(AttractionType type)
+	{
+
+		List<AttractionViewModel> tmpList = new();
+		if(type == AttractionType.Accommodation)
+		{
+			tmpList = await GoogleService.GetSetAttractions
+				($"{Model.latitude.ToString(CultureInfo.InvariantCulture)}%2C{Model.longitude.ToString(CultureInfo.InvariantCulture)}", type, accommodations);
+
+			accommodations=	await GoogleService.GetSetAttractionsDetails(tmpList);
+		}
+		if (type == AttractionType.Restaurant)
+		{
+			tmpList = await GoogleService.GetSetAttractions
+			($"{Model.latitude.ToString(CultureInfo.InvariantCulture)}%2C{Model.longitude.ToString(CultureInfo.InvariantCulture)}", type, restaurants);
+
+			restaurants = await GoogleService.GetSetAttractionsDetails(tmpList);
+		}
+		if (type == AttractionType.Attraction)
+		{
+			tmpList = await GoogleService.GetSetAttractions
+		($"{Model.latitude.ToString(CultureInfo.InvariantCulture)}%2C{Model.longitude.ToString(CultureInfo.InvariantCulture)}", type, touristAtts);
+			touristAtts = await GoogleService.GetSetAttractionsDetails(tmpList);
+		}
+	}
+
+	private async Task MultiDayRandomize()
+	{
+		Random random = new Random();
+		var attsSize = touristAtts.Count();
+		var restSize = restaurants.Count();
+		var accoSize = accommodations.Count();
+		//accommodations[0] = new AttractionViewModel();
+		if(attsSize<(Model.Days*2))
+		{
+			await TripsService.RemoveTripById(trip_id);
+			errorMessage = "To little attractions and restaurants in chosen place";
+			trip = null;
+			return;
+		}
+
+		var chosenAccommodation = -1;
+		if(accoSize != 0)
+		{
+			chosenAccommodation = random.Next(0, (accoSize-1));	
+		}
+		List<AttractionViewModel> chosenAttractions = new();
+		var currentDate = Model.Firstdate;
+
+		AttractionViewModel tmpAttraction = null;
+
+		int tmpStep = 0;
+		for(int i =0;i<trip.Days;i++)
+		{
+			Console.WriteLine("which day?: "+i);
+			Console.WriteLine("how many atts so far?: "+chosenAttractions.Count());
+			if (accoSize != 0)
+			{
+				tmpAttraction = accommodations[chosenAccommodation].Copy();
+
+				tmpAttraction.step = tmpStep++;
+				tmpAttraction.StartDate = Model.Firstdate.Value.AddDays(i);
+				tmpAttraction.Trip = trip;
+				chosenAttractions.Add(tmpAttraction);
+			}
+
+			// do
+			// {
+			tmpAttraction = touristAtts[random.Next(0, (touristAtts.Count() - 1))].Copy();
+			// if(chosenAttractions.Where(x=>x.PlaceCode ==tmpAttraction.PlaceCode).FirstOrDefault()==null)
+			// {
+			tmpAttraction.step = tmpStep++;
+			tmpAttraction.StartDate = Model.Firstdate.Value.AddDays(i);
+			chosenAttractions.Add(tmpAttraction);
+			tmpAttraction.Trip = trip;
+			touristAtts.RemoveAll(x => x.PlaceCode == tmpAttraction.PlaceCode);
+
+			// 		break;
+			// 	}
+
+			// } while (true);
+			if (restSize != 0)
+			{
+
+
+				tmpAttraction = restaurants[random.Next(0, (restSize - 1))].Copy();
+				// if(chosenAttractions.Where(x=>x.PlaceCode ==tmpAttraction.PlaceCode).FirstOrDefault()==null)
+				// {
+				tmpAttraction.step = tmpStep++;
+				tmpAttraction.StartDate = Model.Firstdate.Value.AddDays(i);
+				tmpAttraction.Trip = trip;
+				chosenAttractions.Add(tmpAttraction);
+			//	touristAtts.RemoveAll(x => x.PlaceCode == tmpAttraction.PlaceCode);
+			}
+
+			tmpAttraction = touristAtts[random.Next(0, (touristAtts.Count() - 1))].Copy();
+			// if(chosenAttractions.Where(x=>x.PlaceCode ==tmpAttraction.PlaceCode).FirstOrDefault()==null)
+			// {
+			tmpAttraction.step = tmpStep++;
+			tmpAttraction.StartDate = Model.Firstdate.Value.AddDays(i);
+			tmpAttraction.Trip = trip;
+			chosenAttractions.Add(tmpAttraction);
+			touristAtts.RemoveAll(x => x.PlaceCode == tmpAttraction.PlaceCode);
+
+
+			if (restSize != 0)
+			{
+				tmpAttraction = restaurants[random.Next(0, (restSize - 1))].Copy();
+				// if(chosenAttractions.Where(x=>x.PlaceCode ==tmpAttraction.PlaceCode).FirstOrDefault()==null)
+				// {
+				tmpAttraction.step = tmpStep++;
+				tmpAttraction.StartDate = Model.Firstdate.Value.AddDays(i);
+				tmpAttraction.Trip = trip;
+				chosenAttractions.Add(tmpAttraction);
+				//	touristAtts.RemoveAll(x => x.PlaceCode == tmpAttraction.PlaceCode);
+			}
+
+
+			tmpStep = 0;
+		}
+		Console.WriteLine(chosenAttractions.Count()+" num of chosen atts");
+
+		await AttractionService.SaveAttractionList(chosenAttractions);
+	
+		/*
+		 * 1.hotel?
+		 * 2.atrakcja!
+		 * 3.restauracja?
+		 * 4.atrakcja!
+		 * 5.restauracja?
+		 */
+
+
+	}
+
+	private async Task SingleDayRandomize()
+	{
+		Random random = new Random();
+		var attsSize = touristAtts.Count();
+		var restSize = restaurants.Count();
+		var accoSize = accommodations.Count();
+		//accommodations[0] = new AttractionViewModel();
+		if (attsSize < (Model.Days * 2))
+		{
+			await TripsService.RemoveTripById(trip_id);
+			errorMessage = "To little attractions and restaurants in chosen place";
+			trip = null;
+			return;
+		}
+
+		var chosenAccommodation = -1;
+		if (accoSize != 0)
+		{
+			chosenAccommodation = random.Next(0, (accoSize - 1));
+		}
+		List<AttractionViewModel> chosenAttractions = new();
+		var currentDate = Model.Firstdate;
+
+		AttractionViewModel tmpAttraction = null;
+
+		int tmpStep = 0;
+		if (accoSize != 0)
+		{
+			tmpAttraction = accommodations[chosenAccommodation];
+
+			tmpAttraction.step = tmpStep++;
+			tmpAttraction.StartDate = Model.Firstdate.Value;
+			tmpAttraction.Trip = trip;
+			chosenAttractions.Add(tmpAttraction);
+		}
+
+		// do
+		// {
+		tmpAttraction = touristAtts[random.Next(0, (attsSize - 1))];
+		// if(chosenAttractions.Where(x=>x.PlaceCode ==tmpAttraction.PlaceCode).FirstOrDefault()==null)
+		// {
+		tmpAttraction.step = tmpStep++;
+		tmpAttraction.StartDate = Model.Firstdate.Value;
+		tmpAttraction.Trip = trip;
+		chosenAttractions.Add(tmpAttraction);
+		touristAtts.RemoveAll(x => x.PlaceCode == tmpAttraction.PlaceCode);
+
+		// 		break;
+		// 	}
+
+		// } while (true);
+		if (restSize != 0)
+		{
+			tmpAttraction = restaurants[random.Next(0, (restSize - 1))];
+			// if(chosenAttractions.Where(x=>x.PlaceCode ==tmpAttraction.PlaceCode).FirstOrDefault()==null)
+			// {
+			tmpAttraction.step = tmpStep++;
+			tmpAttraction.StartDate = Model.Firstdate.Value;
+			tmpAttraction.Trip = trip;
+			chosenAttractions.Add(tmpAttraction);
+			//	touristAtts.RemoveAll(x => x.PlaceCode == tmpAttraction.PlaceCode);
+		}
+
+		tmpAttraction = touristAtts[random.Next(0, (attsSize - 1))];
+		// if(chosenAttractions.Where(x=>x.PlaceCode ==tmpAttraction.PlaceCode).FirstOrDefault()==null)
+		// {
+		tmpAttraction.step = tmpStep++;
+		tmpAttraction.StartDate = Model.Firstdate.Value;
+		tmpAttraction.Trip = trip;
+		chosenAttractions.Add(tmpAttraction);
+		touristAtts.RemoveAll(x => x.PlaceCode == tmpAttraction.PlaceCode);
+
+		if (restSize != 0)
+		{
+			tmpAttraction = restaurants[random.Next(0, (restSize - 1))];
+			// if(chosenAttractions.Where(x=>x.PlaceCode ==tmpAttraction.PlaceCode).FirstOrDefault()==null)
+			// {
+			tmpAttraction.step = tmpStep++;
+			tmpAttraction.StartDate = Model.Firstdate.Value;
+			tmpAttraction.Trip = trip;
+			chosenAttractions.Add(tmpAttraction);
+			//	touristAtts.RemoveAll(x => x.PlaceCode == tmpAttraction.PlaceCode);
+		}
+
+		await AttractionService.SaveAttractionList(chosenAttractions);
+	}
+}

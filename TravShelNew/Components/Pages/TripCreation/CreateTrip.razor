@@ -23,7 +23,7 @@
 	<h3>New trip!</h3>
 
 </div>
-	<EditForm Model="Model" on OnValidSubmit="VerifyLocation" FormName="InitialTripCreationForm" style=" margin: auto;  width: 50%;
+	<EditForm Model="Model"  OnValidSubmit="VerifyLocation" FormName="InitialTripCreationForm" style=" margin: auto;  width: 50%;
   padding: 10px;">
 
 	<DataAnnotationsValidator />
@@ -35,7 +35,7 @@
 						<MudTextField   Label="Trip name" @bind-Value="Model.Name" For="@(()=>Model.Name)" />
 						<MudDatePicker Adornment="Adornment.None" Label="Start date" @bind-Date="Model.Firstdate" PickerVariant="PickerVariant.Dialog" Class="mt-3" For="@(()=>Model.Firstdate)" />
 						<MudDatePicker Adornment="Adornment.None" Label="Last date" @bind-Date="Model.Lastdate" PickerVariant="PickerVariant.Dialog" Class="mt-3" For="@(()=>Model.Lastdate)" />
-							<MudTooltip Text="Hint: You don't have to choose city, instead try a anything you want!">
+							<MudTooltip Text="Hint: You don't have to choose city, instead try anything you want!">
 						<MudAutocomplete OnClearButtonClick="RevokeVerification"  @onclick="RevokeVerification"  T="string" Label="Search for places"
 										 Placeholder="Start typing..."
 										 SearchFunc="SearchPlacesAsync"

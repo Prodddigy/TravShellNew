@@ -35,5 +35,11 @@ public class AttractionViewModel
     public GoogleMapMarker Marker { get; set; }
 
 
+    public AttractionViewModel Copy()
+    {
+        return (AttractionViewModel)this.MemberwiseClone();      
+    }
+
+
 }
 

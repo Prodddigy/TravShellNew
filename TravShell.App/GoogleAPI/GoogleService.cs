@@ -92,7 +92,7 @@ public class GoogleService : IGoogleService
                 JObject parsed = JObject.Parse(result);
 
                 var attractions = parsed["results"];
-                Console.WriteLine("number of attractions" + attractions.Count()+" successfully downloaded");
+                Console.WriteLine("number of attractions of type:"+type+" => " + attractions.Count()+" successfully downloaded");
                 
 
                 for (int i = 0; i < attractions.Count(); i++)

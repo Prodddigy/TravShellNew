@@ -46,7 +46,7 @@
 					<MudButton Variant="Variant.Filled" Href="@($"/trips/{UserId}")" Color="Color.Surface">Trip List <MudIcon Icon="@Icons.Material.Filled.GridView" Size="Size.Large" Color="Color.Info" /> </MudButton>
 					
 					<MudSpacer />
-					<MudButton>Random Trip <MudIcon Icon="@Icons.Material.Filled.NotListedLocation" Color="Color.Secondary"Size="Size.Large"/></MudButton>
+					<MudButton Href="@($"/createRandomTrip/{UserId}/newTrip")">Random Trip <MudIcon Icon="@Icons.Material.Filled.NotListedLocation" Color="Color.Secondary"Size="Size.Large"/></MudButton>
 					<MudCarousel Class="mud-width-full" Style="height:200px;" ShowArrows="@arrows" ShowBullets="@bullets" EnableSwipeGesture="@enableSwipeGesture" AutoCycle="@autocycle" TData="object">
 						<MudCarouselItem Transition="transition" Color="@Color.Primary">
 							<div class="d-flex" style="height:100%">
