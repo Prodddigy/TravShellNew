@@ -92,7 +92,7 @@
 	}
 	else
 	{
-
+		<NavigationLock ConfirmExternalNavigation="@IsCreating" OnBeforeInternalNavigation="@OnBeforeInternalNavigation"></NavigationLock>
 	<MudContainer style=" margin: auto;  width: 60vw; min-width:400px; padding: 10px;">
 		<MudProgressLinear Color="Color.Primary" Buffer="true" Value="@Value" BufferValue="@BufferValue" Class="my-7">
 
@@ -383,6 +383,10 @@ else
 
 	private async Task MultiDayRandomize()
 	{
+		if (trip == null)
+		{
+			return;
+		}
 		Random random = new Random();
 		var attsSize = touristAtts.Count();
 		var restSize = restaurants.Count();
@@ -447,7 +451,7 @@ else
 				tmpAttraction.StartDate = Model.Firstdate.Value.AddDays(i);
 				tmpAttraction.Trip = trip;
 				chosenAttractions.Add(tmpAttraction);
-			//	touristAtts.RemoveAll(x => x.PlaceCode == tmpAttraction.PlaceCode);
+				//	touristAtts.RemoveAll(x => x.PlaceCode == tmpAttraction.PlaceCode);
 			}
 
 			tmpAttraction = touristAtts[random.Next(0, (touristAtts.Count() - 1))].Copy();
@@ -478,25 +482,30 @@ else
 		Console.WriteLine(chosenAttractions.Count()+" num of chosen atts");
 
 		await AttractionService.SaveAttractionList(chosenAttractions);
-	
+
 		/*
-		 * 1.hotel?
-		 * 2.atrakcja!
-		 * 3.restauracja?
-		 * 4.atrakcja!
-		 * 5.restauracja?
-		 */
+		* 1.hotel?
+		* 2.atrakcja!
+		* 3.restauracja?
+		* 4.atrakcja!
+		* 5.restauracja?
+		*/
 
 
 	}
 
 	private async Task SingleDayRandomize()
 	{
+		if (trip == null)
+		{
+			return;
+		}
 		Random random = new Random();
 		var attsSize = touristAtts.Count();
 		var restSize = restaurants.Count();
 		var accoSize = accommodations.Count();
 		//accommodations[0] = new AttractionViewModel();
+	
 		if (attsSize < (trip.Days * 2))
 		{
 			await TripsService.RemoveTripById(trip_id);
@@ -575,5 +584,49 @@ else
 		}
 
 		await AttractionService.SaveAttractionList(chosenAttractions);
+	}
+
+
+	private async Task OnBeforeInternalNavigation(LocationChangingContext context)
+	{
+		if (JsRuntime is null) return;
+
+		if (IsCreating)
+		{
+			var isConfirmed = await JsRuntime.InvokeAsync<bool>("confirm",
+				"Changes will be lost. Still want to leave the page?");
+
+			if (!isConfirmed)
+			{
+				context.PreventNavigation();
+			}
+			else
+			{
+				// Tourist_Attractions = new List<AttractionViewModel>();
+				// Restaurants = new List<AttractionViewModel>();
+				// Accommodations = new List<AttractionViewModel>();
+				// selectedAttractions = new List<AttractionViewModel>();
+				trip = null;
+
+				// markers.Clear();
+
+				//WaitForGoogle = true;
+
+				//LastAttIndex = 0;
+
+				//NoSelectedTrips = true;
+
+				//IsPopup = false;
+
+				//IsLoading = true;
+
+				Value = 0;
+
+				BufferValue = 0;
+
+				Status = "Loading tourist attractions... 0%";
+				//await TripsService.RemoveTripById(trip_id);
+			}
+		}
 	}
 }
