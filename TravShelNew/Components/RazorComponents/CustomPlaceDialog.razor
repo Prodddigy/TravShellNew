@@ -9,7 +9,7 @@
              <MudItem xs="4">
         <MudPaper Outlined Class="border-dashed" Height="250px" Style="width:200px;">
 
-                    <MudAutocomplete OnClearButtonClick="()=>AttsLoaded = true" @onclick="()=>AttsLoaded = true" T="string" Label="Search for places"
+                    <MudAutocomplete  @onclick="()=>AttsLoaded = true" T="string" Label="Search for places"
                                      Placeholder="Start typing..."
                                      SearchFunc="SearchPlacesAsync"
                                      Clearable="true"
@@ -75,17 +75,17 @@
     public required IGoogleService GoogleService { get; set; }
 
 
-    public GoogleMapCenter center = new GoogleMapCenter(51.919438, 19.145136);//zmień na ten co jest w 
-                                                                              //                                                                          createDay
+    public GoogleMapCenter center { get; set; }//zmień na ten co jest w 
+                                               //                                                                          createDay
 
 
     [CascadingParameter]
     private MudDialogInstance MudDialog { get; set; }
     [Parameter]
-    public int longitude { get; set; }
+    public double longitude { get; set; }
 
     [Parameter]
-    public int latitude { get; set; }
+    public double latitude { get; set; }
 
     private void Submit() => MudDialog.Close(DialogResult.Ok(true));
 
@@ -104,6 +104,12 @@
     private bool AttsLoaded = false;
 
     private bool AttNotChosen = true;
+
+    protected override Task OnParametersSetAsync()
+    {
+        center = new GoogleMapCenter(latitude, longitude);
+        return base.OnParametersSetAsync();
+    }
 
     public void ReturnChosenTrip()
     {
@@ -126,6 +132,11 @@
 
     private async Task GetAttractions()
     {
+        if (tmpPlace.City == null || tmpPlace.City.Trim()=="")
+    {
+            return;
+        }
+
         IsSearching = true;
         AttsLoaded = true;
         StateHasChanged();

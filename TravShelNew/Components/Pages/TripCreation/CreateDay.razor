@@ -762,7 +762,14 @@ else
     private async Task OpenSearchAttractionDialogAsync(DialogOptions options)
     {
         AttractionViewModel newAttraction;
-        var dialog = await Dialog.ShowAsync<CustomPlaceDialog>("Search attraction", options);
+        var parameters = new DialogParameters<CustomPlaceDialog>
+        {
+            { x => x.latitude, trip.latitude },
+            { x => x.longitude, trip.longitude }
+        };
+
+
+        var dialog = await Dialog.ShowAsync<CustomPlaceDialog>("Search attraction", parameters, options);
 
         var result = await dialog.Result;
         if (!result.Canceled)
