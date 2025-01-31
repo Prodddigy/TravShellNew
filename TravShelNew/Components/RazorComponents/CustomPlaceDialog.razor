@@ -1,0 +1,166 @@
+﻿@using System.Globalization
+@using TravShell.App.GoogleAPI
+
+
+<MudDialog Style="height:900px;">
+    <DialogContent>
+        Choose a place.
+        <MudGrid>
+             <MudItem xs="4">
+        <MudPaper Outlined Class="border-dashed" Height="250px" Style="width:200px;">
+
+                    <MudAutocomplete OnClearButtonClick="()=>AttsLoaded = true" @onclick="()=>AttsLoaded = true" T="string" Label="Search for places"
+                                     Placeholder="Start typing..."
+                                     SearchFunc="SearchPlacesAsync"
+                                     Clearable="true"
+                                     CoerceText="true"
+                                     ResetValueOnEmptyText="true" @bind-Value="tmpPlace.City" />
+                    <MudButton OnClick="GetAttractions" ButtonType="MudBlazor.ButtonType.Submit" Disabled="AttsLoaded" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">
+                    @if (IsSearching)
+                    {
+                        <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                    }
+                    else
+                    {
+                        <MudText >Search</MudText>
+                    }
+                    </MudButton>
+            <MudText Align="Align.Center">Attractions</MudText>
+            <div style="max-height:200px; overflow-y: auto; ">
+                @foreach(var i in attractions)
+                {
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto" OnClick="()=>SetAttraction(i)">
+                        
+                        <MudText  Align="Align.Left">
+                                    @($"{i.Name}, rating: {i.Rating}")
+                        </MudText>
+                      
+                    </MudButton>
+                }
+            </div>
+        </MudPaper>
+            </MudItem>
+
+          <MudItem xs="12" sm="6">
+                <MudPaper Class="pa-4 mud-height-full">
+            <GoogleMap ApiKey="@TravShell.App.GoogleAPI.GoogleService.apiKey"
+                       Center="@center"
+                       Height="300"
+                       Width="60"
+                       Zoom="12"
+                       Clickable="true" />
+        </MudPaper>
+            </MudItem>
+            @if(chosenAtt!=null)
+            {
+                <MudPaper Class="pa-4 mud-height-full">
+                    <MudText>@chosenAtt.Name<br />
+                      Address: @chosenAtt.Vicinity<br />
+                       Hours: @chosenAtt.Opening_Hours<br />
+                        Website: @chosenAtt.Website<br />
+                    </MudText>
+                </MudPaper>
+            }
+          
+        </MudGrid>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Disabled="AttNotChosen" Color="Color.Primary" OnClick="ReturnChosenTrip">Ok</MudButton>
+    </DialogActions>
+</MudDialog>
+@code {
+
+    [Inject]
+    public required IGoogleService GoogleService { get; set; }
+
+
+    public GoogleMapCenter center = new GoogleMapCenter(51.919438, 19.145136);//zmień na ten co jest w 
+                                                                              //                                                                          createDay
+
+
+    [CascadingParameter]
+    private MudDialogInstance MudDialog { get; set; }
+    [Parameter]
+    public int longitude { get; set; }
+
+    [Parameter]
+    public int latitude { get; set; }
+
+    private void Submit() => MudDialog.Close(DialogResult.Ok(true));
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private AttractionViewModel chosenAtt = null;
+
+    private TripViewModel tmpPlace = new();
+
+    private List<AttractionViewModel> attractions = new();
+
+    // private string Place = "";
+
+    private bool IsSearching = false;
+
+    private bool AttsLoaded = false;
+
+    private bool AttNotChosen = true;
+
+    public void ReturnChosenTrip()
+    {
+        MudDialog.Close(DialogResult.Ok(chosenAtt));
+    }
+
+    private async Task<IEnumerable<string>> SearchPlacesAsync(string place, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(place))
+            return Enumerable.Empty<string>();
+
+        var result =  await GoogleService.GetPlaceNamesAutocomplete(place, cancellationToken);
+
+
+        // tmpPlace.Name = result.First();
+        // Place = result.First();
+
+        return result;
+    }
+
+    private async Task GetAttractions()
+    {
+        IsSearching = true;
+        AttsLoaded = true;
+        StateHasChanged();
+        await Task.Delay(1);
+
+        tmpPlace = await GoogleService.GetCoordinates(tmpPlace);
+
+        var tmpNewAtts = await GoogleService.GetSetAttractions($"{tmpPlace.latitude.ToString(CultureInfo.InvariantCulture)}%2C{tmpPlace.longitude.ToString(CultureInfo.InvariantCulture)}", AttractionType.Attraction, attractions);
+
+        attractions = await GoogleService.GetSetAttractionsDetails(tmpNewAtts);
+
+        IsSearching = false;
+        AttsLoaded = false;
+
+        StateHasChanged();
+        await Task.Delay(1);
+
+    }
+
+
+    private void SetAttraction(AttractionViewModel att)
+    {
+        chosenAtt = att;
+
+        if(chosenAtt != null )
+        {
+            AttNotChosen = false;
+
+        }
+        else
+        {
+            chosenAtt = null;
+            AttNotChosen = true;
+        }
+        StateHasChanged();
+    }
+
+}

@@ -16,6 +16,8 @@
 @inject NavigationManager navigationManager
 @inject AuthenticationStateProvider ASP
 
+@inject IDialogService Dialog
+
 @attribute [Authorize]
 
 
@@ -46,7 +48,7 @@ else
     @*<div class="d-flex flex-column mud-width-full mud-height-full">*@
    
     <MudToolBar Class="gap-4">
-        <MudButton  Variant="Variant.Filled" Color="Color.Default">???</MudButton>
+            <MudButton OnClick="()=>OpenSearchAttractionDialogAsync(_fullScreen)" Variant="Variant.Filled" Color="Color.Default">Search attraction</MudButton>
         <MudButton OnClick="PreviousDay" Variant="Variant.Filled" Color="Color.Primary">Prev. day</MudButton>
 
         @if (trip == null || currentDate == trip.Lastdate)
@@ -272,7 +274,7 @@ else
         {
             PopulateAllDropZones();
         }
-       
+
 
         await SimulateProgressAsync("Get ready 100%");
 
@@ -753,6 +755,102 @@ else
             await Task.Delay(1);
         }
     }
+
+    private readonly DialogOptions _fullScreen = new() { FullWidth = true, CloseButton = true, MaxWidth = MaxWidth.Medium };
+
+
+    private async Task OpenSearchAttractionDialogAsync(DialogOptions options)
+    {
+        AttractionViewModel newAttraction;
+        var dialog = await Dialog.ShowAsync<CustomPlaceDialog>("Search attraction", options);
+
+        var result = await dialog.Result;
+        if (!result.Canceled)
+        {
+            if(result.Data == null)
+            {
+                return;
+            }
+            newAttraction = (AttractionViewModel)result.Data;
+
+            newAttraction.StartDate = currentDate;
+            // newAttraction.step = 0;
+            newAttraction.Trip = trip;
+            newAttraction.dropzone = "0";
+            List<AttractionViewModel> tmpDropzone = new();
+            markers = new();
+            if(_dropzoneItems.Where(x=> x.dropzone == "0").Count()>0)
+            {
+                foreach(var a in _dropzoneItems.Where(x => x.dropzone == "0").ToList())
+                {
+                    //a.step += 1;
+                    var marker = CreateMapMarker(a);
+
+                    markers.Add(marker);
+                    var tmpAVM = CopyAttraction(a);
+                    tmpAVM.Marker = marker;
+
+                    // tmpAVM.step +=1;
+                    tmpDropzone.Add(tmpAVM);
+                }
+                // tmpDropzone.Add(newAttraction);
+                newAttraction.step = (tmpDropzone.Where(x => x.dropzone == "0").Max(x => x.step) + 1);
+
+                var nMarker = CreateMapMarker(newAttraction);
+                markers.Add(nMarker);
+                var tmpNAtt = CopyAttraction(newAttraction);
+                tmpNAtt.Marker = nMarker;
+                tmpDropzone.Add(tmpNAtt);
+
+                _dropzoneItems.Clear();
+                LastAttIndex = 0;
+                PopulateDropzone(tmpDropzone, "0");
+                PopulateAllDropZones();
+
+                await googleMapRef.RefreshAsync();
+                await googleMapRef.UpdateMarkersAsync(markers);
+              
+                NoSelectedTrips = false;
+                RefreshContainer();
+                StateHasChanged();
+                await Task.Delay(1);
+            }
+            else
+            {
+                var nMarker = CreateMapMarker(newAttraction);
+
+                markers.Add(nMarker);
+
+                var tmpNAtt = CopyAttraction(newAttraction);
+                tmpNAtt.Marker = nMarker;
+                tmpDropzone.Add(tmpNAtt);
+
+                _dropzoneItems.Clear();
+                LastAttIndex = 0;
+                PopulateDropzone(tmpDropzone, "0");
+                PopulateAllDropZones();
+
+                await googleMapRef.RefreshAsync();
+                await googleMapRef.UpdateMarkersAsync(markers);
+               
+
+                NoSelectedTrips = false;
+
+                RefreshContainer();
+                StateHasChanged();
+                await Task.Delay(1);
+            }
+
+
+           // Console.WriteLine($"result: {((Place)result.Data).city} and it is: {((Place)result.Data).ispublic}");
+            // places.Add(((Place)result.Data));
+
+
+        }
+
+
+    }
+
 }
     <style>
 
