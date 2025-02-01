@@ -150,7 +150,7 @@ else
 			{
 				errorMessage = "No such place found as: " + Model.City;
 
-				Console.WriteLine("No such place founc");
+			//	Console.WriteLine("No such place founc");
 				return true;
 			}
 
@@ -194,11 +194,12 @@ else
 
 	public async Task SaveTrip()
 	{
+		isNotVerified = true;
 		if (Model.Firstdate >= DateTime.Now.Date && Model.Lastdate.Value.Date >= Model.Firstdate.Value.Date)
 		{
 			var trip_id = -1;
 
-			Console.WriteLine(Model.Firstdate.Value.Date +" < " + Model.Lastdate.Value.Date);
+//			Console.WriteLine(Model.Firstdate.Value.Date +" < " + Model.Lastdate.Value.Date);
 
 			if (Model.Firstdate.Value.Date < Model.Lastdate.Value.Date)//Multiple day trip
 			{
@@ -226,11 +227,13 @@ else
 			else
 			{
 				errorMessage = "Dates are mixed up";
+				isNotVerified = false;
 			}
 		}
 		else
 		{
 			errorMessage = "Dates are in the past. First: "+Model.Firstdate.Value.Date.ToShortDateString()+". Second: "+Model.Lastdate.Value.Date.ToShortDateString()+".";
+			isNotVerified = false;
 		}	
 	}
 

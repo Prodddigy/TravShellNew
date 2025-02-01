@@ -43,11 +43,13 @@
 
           <MudItem xs="12" sm="6">
                 <MudPaper Class="pa-4 mud-height-full">
-            <GoogleMap ApiKey="@TravShell.App.GoogleAPI.GoogleService.apiKey"
+                    <GoogleMap @ref="googleMapRef"
+                       ApiKey="@TravShell.App.GoogleAPI.GoogleService.apiKey"
                        Center="@center"
                        Height="300"
                        Width="60"
                        Zoom="12"
+                       Markers="markers"
                        Clickable="true" />
         </MudPaper>
             </MudItem>
@@ -86,8 +88,9 @@
 
     [Parameter]
     public double latitude { get; set; }
+    GoogleMap googleMapRef = default!;
 
-    private void Submit() => MudDialog.Close(DialogResult.Ok(true));
+    //private void Submit() => MudDialog.Close(DialogResult.Ok(true));
 
     private void Cancel() => MudDialog.Cancel();
 
@@ -104,6 +107,8 @@
     private bool AttsLoaded = false;
 
     private bool AttNotChosen = true;
+
+    public List<GoogleMapMarker> markers = new();
 
     protected override Task OnParametersSetAsync()
     {
@@ -133,7 +138,7 @@
     private async Task GetAttractions()
     {
         if (tmpPlace.City == null || tmpPlace.City.Trim()=="")
-    {
+        {
             return;
         }
 
@@ -157,13 +162,25 @@
     }
 
 
-    private void SetAttraction(AttractionViewModel att)
+    private async void SetAttraction(AttractionViewModel att)
     {
         chosenAtt = att;
 
         if(chosenAtt != null )
         {
             AttNotChosen = false;
+            markers.Clear();
+            markers.Add(new GoogleMapMarker()
+                {
+                    Position = new GoogleMapMarkerPosition(att.latitude, att.longitude),
+                    Title = att.Name
+                });
+
+            center = new GoogleMapCenter(att.latitude, att.longitude);
+
+            await googleMapRef.UpdateMarkersAsync(markers);
+
+
 
         }
         else
