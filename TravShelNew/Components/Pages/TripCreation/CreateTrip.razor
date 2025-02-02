@@ -44,14 +44,14 @@
 										 ResetValueOnEmptyText="true" @bind-Value="Model.City" For="@(()=>Model.City)" />
 						</MudTooltip>
 
-						<MudTextField Label="Short description" Immediate="true" Counter="40" MaxLength="40" @bind-Value="Model.ShortDescription" Class="mt-3" For="@(()=>Model.ShortDescription)" AutoGrow MaxLines="4" Variant="Variant.Text" />
+						<MudTextField Label="Short description" Immediate="true" Counter="40"  MaxLength="40" @bind-Value="Model.ShortDescription" For="@(()=>Model.ShortDescription)" Class="mt-3"  AutoGrow MaxLines="4" Variant="Variant.Text" />
 					
 						
 						<MudCheckBox @onclick="RevokeVerification"  Label="Public" @bind-Value="Model.IsPublic" Class="mt-3" For="@(()=>Model.IsPublic)" Color="Color.Primary" />
 				</MudCardContent>
 
 					<MudCardActions>
-						<MudButton ButtonType="MudBlazor.ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto"> Verify details </MudButton>
+						<MudButton  ButtonType="MudBlazor.ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto"> Verify details </MudButton>
 					</MudCardActions>
 					
 			</MudCard>
@@ -118,7 +118,6 @@ else
 	public GoogleMapCenter center = new GoogleMapCenter(51.919438, 19.145136);
 	public List<GoogleMapMarker> markers = new();
 
-
 	public string? errorMessage { get; set; }
 
 	private bool IsAuth = false;
@@ -157,11 +156,8 @@ else
 			{
 				errorMessage = "No such place found as: " + Model.City;
 
-			//	Console.WriteLine("No such place founc");
 				return true;
 			}
-
-			//	Console.WriteLine(model.latitude +" "+ model.longitude);
 			markers.Clear();
 			markers.Add(
 				new GoogleMapMarker()
@@ -171,15 +167,14 @@ else
 					});
 
 			center = new GoogleMapCenter(model.latitude, model.longitude);
-			//	Console.WriteLine("yes city");
 			errorMessage = "";
 
 			zoom = 8;
 			return false;
 
-		}else
+		}
+		else
 		{
-			//	Console.WriteLine("no city!!!");
 			return true;
 		}
 
@@ -187,15 +182,16 @@ else
 
 	private async Task VerifyLocation()
 	{
-		//Console.WriteLine("verify?");
 		bool tmp = await SetLocationOnMap();
 
 		isNotVerified = tmp;
 
+		VerifyDates();
+
 		StateHasChanged();
 		await Task.Delay(3);
 		await googleMapRef.UpdateMarkersAsync(markers);
-		//await googleMapRef.
+
 		await googleMapRef.RefreshAsync();
 	}
 
@@ -206,11 +202,8 @@ else
 		{
 			var trip_id = -1;
 
-//			Console.WriteLine(Model.Firstdate.Value.Date +" < " + Model.Lastdate.Value.Date);
-
 			if (Model.Firstdate.Value.Date < Model.Lastdate.Value.Date)//Multiple day trip
 			{
-				//Console.WriteLine(Model.Firstdate.Value.Date + "<- first tutaj last ->" + Model.Lastdate.Value.Date);
 				errorMessage = null;
 
 				var newModel = await GoogleService.GetCoordinates(Model,cts.Token);
@@ -218,11 +211,9 @@ else
 				trip_id = await TripsService.CreateMultiDayTrip(newModel, user);
 
 				navigationManager.NavigateTo($"/{UserId}/trip={trip_id}/createDay");
-
 			}
 			else if (Model.Firstdate.Value.Date == Model.Lastdate.Value.Date) //one day trip
 			{
-				//Console.WriteLine("==");
 				errorMessage = null;
 
 				var newModel = (await GoogleService.GetCoordinates(Model, cts.Token));
@@ -233,13 +224,13 @@ else
 			}
 			else
 			{
-				errorMessage = "Dates are mixed up";
+			//	errorMessage = "Dates are mixed up";
 				isNotVerified = false;
 			}
 		}
 		else
 		{
-			errorMessage = "Dates are in the past. First: "+Model.Firstdate.Value.Date.ToShortDateString()+". Second: "+Model.Lastdate.Value.Date.ToShortDateString()+".";
+		//	errorMessage = "Dates are in the past. First: "+Model.Firstdate.Value.Date.ToShortDateString()+". Second: "+Model.Lastdate.Value.Date.ToShortDateString()+".";
 			isNotVerified = false;
 		}	
 	}
@@ -256,8 +247,21 @@ else
 	{
 		isNotVerified = true;
 		StateHasChanged();
+	}
 
-	//	Console.WriteLine("verifyrevoked");
+	private void VerifyDates()
+	{
+		if (!(Model.Firstdate >= DateTime.Now.Date && Model.Lastdate.Value.Date >= Model.Firstdate.Value.Date))
+		{
+			errorMessage = "Dates are in the past. First: " + Model.Firstdate.Value.Date.ToShortDateString() + ". Second: " + Model.Lastdate.Value.Date.ToShortDateString() + ".";
+			isNotVerified = true;
+		}
+
+		if (Model.Firstdate.Value.Date > Model.Lastdate.Value.Date)
+		{
+			errorMessage = "Dates are mixed up";
+			isNotVerified = true;
+		}
 	}
 
 }

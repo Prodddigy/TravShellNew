@@ -47,7 +47,7 @@
                        ApiKey="@TravShell.App.GoogleAPI.GoogleService.apiKey"
                        Center="@center"
                        Height="300"
-                       Width="60"
+                       Width="100"
                        Zoom="12"
                        Markers="markers"
                        Clickable="true" />
@@ -57,9 +57,9 @@
             {
                 <MudPaper Class="pa-4 mud-height-full" Outlined="true">
                     <MudText>@chosenAtt.Name<br />
-                      Address: @chosenAtt.Vicinity<br />
-                      Raing: @chosenAtt.Rating<br/>
-                        Website:<a href="@($"https://www.google.com/maps?q={chosenAtt.latitude.ToString(CultureInfo.InvariantCulture)},{chosenAtt.longitude.ToString(CultureInfo.InvariantCulture)}")" target='_blank'> See on Google Maps</a><br />
+                      <MudIcon Icon="@Icons.Material.Filled.Home" Size="Size.Large" Color="Color.Success" /> Address: @chosenAtt.Vicinity<br />
+                      <MudIcon Icon="@Icons.Material.Filled.StarRate" Size="Size.Large" Color="Color.Warning" /> Rating: @chosenAtt.Rating<br/>
+                        <MudIcon Icon="@Icons.Material.Filled.Public" Size="Size.Large" Color="Color.Info" /> Website:<a href="@($"https://www.google.com/maps?q={chosenAtt.latitude.ToString(CultureInfo.InvariantCulture)},{chosenAtt.longitude.ToString(CultureInfo.InvariantCulture)}")" target='_blank'> See on Google Maps</a><br />
                     </MudText>
                 </MudPaper>
             }
@@ -136,7 +136,7 @@
     {
         if (string.IsNullOrWhiteSpace(place))
             return Enumerable.Empty<string>();
-
+            
         var result =  await GoogleService.GetPlaceNamesAutocomplete(place, cancellationToken);
 
         return result;

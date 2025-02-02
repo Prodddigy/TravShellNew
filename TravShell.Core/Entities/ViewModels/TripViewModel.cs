@@ -6,8 +6,10 @@ namespace TravShell.Core.Entities.ViewModels
     {
 
 		public int Id { get; set; }
-        [MinLength(6)]
-        [Required(AllowEmptyStrings = false, ErrorMessage = "Please provide Name for the Trip, try\" My own Cool trip\"")]
+		//[MinLength(6)]
+		//[Required(AllowEmptyStrings = false, ErrorMessage = "Please provide Name for the Trip, try\" My own Cool trip\"")]
+		[Required]
+		[StringLength(20, ErrorMessage = "Please provide Name(min.6 characters), try \" My own Cool trip\"", MinimumLength = 6)]
         public string Name { get; set; }
         public int Days { get; set; }
 
@@ -24,8 +26,9 @@ namespace TravShell.Core.Entities.ViewModels
         public double latitude { get; set; }
         public double longitude { get; set; }
 
-		[MinLength(10)]
-		[Required(AllowEmptyStrings = false, ErrorMessage = "Please provide short description.")]
+
+		
+		[StringLength(40, ErrorMessage = "Short desc. must be at least 10 characters long.", MinimumLength = 10)]
 		public string ShortDescription { get; set; } = "";
 
 		public string Description { get; set; } = "";

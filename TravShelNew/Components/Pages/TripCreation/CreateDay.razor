@@ -124,21 +124,32 @@ else
             </div>
         </ChildContent>
         <ItemRenderer>
+            <MudListItem T="string" Text="@($"{context.Name} ({context.step})")" >
+
+               @if(context.Type == AttractionType.Attraction)
+                {
+                <MudIcon Icon="@Icons.Material.Filled.Museum" Size="Size.Large" Color="Color.Warning"/>
+                }
+                else if(context.Type == AttractionType.Accommodation)
+                {
+                    <MudIcon Icon="@Icons.Material.Filled.Hotel" Size="Size.Large"  Color="Color.Secondary"/>
+                }
+                 else if(context.Type == AttractionType.Restaurant)
+                {
+                    <MudIcon Icon="@Icons.Material.Filled.Fastfood" Size="Size.Large"  Color="Color.Tertiary"/>
+                }
+
+
             @if (context.dropzone == "0")
             {
-                <MudListItem T="string" Text="@($"{context.Name} ({context.step})")">
-                    @($"{context.Name} ({context.step +1})")
-                    <MudButton OnClick="()=>removeAttraction(context)" Variant="Variant.Filled" Color="Color.Error">Remove</MudButton>
-                </MudListItem>
+                    @($"({context.step +1}) {context.Name} ")
+                    <MudIconButton Icon="@Icons.Material.Filled.RemoveCircleOutline" Size="Size.Large" OnClick="()=>removeAttraction(context)" Variant="Variant.Filled" Color="Color.Error"/>
             }
             else
             {
-                <MudListItem T="string" Text="@($"{context.Name} ({context.step})")">
                     @($"{context.Name}, rating: {context.Rating}")
-
-                </MudListItem>
             }
-
+                    </MudListItem>
             @*
             restaurant: @Icons.Material.Filled.Fastfood
             attraction: @Icons.Material.Filled.Museum

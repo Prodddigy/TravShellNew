@@ -14,6 +14,7 @@ using Newtonsoft.Json.Linq;
 using System.Globalization;
 using TravShell.Core.Entities;
 using TravShell.Core.Entities.ViewModels;
+using GoogleApi.Entities.Places.AutoComplete.Response;
 
 namespace TravShell.App.GoogleAPI;
 public class GoogleService : IGoogleService
@@ -222,10 +223,22 @@ public class GoogleService : IGoogleService
             Input = place
         };
 
-        var response = await GooglePlaces.AutoComplete.QueryAsync(request, cancellationToken);
+
+        PlacesAutoCompleteResponse? response = null;
+        try
+        {
+            response = await GooglePlaces.AutoComplete.QueryAsync(request, cancellationToken);
+        }
+      
+        catch(Exception e)
+        {
+
+        }
+             
 
         if (response?.Predictions == null || !response.Predictions.Any())
             return Enumerable.Empty<string>();
+        
 
         return response.Predictions.Select(p => p.Description);
     }
