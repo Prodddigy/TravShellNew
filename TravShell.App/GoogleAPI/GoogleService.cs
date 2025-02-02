@@ -25,13 +25,15 @@ public class GoogleService : IGoogleService
 
     public static string apiKey = "AIzaSyARfnT3GsxeslzR5yjxcqDrlRGb88qBnUs";
 
-    public async Task<TripViewModel> GetCoordinates(TripViewModel model)
+    public async Task<TripViewModel> GetCoordinates(TripViewModel model, CancellationToken token)
     {
         string placesApi = $"https://maps.googleapis.com/maps/api/place/textsearch/json?query={Uri.EscapeDataString(model.City)}&key={apiKey}";
 
         using (HttpClient client = new HttpClient())
         {
-            HttpResponseMessage response = await client.GetAsync(placesApi);
+            HttpResponseMessage response = await client.GetAsync(placesApi,token);
+
+            token.ThrowIfCancellationRequested();
 
             if (response.IsSuccessStatusCode)
             {
@@ -57,7 +59,7 @@ public class GoogleService : IGoogleService
         return null;
     }
 
-    public async Task<List<AttractionViewModel>> GetSetAttractions(string coords, AttractionType type, List<AttractionViewModel> list)
+    public async Task<List<AttractionViewModel>> GetSetAttractions(string coords, AttractionType type, List<AttractionViewModel> list, CancellationToken token)
     {
         string placesApi = null;
 
@@ -84,7 +86,9 @@ public class GoogleService : IGoogleService
 
         using (HttpClient client = new HttpClient())
         {
-            HttpResponseMessage httpRespMess = await client.GetAsync(placesApi);
+            HttpResponseMessage httpRespMess = await client.GetAsync(placesApi,token);
+            token.ThrowIfCancellationRequested();
+
             if (httpRespMess.IsSuccessStatusCode)
             {
                 string result = await httpRespMess.Content.ReadAsStringAsync();
@@ -129,7 +133,7 @@ public class GoogleService : IGoogleService
         return list;
     }
 
-    public async Task<List<AttractionViewModel>?> GetSetAttractionsDetails(List<AttractionViewModel> list)
+    public async Task<List<AttractionViewModel>?> GetSetAttractionsDetails(List<AttractionViewModel> list, CancellationToken token)
     {
         if(list ==null)
         {
@@ -141,7 +145,9 @@ public class GoogleService : IGoogleService
             using (HttpClient client = new HttpClient())
             {
 
-                HttpResponseMessage httpRespMess = await client.GetAsync(du);
+                HttpResponseMessage httpRespMess = await client.GetAsync(du,token);
+
+                token.ThrowIfCancellationRequested();
 
                 if (httpRespMess.IsSuccessStatusCode)
                 {

@@ -165,8 +165,17 @@ else
 
 	[Inject] IJSRuntime? JsRuntime { get; set; }
 
+	private CancellationTokenSource? cts;
+
 	protected override async Task OnParametersSetAsync()
 	{
+		if (cts != null)
+		{
+			cts.Cancel();
+		}
+		cts = new CancellationTokenSource();
+
+
 		var authState = await ASP.GetAuthenticationStateAsync();
 
 		if (authState.User.Identity.IsAuthenticated)
@@ -185,7 +194,7 @@ else
 	{
 		if (Model.City != "" && Model.City != null)
 		{
-			var model = await GoogleService.GetCoordinates(Model);
+			var model = await GoogleService.GetCoordinates(Model, cts.Token);
 			if(model == null)
 			{
 				errorMessage = "No such place found as: " + Model.City;
@@ -247,7 +256,7 @@ else
 					StateHasChanged();
 					errorMessage = null;
 
-					var newModel = await GoogleService.GetCoordinates(Model);
+					var newModel = await GoogleService.GetCoordinates(Model,cts.Token);
 
 					trip_id = await TripsService.CreateMultiDayTrip(newModel, user);
 					trip = await TripsService.FindTripById(trip_id);
@@ -285,7 +294,7 @@ else
 				IsCreating = true;
 				StateHasChanged();
 
-				var newModel = (await GoogleService.GetCoordinates(Model));
+				var newModel = (await GoogleService.GetCoordinates(Model,cts.Token));
 
 				trip_id = await TripsService.CreateOneDayTrip(Model, user);
 
@@ -362,22 +371,25 @@ else
 		if(type == AttractionType.Accommodation)
 		{
 			tmpList = await GoogleService.GetSetAttractions
-				($"{Model.latitude.ToString(CultureInfo.InvariantCulture)}%2C{Model.longitude.ToString(CultureInfo.InvariantCulture)}", type, accommodations);
+				($"{Model.latitude.ToString(CultureInfo.InvariantCulture)}%2C{Model.longitude.ToString(CultureInfo.InvariantCulture)}",
+				type, accommodations,cts.Token);
 
-			accommodations=	await GoogleService.GetSetAttractionsDetails(tmpList);
+			//accommodations=	await GoogleService.GetSetAttractionsDetails(tmpList);
 		}
 		if (type == AttractionType.Restaurant)
 		{
 			tmpList = await GoogleService.GetSetAttractions
-			($"{Model.latitude.ToString(CultureInfo.InvariantCulture)}%2C{Model.longitude.ToString(CultureInfo.InvariantCulture)}", type, restaurants);
+			($"{Model.latitude.ToString(CultureInfo.InvariantCulture)}%2C{Model.longitude.ToString(CultureInfo.InvariantCulture)}",
+			type, restaurants, cts.Token);
 
-			restaurants = await GoogleService.GetSetAttractionsDetails(tmpList);
+		//	restaurants = await GoogleService.GetSetAttractionsDetails(tmpList);
 		}
 		if (type == AttractionType.Attraction)
 		{
 			tmpList = await GoogleService.GetSetAttractions
-		($"{Model.latitude.ToString(CultureInfo.InvariantCulture)}%2C{Model.longitude.ToString(CultureInfo.InvariantCulture)}", type, touristAtts);
-			touristAtts = await GoogleService.GetSetAttractionsDetails(tmpList);
+		($"{Model.latitude.ToString(CultureInfo.InvariantCulture)}%2C{Model.longitude.ToString(CultureInfo.InvariantCulture)}",
+		type, touristAtts, cts.Token);
+			//touristAtts = await GoogleService.GetSetAttractionsDetails(tmpList);
 		}
 	}
 
@@ -480,7 +492,7 @@ else
 			tmpStep = 0;
 		}
 		Console.WriteLine(chosenAttractions.Count()+" num of chosen atts");
-
+		chosenAttractions = await GoogleService.GetSetAttractionsDetails(chosenAttractions, cts.Token);
 		await AttractionService.SaveAttractionList(chosenAttractions);
 
 		/*
@@ -582,10 +594,9 @@ else
 			chosenAttractions.Add(tmpAttraction);
 			//	touristAtts.RemoveAll(x => x.PlaceCode == tmpAttraction.PlaceCode);
 		}
-
+		chosenAttractions = await GoogleService.GetSetAttractionsDetails(chosenAttractions, cts.Token);
 		await AttractionService.SaveAttractionList(chosenAttractions);
 	}
-
 
 	private async Task OnBeforeInternalNavigation(LocationChangingContext context)
 	{
@@ -602,6 +613,7 @@ else
 			}
 			else
 			{
+				cts?.Cancel();
 				// Tourist_Attractions = new List<AttractionViewModel>();
 				// Restaurants = new List<AttractionViewModel>();
 				// Accommodations = new List<AttractionViewModel>();

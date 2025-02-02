@@ -123,6 +123,7 @@ else
 
 	private bool IsAuth = false;
 
+	private CancellationTokenSource? cts;
 
 	protected override async Task OnParametersSetAsync()
 	{
@@ -143,9 +144,15 @@ else
 
 	private async Task<bool> SetLocationOnMap()
 	{
+		if (cts != null)
+		{
+			cts.Cancel();
+		}
+		cts = new CancellationTokenSource();
+
 		if (Model.City != "" && Model.City != null)
 		{
-			var model = await GoogleService.GetCoordinates(Model);
+			var model = await GoogleService.GetCoordinates(Model,cts.Token);
 			if(model == null)
 			{
 				errorMessage = "No such place found as: " + Model.City;
@@ -206,7 +213,7 @@ else
 				//Console.WriteLine(Model.Firstdate.Value.Date + "<- first tutaj last ->" + Model.Lastdate.Value.Date);
 				errorMessage = null;
 
-				var newModel = await GoogleService.GetCoordinates(Model);
+				var newModel = await GoogleService.GetCoordinates(Model,cts.Token);
 
 				trip_id = await TripsService.CreateMultiDayTrip(newModel, user);
 
@@ -218,7 +225,7 @@ else
 				//Console.WriteLine("==");
 				errorMessage = null;
 
-				var newModel = (await GoogleService.GetCoordinates(Model));
+				var newModel = (await GoogleService.GetCoordinates(Model, cts.Token));
 
 				trip_id = await TripsService.CreateOneDayTrip(Model, user);
 

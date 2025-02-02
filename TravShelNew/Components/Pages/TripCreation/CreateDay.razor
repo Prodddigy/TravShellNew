@@ -138,6 +138,13 @@ else
 
                 </MudListItem>
             }
+
+            @*
+            restaurant: @Icons.Material.Filled.Fastfood
+            attraction: @Icons.Material.Filled.Museum
+            accommodation: @Icons.Material.Filled.Hotel
+
+            *@
         </ItemRenderer>
     </MudDropContainer>
     </MudContainer>
@@ -217,8 +224,17 @@ else
     [Inject] IJSRuntime? JsRuntime { get; set; }
     private bool NotSaved { get; set; } = true;
 
+    private CancellationTokenSource? cts;
+
     protected override async Task OnParametersSetAsync()
     {
+        if (cts != null)
+        {
+            cts.Cancel();
+        }
+        cts = new CancellationTokenSource();
+
+
         NotSaved = true;
         selectedAttractions = new List<AttractionViewModel>();
 
@@ -251,22 +267,34 @@ else
             coordinates = $"{trip.latitude.ToString(CultureInfo.InvariantCulture)}%2C{trip.longitude.ToString(CultureInfo.InvariantCulture)}";
         }
 
-        if (Tourist_Attractions.Count() == 0)
+        try
         {
-            await GetSetAttractions(coordinates, AttractionType.Attraction, Tourist_Attractions);
+
+            if (Tourist_Attractions.Count() == 0)
+            {
+                await GetSetAttractions(coordinates, AttractionType.Attraction, Tourist_Attractions, cts.Token);
+            }
+
+            await SimulateProgressAsync("Loading restaurants... 30%");
+
+            if (Restaurants.Count() == 0)
+            {
+                await GetSetAttractions(coordinates, AttractionType.Restaurant, Restaurants, cts.Token);
+            }
+            await SimulateProgressAsync("Loading accommodations... 60%");
+
+            if (Accommodations.Count() == 0)
+            {
+                await GetSetAttractions(coordinates, AttractionType.Accommodation, Accommodations, cts.Token);
+            }
         }
-
-        await SimulateProgressAsync("Loading restaurants... 30%");
-
-        if (Restaurants.Count() == 0)
+        catch(TaskCanceledException)
         {
-            await GetSetAttractions(coordinates, AttractionType.Restaurant, Restaurants);
+            Console.WriteLine("Creation/Edition Cancelled");
         }
-        await SimulateProgressAsync("Loading accommodations... 60%");            
-
-        if (Accommodations.Count() == 0)
+        catch (Exception e)
         {
-            await GetSetAttractions(coordinates, AttractionType.Accommodation, Accommodations);
+            Console.WriteLine(  $"Error: {e.Message}");
         }
         await SimulateProgressAsync("Finalizng... 90%");
 
@@ -416,7 +444,7 @@ else
                     Glyph = (att.step + 1) + "",
                     GlyphColor = "white"
                 },
-                Title = att.Website != "Website is not available." ? $" <a target = '_blank' jstcache = '6' href = '{att.Website}' tabindex = '0'> <span> Check the website!</span> </a> " : "<h4> No Website available </h4>"
+               Title = att.Website != "Website is not available." ? $" <a target = '_blank' jstcache = '6' href = '{att.Website}' tabindex = '0'> <span> Check the website!</span> </a> " : "<h4> No Website available </h4>"
                 // Title = $" place: {att.Name}",
                 // Content= ""+newAttraction.Id
             };
@@ -651,11 +679,11 @@ else
         }
     }
 
-    public async Task GetSetAttractions(string coords, AttractionType type, List<AttractionViewModel> list)
+    public async Task GetSetAttractions(string coords, AttractionType type, List<AttractionViewModel> list,CancellationToken token)
     {
-        var populatedList = await GoogleService.GetSetAttractions(coords, type, list);
+        var populatedList = await GoogleService.GetSetAttractions(coords, type, list,token);
 
-        list = await GoogleService.GetSetAttractionsDetails(populatedList);
+        list = await GoogleService.GetSetAttractionsDetails(populatedList,token);
     }
 
     private async Task OnBeforeInternalNavigation(LocationChangingContext context)
@@ -673,6 +701,8 @@ else
             }
             else
             {
+
+                cts?.Cancel();
                 Tourist_Attractions = new List<AttractionViewModel>();
                 Restaurants = new List<AttractionViewModel>();
                 Accommodations = new List<AttractionViewModel>();
@@ -696,7 +726,11 @@ else
                 BufferValue = 0;
 
                 Status = "Loading tourist attractions... 0%";
-                await TripsService.RemoveTripById(TripId);
+
+                if (await AttractionService.CountTripAttractions(TripId)<=0)
+                {
+                    await TripsService.RemoveTripById(TripId);
+                }
             }
         }
     }
@@ -704,10 +738,17 @@ else
 
     public async Task IsEditMode()
     {
+
+        if(trip == null)
+        {
+            return;
+        }
         var attractions = await AttractionService.GetTripAttractionsOrderByStartDate(trip.TripId);
 
         if (attractions.Count() > 0)
         {
+            //editMode = true;
+
             foreach (var savedAtt in attractions)
             {
                 selectedAttractions.Add(new AttractionViewModel
@@ -847,11 +888,6 @@ else
                 StateHasChanged();
                 await Task.Delay(1);
             }
-
-
-           // Console.WriteLine($"result: {((Place)result.Data).city} and it is: {((Place)result.Data).ispublic}");
-            // places.Add(((Place)result.Data));
-
 
         }
 

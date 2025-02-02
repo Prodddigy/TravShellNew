@@ -29,7 +29,7 @@
             <div style="max-height:200px; overflow-y: auto; ">
                 @foreach(var i in attractions)
                 {
-                            <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto" OnClick="()=>SetAttraction(i)">
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" Style="flex-shrink: 0; padding: 10px 20px;" Class="ml-auto" OnClick="()=>SetAttraction(i)">
                         
                         <MudText  Align="Align.Left">
                                     @($"{i.Name}, rating: {i.Rating}")
@@ -55,11 +55,11 @@
             </MudItem>
             @if(chosenAtt!=null)
             {
-                <MudPaper Class="pa-4 mud-height-full">
+                <MudPaper Class="pa-4 mud-height-full" Outlined="true">
                     <MudText>@chosenAtt.Name<br />
                       Address: @chosenAtt.Vicinity<br />
-                       Hours: @chosenAtt.Opening_Hours<br />
-                        Website: @chosenAtt.Website<br />
+                      Raing: @chosenAtt.Rating<br/>
+                        Website:<a href="@($"https://www.google.com/maps?q={chosenAtt.latitude.ToString(CultureInfo.InvariantCulture)},{chosenAtt.longitude.ToString(CultureInfo.InvariantCulture)}")" target='_blank'> See on Google Maps</a><br />
                     </MudText>
                 </MudPaper>
             }
@@ -71,15 +71,13 @@
         <MudButton Disabled="AttNotChosen" Color="Color.Primary" OnClick="ReturnChosenTrip">Ok</MudButton>
     </DialogActions>
 </MudDialog>
+
 @code {
 
     [Inject]
     public required IGoogleService GoogleService { get; set; }
 
-
-    public GoogleMapCenter center { get; set; }//zmień na ten co jest w 
-                                               //                                                                          createDay
-
+    public GoogleMapCenter center { get; set; }
 
     [CascadingParameter]
     private MudDialogInstance MudDialog { get; set; }
@@ -90,8 +88,6 @@
     public double latitude { get; set; }
     GoogleMap googleMapRef = default!;
 
-    //private void Submit() => MudDialog.Close(DialogResult.Ok(true));
-
     private void Cancel() => MudDialog.Cancel();
 
     private AttractionViewModel chosenAtt = null;
@@ -100,8 +96,6 @@
 
     private List<AttractionViewModel> attractions = new();
 
-    // private string Place = "";
-
     private bool IsSearching = false;
 
     private bool AttsLoaded = false;
@@ -109,16 +103,33 @@
     private bool AttNotChosen = true;
 
     public List<GoogleMapMarker> markers = new();
+    private CancellationTokenSource? cts;
+
 
     protected override Task OnParametersSetAsync()
     {
+        if (cts != null)
+        {
+            cts.Cancel();
+        }
+        cts = new CancellationTokenSource();
+
         center = new GoogleMapCenter(latitude, longitude);
         return base.OnParametersSetAsync();
     }
 
-    public void ReturnChosenTrip()
+    public async void ReturnChosenTrip()
     {
-        MudDialog.Close(DialogResult.Ok(chosenAtt));
+        AttNotChosen = true;
+        List<AttractionViewModel> tmpAttractionChosenList  = new();
+
+        tmpAttractionChosenList.Add(chosenAtt);
+
+        tmpAttractionChosenList = await GoogleService.GetSetAttractionsDetails(tmpAttractionChosenList,cts.Token);
+
+
+
+        MudDialog.Close(DialogResult.Ok(tmpAttractionChosenList.FirstOrDefault()));
     }
 
     private async Task<IEnumerable<string>> SearchPlacesAsync(string place, CancellationToken cancellationToken)
@@ -127,10 +138,6 @@
             return Enumerable.Empty<string>();
 
         var result =  await GoogleService.GetPlaceNamesAutocomplete(place, cancellationToken);
-
-
-        // tmpPlace.Name = result.First();
-        // Place = result.First();
 
         return result;
     }
@@ -147,11 +154,12 @@
         StateHasChanged();
         await Task.Delay(1);
 
-        tmpPlace = await GoogleService.GetCoordinates(tmpPlace);
+        tmpPlace = await GoogleService.GetCoordinates(tmpPlace, cts.Token);
 
-        var tmpNewAtts = await GoogleService.GetSetAttractions($"{tmpPlace.latitude.ToString(CultureInfo.InvariantCulture)}%2C{tmpPlace.longitude.ToString(CultureInfo.InvariantCulture)}", AttractionType.Attraction, attractions);
-
-        attractions = await GoogleService.GetSetAttractionsDetails(tmpNewAtts);
+         attractions = await GoogleService.GetSetAttractions($"{tmpPlace.latitude.ToString(CultureInfo.InvariantCulture)}%2C{tmpPlace.longitude.ToString(CultureInfo.InvariantCulture)}",
+        AttractionType.Attraction, attractions, cts.Token);
+        //attractions
+       // attractions = await GoogleService.GetSetAttractionsDetails(tmpNewAtts);
 
         IsSearching = false;
         AttsLoaded = false;
@@ -160,7 +168,6 @@
         await Task.Delay(1);
 
     }
-
 
     private async void SetAttraction(AttractionViewModel att)
     {
@@ -179,9 +186,6 @@
             center = new GoogleMapCenter(att.latitude, att.longitude);
 
             await googleMapRef.UpdateMarkersAsync(markers);
-
-
-
         }
         else
         {
