@@ -227,6 +227,8 @@ else
 
 		isNotVerified = tmp;
 
+		VerifyDates();
+
 		StateHasChanged();
 		await Task.Delay(3);
 		await googleMapRef.UpdateMarkersAsync(markers);
@@ -237,8 +239,6 @@ else
 	{
 		if (Model.Firstdate >= DateTime.Now.Date && Model.Lastdate.Value.Date >= Model.Firstdate.Value.Date)
 		{
-
-
 			// var trip_id = -1;
 
 			if (Model.Firstdate.Value.Date < Model.Lastdate.Value.Date)//Multiple day trip
@@ -324,16 +324,16 @@ else
 			}
 			else
 			{
-				errorMessage = "Dates are mixed up";
+				//errorMessage = "Dates are mixed up";
+				isNotVerified = false;
 			}
 		}
 		else
 		{
-			errorMessage = "Dates are in the past. First: "+Model.Firstdate.Value.Date.ToShortDateString()+". Second: "+Model.Lastdate.Value.Date.ToShortDateString()+".";
+			//errorMessage = "Dates are in the past. First: "+Model.Firstdate.Value.Date.ToShortDateString()+". Second: "+Model.Lastdate.Value.Date.ToShortDateString()+".";
+			isNotVerified = false;
 		}	
 	}
-
-
 
 	private async Task<IEnumerable<string>> SearchPlacesAsync(string place, CancellationToken cancellationToken)
 	{
@@ -362,6 +362,21 @@ else
 		// 	StateHasChanged();
 		// 	await Task.Delay(500);
 		// }
+	}
+
+	private void VerifyDates()
+	{
+		if (!(Model.Firstdate >= DateTime.Now.Date && Model.Lastdate.Value.Date >= Model.Firstdate.Value.Date))
+		{
+			errorMessage = "Dates are in the past. First: " + Model.Firstdate.Value.Date.ToShortDateString() + ". Second: " + Model.Lastdate.Value.Date.ToShortDateString() + ".";
+			isNotVerified = true;
+		}
+
+		if (Model.Firstdate.Value.Date > Model.Lastdate.Value.Date)
+		{
+			errorMessage = "Dates are mixed up";
+			isNotVerified = true;
+		}
 	}
 
 	private async Task GetPlaces(AttractionType type)

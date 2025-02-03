@@ -212,7 +212,7 @@ public class GoogleService : IGoogleService
         return list;
     }
 
-    public async Task<IEnumerable<string>> GetPlaceNamesAutocomplete(string place, CancellationToken cancellationToken)
+    public async Task<IEnumerable<string>> GetPlaceNamesAutocomplete(string place, CancellationToken token)
     {
         if (string.IsNullOrWhiteSpace(place))
             return Enumerable.Empty<string>();
@@ -227,7 +227,9 @@ public class GoogleService : IGoogleService
         PlacesAutoCompleteResponse? response = null;
         try
         {
-            response = await GooglePlaces.AutoComplete.QueryAsync(request, cancellationToken);
+            response = await GooglePlaces.AutoComplete.QueryAsync(request, token);
+
+            token.ThrowIfCancellationRequested();
         }
       
         catch(Exception e)

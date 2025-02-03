@@ -29,8 +29,8 @@
             <div style="max-height:200px; overflow-y: auto; ">
                 @foreach(var i in attractions)
                 {
-                        <MudButton Variant="Variant.Filled" Color="Color.Primary" Style="flex-shrink: 0; padding: 10px 20px;" Class="ml-auto" OnClick="()=>SetAttraction(i)">
-                        
+                        <MudButton  Color="Color.Primary" Style="flex-shrink: 0; padding: 10px 20px;" Class="ml-auto" OnClick="()=>SetAttraction(i)">
+                        <MudIcon Icon="@Icons.Material.Filled.Museum" Size="Size.Large" Color="Color.Warning"/>
                         <MudText  Align="Align.Left">
                                     @($"{i.Name}, rating: {i.Rating}")
                         </MudText>
@@ -59,7 +59,7 @@
                     <MudText>@chosenAtt.Name<br />
                       <MudIcon Icon="@Icons.Material.Filled.Home" Size="Size.Large" Color="Color.Success" /> Address: @chosenAtt.Vicinity<br />
                       <MudIcon Icon="@Icons.Material.Filled.StarRate" Size="Size.Large" Color="Color.Warning" /> Rating: @chosenAtt.Rating<br/>
-                        <MudIcon Icon="@Icons.Material.Filled.Public" Size="Size.Large" Color="Color.Info" /> Website:<a href="@($"https://www.google.com/maps?q={chosenAtt.latitude.ToString(CultureInfo.InvariantCulture)},{chosenAtt.longitude.ToString(CultureInfo.InvariantCulture)}")" target='_blank'> See on Google Maps</a><br />
+                        <MudIcon Icon="@Icons.Material.Filled.Public" Size="Size.Large" Color="Color.Info" /> Website:<a href="@($"https://www.google.com/maps/place/?q=place_id:{chosenAtt.PlaceCode}")" target='_blank'> See on Google Maps</a><br />
                     </MudText>
                 </MudPaper>
             }
@@ -68,7 +68,7 @@
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="Cancel">Cancel</MudButton>
-        <MudButton Disabled="AttNotChosen" Color="Color.Primary" OnClick="ReturnChosenTrip">Ok</MudButton>
+        <MudButton Disabled="AttNotChosen" Color="Color.Primary" OnClick="ReturnChosenTrip">Add</MudButton>
     </DialogActions>
 </MudDialog>
 
@@ -88,7 +88,7 @@
     public double latitude { get; set; }
     GoogleMap googleMapRef = default!;
 
-    private void Cancel() => MudDialog.Cancel();
+    //private void Cancel() => MudDialog.Cancel();
 
     private AttractionViewModel chosenAtt = null;
 
@@ -104,7 +104,12 @@
 
     public List<GoogleMapMarker> markers = new();
     private CancellationTokenSource? cts;
+    private void Cancel()
+    {
+        cts.Cancel();
 
+        MudDialog.Cancel();
+    }
 
     protected override Task OnParametersSetAsync()
     {
@@ -125,9 +130,7 @@
 
         tmpAttractionChosenList.Add(chosenAtt);
 
-        tmpAttractionChosenList = await GoogleService.GetSetAttractionsDetails(tmpAttractionChosenList,cts.Token);
-
-
+        //  tmpAttractionChosenList = await GoogleService.GetSetAttractionsDetails(tmpAttractionChosenList,cts.Token);
 
         MudDialog.Close(DialogResult.Ok(tmpAttractionChosenList.FirstOrDefault()));
     }
@@ -136,7 +139,7 @@
     {
         if (string.IsNullOrWhiteSpace(place))
             return Enumerable.Empty<string>();
-            
+
         var result =  await GoogleService.GetPlaceNamesAutocomplete(place, cancellationToken);
 
         return result;
@@ -148,6 +151,11 @@
         {
             return;
         }
+        if (cts != null)
+        {
+            cts.Cancel();
+        }
+        cts = new CancellationTokenSource();
 
         IsSearching = true;
         AttsLoaded = true;
@@ -156,10 +164,10 @@
 
         tmpPlace = await GoogleService.GetCoordinates(tmpPlace, cts.Token);
 
-         attractions = await GoogleService.GetSetAttractions($"{tmpPlace.latitude.ToString(CultureInfo.InvariantCulture)}%2C{tmpPlace.longitude.ToString(CultureInfo.InvariantCulture)}",
-        AttractionType.Attraction, attractions, cts.Token);
+        attractions = await GoogleService.GetSetAttractions($"{tmpPlace.latitude.ToString(CultureInfo.InvariantCulture)}%2C{tmpPlace.longitude.ToString(CultureInfo.InvariantCulture)}",
+       AttractionType.Attraction, attractions, cts.Token);
         //attractions
-       // attractions = await GoogleService.GetSetAttractionsDetails(tmpNewAtts);
+        // attractions = await GoogleService.GetSetAttractionsDetails(tmpNewAtts);
 
         IsSearching = false;
         AttsLoaded = false;
@@ -194,5 +202,8 @@
         }
         StateHasChanged();
     }
-
+    private async Task OnBeforeInternalNavigation(LocationChangingContext context)
+    {
+        cts.Cancel();
+    }
 }
