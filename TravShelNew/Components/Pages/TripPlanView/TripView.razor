@@ -65,7 +65,28 @@
       
             <MudTimelineItem Color="Color.Info" Size="Size.Medium">
                 <ItemContent>
-            <MudChip T="string" Variant="Variant.Outlined" Color="Color.Info">Opening at:</MudChip> @attraction.Opening_Hours
+            <MudChip T="string" Variant="Variant.Outlined" Color="Color.Info">Opening at:</MudChip>
+
+               @if(attraction.Opening_Hours != "Opening hours are not available.")
+                    {
+                        <MudMenu MaxHeight="200"  FullWidth="true" ActivationEvent="@MouseEvent.MouseOver" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter">
+                             <ActivatorContent>
+                         <MudChip T="string" Icon="@Icons.Material.Filled.AccessTime" Color="Color.Info">Working Time</MudChip>
+                             </ActivatorContent>
+                             <ChildContent>
+                            @foreach(var i in attraction.Opening_Hours.Split(','))
+                            {
+                                 <MudMenuItem > @i </MudMenuItem>
+                            }
+                             </ChildContent>
+
+                        </MudMenu>
+                    }
+                    else
+                    {
+                        @attraction.Opening_Hours
+                    }
+
                </ItemContent>
             </MudTimelineItem>
 

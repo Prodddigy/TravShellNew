@@ -51,7 +51,7 @@
 				</MudCardContent>
 
 					<MudCardActions>
-						<MudButton  ButtonType="MudBlazor.ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto"> Verify details </MudButton>
+						<MudButton ButtonType="MudBlazor.ButtonType.Submit" Disabled="IsBeingVerified" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto"> Verify details </MudButton>
 					</MudCardActions>
 					
 			</MudCard>
@@ -109,6 +109,8 @@ else
 	public int TripId { get; set; } = -1;
 
 	public bool isNotVerified { get; set; } = true;
+
+	public bool IsBeingVerified = false;
 	public int zoom = 5;
 
 	public User user { get; set; }
@@ -139,7 +141,6 @@ else
 			}
 		}
 	}
-
 
 	private async Task<bool> SetLocationOnMap()
 	{
@@ -180,12 +181,16 @@ else
 
 	private async Task VerifyLocation()
 	{
+		IsBeingVerified = true;
+
 		bool tmp = await SetLocationOnMap();
 
 		isNotVerified = tmp;
-
-		VerifyDates();
-
+		if (!tmp)
+		{
+			VerifyDates();
+		}
+		IsBeingVerified = false;
 		StateHasChanged();
 		await Task.Delay(3);
 		await googleMapRef.UpdateMarkersAsync(markers);
@@ -195,6 +200,7 @@ else
 
 	public async Task SaveTrip()
 	{
+		IsBeingVerified = true;
 		isNotVerified = true;
 		if (Model.Firstdate >= DateTime.Now.Date && Model.Lastdate.Value.Date >= Model.Firstdate.Value.Date)
 		{
@@ -223,13 +229,15 @@ else
 			else
 			{
 			//	errorMessage = "Dates are mixed up";
+				IsBeingVerified = false;
 				isNotVerified = false;
 			}
 		}
 		else
 		{
 		//	errorMessage = "Dates are in the past. First: "+Model.Firstdate.Value.Date.ToShortDateString()+". Second: "+Model.Lastdate.Value.Date.ToShortDateString()+".";
-			isNotVerified = false;
+			IsBeingVerified = false;
+		isNotVerified = false;
 		}	
 	}
 

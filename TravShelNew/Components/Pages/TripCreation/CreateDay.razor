@@ -54,7 +54,7 @@ else
         @if (trip == null || currentDate == trip.Lastdate)
         {
                     <MudButton OnClick="SaveDayAttractions" Disabled="WaitForGoogle" ButtonType="MudBlazor.ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary">
-                Finish trip
+                Finish Trip
             </MudButton>  
         }
         else
@@ -63,13 +63,14 @@ else
                 Next Day
             </MudButton>  
         }
-   
+           
         <MudPopover Open="@IsPopup" Fixed="true" Class="px-4 pt-4">
             <div class="d-flex flex-column">
                 <MudText>Your list of attractions is empty... in order to proceed choose one.</MudText>
                 <MudButton OnClick="@ToggleOpen" Class="ml-auto mr-n3 mb-1" Color="Color.Error">Close</MudButton>
             </div>
         </MudPopover>
+            <MudIconButton Icon="@Icons.Material.Filled.LiveHelp" Size="Size.Large" Color="Color.Info" OnClick="()=>OpenDialogInfo(_fullScreen)" />
         <MudSpacer />
       <MudButton StartIcon="@Icons.Material.Filled.LocationSearching" OnClick="()=>OpenSearchAttractionDialogAsync(_fullScreen)" Variant="Variant.Filled" Color="Color.Warning">Search attraction</MudButton>
     </MudToolBar>
@@ -911,10 +912,12 @@ else
                 StateHasChanged();
                 await Task.Delay(1);
             }
-
         }
+    }
 
-
+    private Task OpenDialogInfo(DialogOptions options)
+    {
+        return Dialog.ShowAsync<CreateDayInfoDialog>("How to create your trip?", options);
     }
 
 }
