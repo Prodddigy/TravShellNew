@@ -39,6 +39,7 @@
 			<MudChip T="string" Icon="@Icons.Material.Filled.FilterAlt" Color="Color.Primary">OrderBy: @(OrderChosen+": "+SearchedName)</MudChip>
 		</ActivatorContent>
 		<ChildContent>
+			<MudMenuItem OnClick="()=>SearchTripsByCondition(SearchOptions.Nothing)">Nothing</MudMenuItem>
 			<MudMenuItem OnClick="()=>SearchTripsByCondition(SearchOptions.AtoZ)">From A to Z</MudMenuItem>
 			<MudMenuItem OnClick="()=>SearchTripsByCondition(SearchOptions.ZtoA)">From Z to A</MudMenuItem>
 			<MudMenuItem OnClick="()=>SearchTripsByCondition(SearchOptions.Shortest)">Shortest trips</MudMenuItem>

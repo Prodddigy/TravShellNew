@@ -30,12 +30,12 @@
 
     if(TripExists)
     {
-        <MudText Style="@($"color:{Colors.Purple.Darken4};")" Typo="Typo.h3"> Trip name: @TripName</MudText>  
+        <MudText Style="@($"color:{Colors.Purple.Darken4};")" Typo="Typo.h3">@TripName</MudText>  
    
-        <MudContainer style=" margin: auto;  width: 80vw; min-width:400px; padding: 10px;">
+        <MudContainer style=" margin: auto;  width: 80vw; min-width:900px; padding: 10px;">
 <MudGrid>
     <MudItem >
-        <MudExpansionPanels  Style="width:200px;">
+        <MudExpansionPanels  Style="position: absolute; width:200px;">
                        
         <MudExpansionPanel Text="Write a review" MaxHeight="500" Dense Gutters>
             <MudTextField OnKeyUp="enableSave"  T="string" @bind-Value="userReviewDesc"  Immediate="true" Counter="50" MaxLength="50" Label="Review" Variant="Variant.Outlined" Lines="3" FullWidth />
@@ -47,8 +47,8 @@
     </MudExpansionPanels>
 
     </MudItem>
-        <MudItem > 
-<MudCarousel Class="mud-width-full" @ref="_carousel" ItemsSource="@_source" Style="height:250px; width:450px" ShowArrows="true" ShowBullets="false" EnableSwipeGesture="false" AutoCycle="false" @bind-SelectedIndex="staticIndex">
+        <MudItem Style="margin-left:180px;"> 
+<MudCarousel Class="mud-width-full" @ref="_carousel" ItemsSource="@_source" Style=" height:250px; width:450px" ShowArrows="true" ShowBullets="false" EnableSwipeGesture="false" AutoCycle="false" @bind-SelectedIndex="staticIndex">
     <ItemTemplate>
                     <div class="horizontal-scroll" style="height:100%; padding: 33px;">
     <MudText Typo="Typo.h4" Style="@($"color:{Colors.Purple.Darken3};")">Day @(selectedIndex + 1) / @TripDays</MudText>
@@ -156,7 +156,7 @@
 </MudItem>
 
 <MudItem  >
-        <MudPaper Outlined Class="border-dashed" Height="250px" Style="width:200px;" >
+        <MudPaper Outlined Class="border-dashed" Height="250px" Style="width:170px;" >
         <MudText Align="Align.Center">Tags</MudText>
         <div style="height:200px; display: flex; flex-direction:column; overflow-y: auto; white-space: nowrap; gap: 8px; padding: 8px;">
         @foreach(var t in Tags)

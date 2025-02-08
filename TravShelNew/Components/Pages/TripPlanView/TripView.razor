@@ -27,9 +27,9 @@
 
     if(TripExists)
     {
-        <MudText Style="@($"color:{Colors.Purple.Darken4};")" Typo="Typo.h3"> Trip name: @TripName</MudText>  
+        <MudText Style="@($"color:{Colors.Purple.Darken4};")" Typo="Typo.h3">@TripName</MudText>  
    
-        <MudContainer style=" margin: auto;  width: 60vw; min-width:400px; padding: 10px;">
+        <MudContainer style=" margin: auto;  width: 60vw; min-width:700px; padding: 10px;">
     <MudGrid>
     <MudItem>
         @if(isPublic)
