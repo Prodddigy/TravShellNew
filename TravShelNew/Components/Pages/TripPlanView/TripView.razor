@@ -4,7 +4,6 @@
 
 @attribute [Authorize]
 
-@inject DataContext dataContext
 @inject AuthenticationStateProvider ASP
 @inject NavigationManager navi
 
@@ -59,7 +58,19 @@
                     <MudText Style="@($"color:{Colors.Purple.Darken3};")" Typo="Typo.h4">@(context.IndexOf(attraction)+1)</MudText>
                 </ItemDot>
                 <ItemContent>
-                       @attraction.Name
+                 @if(attraction.Type == AttractionType.Attraction)
+                {
+                <MudIcon Icon="@Icons.Material.Filled.Museum" Size="Size.Large" Color="Color.Warning"/>
+                }
+                else if(attraction.Type == AttractionType.Accommodation)
+                {
+                    <MudIcon Icon="@Icons.Material.Filled.Hotel" Size="Size.Large"  Color="Color.Secondary"/>
+                }
+                 else if(attraction.Type == AttractionType.Restaurant)
+                {
+                    <MudIcon Icon="@Icons.Material.Filled.Fastfood" Size="Size.Large"  Color="Color.Tertiary"/>
+                }
+                       @(" "+attraction.Name)
                 </ItemContent>
             </MudTimelineItem>
       
@@ -95,21 +106,27 @@
            <MudChip T="string" Variant="Variant.Outlined" Color="Color.Success">Address:</MudChip> @attraction.Vicinity
              </ItemContent>
             </MudTimelineItem>
-
             
             <MudTimelineItem Color="Color.Warning" Size="Size.Medium">
                 <ItemContent>
             <MudChip T="string" Variant="Variant.Outlined" Color="Color.Warning">Rating:</MudChip> @attraction.Rating
                </ItemContent>
             </MudTimelineItem>
-
              
             <MudTimelineItem Color="Color.Error" Size="Size.Medium">
                 <ItemContent>
-            <MudChip T="string" Variant="Variant.Outlined" Color="Color.Error">Type:</MudChip> @attraction.Type
+              <MudChip T="string" Variant="Variant.Outlined" Color="Color.Error">Website: </MudChip>
+                    @if (attraction.Website != "Website is not available.")
+                    {
+                     <a target='_blank' jstcache='6' href='@attraction.Website' tabindex='0'> <span>Check the website!</span> </a> 
+                    }
+                    else
+                    {
+                     <a target='_blank' jstcache='6' href='@($"https://www.google.com/maps/place/?q=place_id:{@attraction.PlaceCode}")' tabindex='0'> <span>See on GoogleMaps</span> </a> 
+                    }
+                    
                     </ItemContent>
             </MudTimelineItem>
-           
         }
 
         </MudTimeline>
@@ -135,7 +152,6 @@
 </MudCarousel>
 </MudItem>
 
-
 <MudItem  xs="3">
     <MudPaper Outlined Class="border-dashed" Height="250px" >
         <MudText Align="Align.Center">Tags</MudText>
@@ -146,7 +162,6 @@
         }
         </div>
     </MudPaper>
-
 
 </MudItem>
 
@@ -166,13 +181,13 @@
     </MudItem>
 
            <MudItem xs="5" >
-              
-                    <MudExpansionPanels>
-                        <MudExpansionPanel Text="New Tag">
+
+                        <MudExpansionPanels Style=" position: absolute; width:280px;">
+                            <MudExpansionPanel  Text="New Tag">
                             <MudTextField T="string" @bind-Value="tagName" MaxLength="10" Label="Tag" Variant="Variant.Outlined" Counter="10" Immediate />
                             <MudButton  OnClick="SaveAndAddTag" Variant="Variant.Filled" Color="Color.Success">Save</MudButton>
                         </MudExpansionPanel>
-                       <MudExpansionPanel Text="Edit desc." MaxHeight="1000" >
+                       <MudExpansionPanel  Text="Edit desc." MaxHeight="1000" >
                             <MudTextField T="string" @bind-Value="tripDescription" Disabled="@editMode" Immediate="true" Counter="1000" MaxLength="1000" Label="Description" Variant="Variant.Outlined" Lines="5" FullWidth />
                             <MudToolBar Class="gap-4">
 
@@ -183,19 +198,26 @@
                         </MudExpansionPanel>
                     </MudExpansionPanels>
 
-                  <MudPaper>
-                        <MudText Typo="Typo.h5" GutterBottom>Description</MudText>
-	                <MudText Style="max-height: 10em; overflow-y: auto;">
+                    <MudPaper style="margin-top:130px;" Outlined="true">
+                            <MudText Typo="Typo.h4" Align="Align.Center" GutterBottom>Description</MudText>
+                        @if ((tripDescriptionMarkUp.Value.ToString()).Trim() == "")
+                     {
+                    <MudText Label="Description" Align="Align.Center" Style="max-height: 10em; overflow-y: auto;">
+                                No description. :(
+
+                            </MudText>
+                     }
+                     else
+                     {
+	                <MudText Label="Description" Align="Align.Center" Style="max-height: 10em; overflow-y: auto; word-break: break-word;">
                             @(tripDescriptionMarkUp)
 
                     </MudText>
+                     }
                     </MudPaper>
 
            </MudItem>
-
-     
-            </MudGrid>
-            
+            </MudGrid>  
         </MudContainer>
     }
     else
@@ -313,17 +335,11 @@ else
                 int numOfAtt = await attractionsService.CountTripAttractions(TripId);
                 if (numOfAtt == 0)
                 {
-                    // Console.WriteLine("no atts");
                     return;
                 }
                 IsTripComplete = true;
                 Attractions = await attractionsService.GetTripAttractionsOrderByStartDate(TripId);
-               // IsTripComplete =  CheckTripCompleteness();
 
-                // if(IsTripComplete == false)
-                // {
-                //     return;
-                // }
                 DateTime tmp = Attractions.First().StartDate;
 
                 List<Attraction> tmpList = new();
@@ -386,10 +402,8 @@ else
                         });
                     }
                     AllMarkers.Add(newMarkers);
-
                 }
                 markers = AllMarkers[0];
-
 
                 var trip = await tripsService.FindTripById(TripId);
 
@@ -522,15 +536,11 @@ else
 
     private bool CheckTripCompleteness()
     {
-        //var dates = Attractions.Select(x => x.StartDate).Distinct().ToList();
-        Console.WriteLine(Attractions.Count()+ " att count");
-
         for(var i = 0; i < currentTrip.Days; i++)
         {
             Console.WriteLine(currentTrip.Firstdate.AddDays(i) + " last date "+ currentTrip.Lastdate);
             if(Attractions.Where(x => x.StartDate == currentTrip.Firstdate.AddDays(i)).Count()<=0)
             {
-
                 return false;
             }
         }

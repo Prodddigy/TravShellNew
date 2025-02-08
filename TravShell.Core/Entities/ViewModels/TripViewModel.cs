@@ -9,7 +9,7 @@ namespace TravShell.Core.Entities.ViewModels
 		//[MinLength(6)]
 		//[Required(AllowEmptyStrings = false, ErrorMessage = "Please provide Name for the Trip, try\" My own Cool trip\"")]
 		[Required]
-		[StringLength(20, ErrorMessage = "Please provide Name(min.6 characters), try \" My own Cool trip\"", MinimumLength = 6)]
+		[StringLength(20, ErrorMessage = "Min. 6 & max 20 characters, try \" My own Cool trip\"", MinimumLength = 6)]
         public string Name { get; set; }
         public int Days { get; set; }
 

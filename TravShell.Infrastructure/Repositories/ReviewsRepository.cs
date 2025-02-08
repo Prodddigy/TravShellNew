@@ -86,6 +86,7 @@ public class ReviewsRepository : IReviewsRepository
                                                                     .FirstOrDefaultAsync();
         review.Content = content;
         review.StarReview = rating;
+        review.IsEdited = true;
 
         await _dbContext.SaveChangesAsync();
 

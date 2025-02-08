@@ -38,7 +38,7 @@ else
     
     @if (trip == null || currentDate == trip.Lastdate)
     {
-        <h3>Day: @currentDate.ToShortDateString() -> This is the last day!</h3>
+            <h3>Day: @currentDate.ToShortDateString() <MudChip T="string" Icon="@Icons.Material.Filled.WarningAmber" Variant="Variant.Outlined" Color="Color.Secondary"> This is the last day! </MudChip></h3>
     }
     else
     {
@@ -51,7 +51,7 @@ else
 
         @if (trip == null || currentDate == trip.Lastdate)
         {
-                    <MudButton OnClick="SaveDayAttractions" Disabled="WaitForGoogle" ButtonType="MudBlazor.ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary">
+                <MudButton EndIcon="@Icons.Material.Filled.Save" OnClick="SaveDayAttractions" Disabled="WaitForGoogle" ButtonType="MudBlazor.ButtonType.Submit" Variant="Variant.Filled" Color="Color.Warning">
                 Finish Trip
             </MudButton>  
         }
@@ -79,7 +79,8 @@ else
         <div class="columns-container">
             <MudPaper Class="column">
                 <MudList T="string" Class="d-flex flex-column mud-height-full">
-                    <MudListSubheader>Your attractions</MudListSubheader>
+                    <MudListSubheader>
+                        <MudChip Color="Color.Info">Your attractions</MudChip></MudListSubheader>
                     <MudDropZone T="AttractionViewModel" Identifier="0" Class="flex-grow-1" AllowReorder="true" />
                 </MudList>
             </MudPaper>
@@ -468,12 +469,6 @@ else
             }
         }
     }
-
-    // private async void RefreshMap()
-    // {
-    //     await googleMapRef.RefreshAsync();
-    //     await googleMapRef.UpdateMarkersAsync(markers);
-    // }
 
     private void RefreshContainer()
     {

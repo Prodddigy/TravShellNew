@@ -62,7 +62,20 @@
                     <MudText Style="@($"color:{Colors.Purple.Darken3};")" Typo="Typo.h4">@(context.IndexOf(attraction) + 1)</MudText>
                 </ItemDot>
                 <ItemContent>
-                    @attraction.Name
+
+                @if(attraction.Type == AttractionType.Attraction)
+                {
+                <MudIcon Icon="@Icons.Material.Filled.Museum" Size="Size.Large" Color="Color.Warning"/>
+                }
+                else if(attraction.Type == AttractionType.Accommodation)
+                {
+                    <MudIcon Icon="@Icons.Material.Filled.Hotel" Size="Size.Large"  Color="Color.Secondary"/>
+                }
+                 else if(attraction.Type == AttractionType.Restaurant)
+                {
+                    <MudIcon Icon="@Icons.Material.Filled.Fastfood" Size="Size.Large"  Color="Color.Tertiary"/>
+                }
+                   @(" "+ attraction.Name)
                 </ItemContent>
             </MudTimelineItem>
        
@@ -104,10 +117,18 @@
                 </ItemContent>
             </MudTimelineItem>
 
-
             <MudTimelineItem Color="Color.Error" Size="Size.Medium">
                 <ItemContent>
-                    <MudChip T="string" Variant="Variant.Outlined" Color="Color.Error">Type:</MudChip> @attraction.Type
+                    <MudChip T="string" Variant="Variant.Outlined" Color="Color.Error">Website: </MudChip>
+                    @if (attraction.Website != "Website is not available.")
+                    {
+                     <a target='_blank' jstcache='6' href='@attraction.Website' tabindex='0'> <span>Check the website!</span> </a> 
+                    }
+                    else
+                    {
+                     <a target='_blank' jstcache='6' href='@($"https://www.google.com/maps/place/?q=place_id:{@attraction.PlaceCode}")' tabindex='0'> <span>See on GoogleMaps</span> </a> 
+                    }
+                    
                 </ItemContent>
             </MudTimelineItem>
         }
@@ -134,7 +155,6 @@
 </MudCarousel>
 </MudItem>
 
-
 <MudItem  >
         <MudPaper Outlined Class="border-dashed" Height="250px" Style="width:200px;" >
         <MudText Align="Align.Center">Tags</MudText>
@@ -145,10 +165,7 @@
         }
         </div>
     </MudPaper>
-
-
 </MudItem>
-
 </MudGrid>
 
 <MudGrid>
@@ -169,16 +186,19 @@
                         <MudText Style="white-space: normal;overflow-wrap: break-word; padding: 10px 15px;" Align="Align.Left">
                                         @((MarkupString)Markdig.Markdown.ToHtml(r.Content, pipeline))
                                     </MudText>
-                 <MudRating ReadOnly="true" SelectedValue="r.StarReview" FullIcon="@Icons.Material.Filled.Favorite" EmptyIcon="@Icons.Material.Filled.FavoriteBorder" Color="Color.Secondary" />
-                </MudPaper>
+                
+                 <MudRating ReadOnly="true" SelectedValue="r.StarReview" FullIcon="@Icons.Material.Filled.Favorite" EmptyIcon="@Icons.Material.Filled.FavoriteBorder" Color="Color.Secondary" /><br/>   
+                 @if(r.IsEdited ==true)
+                    {
+                        <MudChip Icon="@Icons.Material.Filled.Edit" T="string" Disabled="true" Variant="Variant.Outlined" Color="Color.Success">edited</MudChip>        
+                    }   
              
-
+             </MudPaper>
                 }
                  <MudButton Color="Color.Tertiary" Variant="Variant.Filled" OnClick="async ()=>await GetFourTripReviews(reviewSkip)">More</MudButton>
             </div>
             
         </MudPaper>
-
     </MudItem>
     <MudItem xs="7"  >
      
@@ -205,7 +225,7 @@
                      }
                      else
                      {
-	                <MudText Label="Description" Align="Align.Center" Style="max-height: 10em; overflow-y: auto;">
+                                <MudText Label="Description" Align="Align.Center" Style="max-height: 10em; overflow-y: auto; word-break: break-word;">
                             @(tripDescriptionMarkUp)
 
                     </MudText>
@@ -213,17 +233,14 @@
                     </MudPaper>
 
            </MudItem>
-
-     
             </MudGrid>
-            
         </MudContainer>
     }
     else
     {
         <h1>Trip @TripId does not exist, or is not public.</h1>
     }
-    }
+   }
 }
 else
 {
@@ -301,7 +318,6 @@ else
     private int userRating = 0;
 
     private bool IsTripComplete = false;
-
 
     protected async override Task OnInitializedAsync()//zmniejszyć to!!!
     {
@@ -432,25 +448,6 @@ else
         }
     }
 
-    // private bool editDescription()
-    // {
-    //     editMode=false;
-    //     StateHasChanged();
-
-    //     return editMode;
-    // }
-
-    // private async void SaveDescription()
-    // {
-    //     await tripsService.EditTripDescription(tripDescription.ToString(), TripId);
-    //     editMode = true;
-
-    //     UpdateHTMLAsync();
-    //     StateHasChanged();
-
-    //     Snackbar.Add($"Description has been saved!", Severity.Success);
-    // }
-
     private async void RefreshMap()
     {
         await googleMapRef.RefreshAsync();
@@ -560,13 +557,11 @@ else
         }
     }
 
-
     private void enableSave()
     {
         editMode = false;
         StateHasChanged();
     }
-
 }
 <style>
     .horizontal-scroll {
