@@ -76,8 +76,9 @@
 		<MudPaper Style="  aspect-ratio: 1 / 1; overflow: hidden; overflow-y:auto; overflow-wrap: break-word; padding: 10px; " Class="border-dashed border-2 mud-border-primary pa-4" Square="true">
 
 					<MudButton Class="d-flex flex-column align-center justify-center mud-width-full py-8" OnClick="()=>EnterTrip(i.TripId)" Typo="Typo.h6" Align="center">
-
+				
 					<MudText Style="white-space: normal;overflow-wrap: break-word; padding: 10px 15px;">
+					
 							<b> @i.Name :</b>
 							@i.ShortDescription
 															
@@ -90,14 +91,16 @@
 								<p><b>@i.Days day trip.</b></p>
 							}
 
+							<MudRating SelectedValue="@( i.Reviews.Count() != 0?(int)i.Reviews.Average(x=>x.StarReview):0)" ReadOnly="true" FullIcon="@Icons.Material.Filled.Favorite" EmptyIcon="@Icons.Material.Filled.FavoriteBorder" Color="Color.Secondary" />
+								<br/> <MudText Typo="Typo.caption">Based on @i.Reviews.Count() reviews.</MudText>
+							<br />	By:	<MudChip T="string" Variant="Variant.Outlined" Color="Color.Info">@i.User.Forename</MudChip>
 							@if(i.User.UserId == UserId)
 							{
-								<MudText Color="Color.Success" Typo="Typo.caption">This is your trip!</MudText>
+								<br /><MudText Color="Color.Success" Typo="Typo.caption">This is your trip!</MudText>
 
 							
 							}
-							<MudRating SelectedValue="@( i.Reviews.Count() != 0?(int)i.Reviews.Average(x=>x.StarReview):0)" ReadOnly="true" FullIcon="@Icons.Material.Filled.Favorite" EmptyIcon="@Icons.Material.Filled.FavoriteBorder" Color="Color.Secondary" />
-							</MudText>
+													</MudText>
 						</MudButton>
 					</MudPaper>
 					@if(i.User.UserId != UserId)

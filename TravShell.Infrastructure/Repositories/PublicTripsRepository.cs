@@ -142,8 +142,9 @@ public class PublicTripsRepository : IPublicTripsRepository
                     .Skip((page - 1) * trips).Take(trips).ToListAsync();
 			case 7:
 				return await _dbContext.Trips.Where(x => x.IsPublic == true).Include(x => x.User).Include(x => x.Reviews)
-					.OrderByDescending(x =>( x.Reviews.Count != 0) ? x.Reviews.Average(x => x.StarReview) :0).
-					Skip((page - 1) * trips).Take(trips).ToListAsync();
+					.OrderByDescending(x => (x.Reviews.Count != 0) ? x.Reviews.Count() : 0)
+					.ThenByDescending(x =>( x.Reviews.Count != 0) ? x.Reviews.Average(x => x.StarReview) :0)
+					.Skip((page - 1) * trips).Take(trips).ToListAsync();
 
 
 			default:
