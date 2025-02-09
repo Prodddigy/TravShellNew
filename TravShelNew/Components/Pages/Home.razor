@@ -22,15 +22,17 @@
 			<AuthorizeView>
 				<NotAuthorized>
 					<MudText Typo="Typo.h4">Welcome! Please login or create a new account.</MudText>
-					<MudPaper Class=" align-start d-flex" Style="width: 250px;">
-						<MudPaper Class="pa-3" Elevation="6">
+					
+					<MudPaper Class=" align-start d-flex" Elevation="0" Style="width: 600px;">
+						
 							 <MudFab Href="/login" Color="Color.Primary" Label="Login" StartIcon="@Icons.Material.Filled.Login" />
-							 </MudPaper>
+							
 						<MudSpacer />
-						<MudPaper Class="pa-3" Elevation="6"> 
+						
 							<MudFab  Href="/register" Color="Color.Tertiary" Label="Register" StartIcon="@Icons.Material.Filled.AccountCircle" />
-						</MudPaper>
+						
 					</MudPaper>
+					
 				</NotAuthorized>
 				<Authorized>
 					<MudDivider />
