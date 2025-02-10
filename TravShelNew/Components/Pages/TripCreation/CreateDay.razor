@@ -780,26 +780,31 @@ else
                 }
                 newAttraction.step = (tmpDropzone.Where(x => x.dropzone == "0").Max(x => x.step) + 1);
             }
-                var nMarker = CreateMapMarker(newAttraction);
-                markers.Add(nMarker);
-                var tmpNAtt = CopyAttraction(newAttraction,null);
-                tmpNAtt.Marker = nMarker;
-                tmpDropzone.Add(tmpNAtt);
+            var nMarker = CreateMapMarker(newAttraction);
+            markers.Add(nMarker);
+            var tmpNAtt = CopyAttraction(newAttraction,null);
+            tmpNAtt.Marker = nMarker;
+            tmpDropzone.Add(tmpNAtt);
 
-                _dropzoneItems.Clear();
-                LastAttIndex = 0;
-                PopulateDropzone(tmpDropzone, "0");
-                PopulateAllDropZones();
+            _dropzoneItems.Clear();
+            LastAttIndex = 0;
+            PopulateDropzone(tmpDropzone, "0");
+            PopulateAllDropZones();
 
-                await googleMapRef.RefreshAsync();
-                await googleMapRef.UpdateMarkersAsync(markers);
-               
+            await googleMapRef.RefreshAsync();
+            await googleMapRef.UpdateMarkersAsync(markers);
 
-                NoSelectedTrips = false;
 
-                RefreshContainer();
-                StateHasChanged();
-                await Task.Delay(1);
+            NoSelectedTrips = false;
+
+            RefreshContainer();
+            StateHasChanged();
+            await Task.Delay(1);
+        }
+        else
+        {
+            await googleMapRef.RefreshAsync();
+            await googleMapRef.UpdateMarkersAsync(markers);
         }
     }
 

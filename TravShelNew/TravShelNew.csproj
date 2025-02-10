@@ -19,4 +19,12 @@
     <ProjectReference Include="..\TravShell.Infrastructure\TravShell.Infrastructure.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="wwwroot\Images\drag_n_drop.png" />
+    <None Include="wwwroot\Images\final day.png" />
+    <None Include="wwwroot\Images\marker.png" />
+    <None Include="wwwroot\Images\navigation.png" />
+    <None Include="wwwroot\Images\search_att.png" />
+  </ItemGroup>
+
 </Project>

@@ -3,40 +3,58 @@
         <MudCarousel Class="mud-width-full" Style="height:200px;" ShowArrows="true" ShowBullets="true" AutoCycle="false"  TData="object">
             <MudCarouselItem Transition="Transition.Slide" Color="@Color.Primary">
                 <div class="d-flex" style="height:100%">
-                    <MudText Class="mx-auto my-auto" />
-                    Drag with your mouse any box from 3 lists below, and drop it in the list above.
+                    <MudItem Class="d-flex justify-content-center align-center">
+                        <MudImage ObjectFit="ObjectFit.ScaleDown" Height="300" Width="400" Alt="Drag and drop" Class="rounded-lg" Src="/Images/drag_n_drop.png" />
+                    
+                        <MudText Class="mx-auto my-auto" />
+                        <br />
+                        <MudSpacer/>
+                    - 1. Drag with your mouse any box from 3 lists below, and drop it in the list above.
                     You can also drag 'n' drop the boxes to reorder them to you needs.
                     <MudText />
+                    </MudItem>
                 </div>
             </MudCarouselItem>
             <MudCarouselItem Transition="Transition.Slide" Color="@Color.Secondary">
                 <div class="d-flex" style="height:100%">
-                    <MudText Class="mx-auto my-auto" />
-                    In case you can't find desired tourist attraction - click "Search attraction" in the top-right.
+                    <MudItem Class="d-flex justify-content-center align-center">
+                    <MudImage ObjectFit="ObjectFit.ScaleDown" Height="300" Width="400" Alt="search attraction" Class="rounded-lg" Src="/Images/search_att.png" />
+                    <MudText Align="Align.Center" />
+                   - 2. In case you can't find desired tourist attraction - click "Search attraction" in the top-right.
                     <MudText />
+                    </MudItem>
                 </div>
             </MudCarouselItem>
             <MudCarouselItem Transition="Transition.Slide" Color="@Color.Tertiary">
                 <div class="d-flex" style="height:100%">
-                    <MudText Class="mx-auto my-auto" />
-                    If you click on one of the markers that appear on the map, there will
+                      <MudItem Class="d-flex justify-content-center align-center">
+                    <MudImage ObjectFit="ObjectFit.ScaleDown" Height="300" Width="400" Alt="search attraction" Class="rounded-lg" Src="/Images/marker.png" />
+                    <MudText Align="Align.Center" Class="mx-auto my-auto" />
+                   - 3. If you click on one of the markers that appear on the map, there will
                     be a link to google maps page where you can see more details about the place.
                     <MudText />
+                    </MudItem>
                 </div>
             </MudCarouselItem>
             <MudCarouselItem Transition="Transition.Slide" Color="@Color.Info">
                 <div class="d-flex" style="height:100%">
+                     <MudItem Class="d-flex justify-content-center align-center">
+                    <MudImage ObjectFit="ObjectFit.ScaleDown" Height="300" Width="400" Alt="search attraction" Class="rounded-lg" Src="/Images/navigation.png" />
                     <MudText Class="mx-auto my-auto" />
-                    In order to move between the days of your trip use "Prev. Day" and "Next Day" buttons.
+                  -  4. In order to move between the days of your trip use "Prev. Day" and "Next Day" buttons.
                     Notice that in order to go to the "Next Day" you must choose at least 1 place.
                     <MudText />
+                    </MudItem>
                 </div>
             </MudCarouselItem>
             <MudCarouselItem Transition="Transition.Slide" Color="@Color.Success">
                 <div class="d-flex" style="height:100%">
+                      <MudItem Class="d-flex justify-content-center align-center">
+                    <MudImage ObjectFit="ObjectFit.ScaleDown" Height="300" Width="400" Alt="search attraction" Class="rounded-lg" Src="/Images/final day.png" />
                     <MudText Class="mx-auto my-auto" />
-                    When reached final day of the trip click "Finish Trip" to save it and see final result!
+                  - 5. When reached final day of the trip click "Finish Trip" to save it and see final result!
                     <MudText />
+                    </MudItem>
                 </div>
             </MudCarouselItem>
 
