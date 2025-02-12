@@ -8,6 +8,7 @@ using TravShell.App;
 
 var builder = WebApplication.CreateBuilder(args);
 
+
 builder.Services.AddApplicationLayer();
 builder.Services.AddInfrastructureLayer();
 
