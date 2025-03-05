@@ -15,6 +15,7 @@
 </head>
 
 <body>
+
     <Routes @rendermode="RenderModeForPage" />
 
     <script src="_framework/blazor.web.js"></script>
@@ -30,6 +31,7 @@
 </body>
 
 </html>
+
 @code {
     [CascadingParameter]
     private HttpContext HttpContext { get; set; } = default!;

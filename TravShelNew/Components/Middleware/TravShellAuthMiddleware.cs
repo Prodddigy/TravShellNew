@@ -19,17 +19,14 @@ namespace TravShelNew.Components.Middleware
 
 		public async Task InvokeAsync(HttpContext context)
 		{
-         //   Console.WriteLine("Middleware");
 			if (context.Request.Path=="/login" && context.Request.Query.ContainsKey("key") )
 				{
-				//Console.WriteLine("Middleware true");
 				var key = Guid.Parse(context.Request.Query["key"]);
 				var claim = Logins[key];
 				await context.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, claim);
 				context.Response.Redirect("/");
 			}
 			else {
-				//Console.WriteLine("Middleware false");
 				await next(context);
 			}
 		}

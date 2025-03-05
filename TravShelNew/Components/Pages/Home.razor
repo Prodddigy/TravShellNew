@@ -121,7 +121,7 @@
 			{
 				UserName = user.Forename;
 				UserId = user.UserId;
-				Console.WriteLine("idiiidid: "+UserId);
+				//Console.WriteLine("idiiidid: "+UserId);
 			}
 		}
 	}
@@ -147,45 +147,45 @@
 
 
 
-	public async void CreateReviewTest()
-	{
+	// public async void CreateReviewTest()
+	// {
 
-		var t =  dataContext.Trips.First();
+	// 	var t =  dataContext.Trips.First();
 
-		var u =  dataContext.Users.First();
+	// 	var u =  dataContext.Users.First();
 
-		Review review = new Review
-			{
-				StarReview = 5,
-				Trip = t,
-				User = u,
-				IsEdited = false,
-				Content = "Good trip!!!!"
-			};
+	// 	Review review = new Review
+	// 		{
+	// 			StarReview = 5,
+	// 			Trip = t,
+	// 			User = u,
+	// 			IsEdited = false,
+	// 			Content = "Good trip!!!!"
+	// 		};
 
-		await 	dataContext.Reviews.AddAsync(review);
+	// 	await 	dataContext.Reviews.AddAsync(review);
 
-		await dataContext.SaveChangesAsync();
+	// 	await dataContext.SaveChangesAsync();
 
-		Console.WriteLine(" Review after creation: "+ review.ReviewId);
-		Console.WriteLine(" Review after creation and trip id: "+ review.Trip.TripId);
-		Console.WriteLine(" Review after creation and user id: " + review.User.UserId);
+	// 	Console.WriteLine(" Review after creation: "+ review.ReviewId);
+	// 	Console.WriteLine(" Review after creation and trip id: "+ review.Trip.TripId);
+	// 	Console.WriteLine(" Review after creation and user id: " + review.User.UserId);
 
-		var rev =  dataContext.Reviews.First();
-		int revid = rev.ReviewId;
-		Console.WriteLine(" Review after fetching: " + review.ReviewId);
+	// 	var rev =  dataContext.Reviews.First();
+	// 	int revid = rev.ReviewId;
+	// 	Console.WriteLine(" Review after fetching: " + review.ReviewId);
 
-		// dataContext.Reviews.Remove(rev);
+	// 	dataContext.Reviews.Remove(rev);
 
 
-		// await dataContext.SaveChangesAsync();
+	// 	await dataContext.SaveChangesAsync();
 
-		// var isnull = dataContext.Reviews.Where(x => x.ReviewId == revid).FirstOrDefault();
+	// 	var isnull = dataContext.Reviews.Where(x => x.ReviewId == revid).FirstOrDefault();
 
-		// if(isnull == null)
-		// {
-		// 	Console.WriteLine("No review found!!!");
-		// }
-	}
+	// 	if(isnull == null)
+	// 	{
+	// 		Console.WriteLine("No review found!!!");
+	// 	}
+	// }
 
 }

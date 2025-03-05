@@ -24,7 +24,7 @@ public class GoogleService : IGoogleService
 		"Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" ,"Sunday"};
         
 
-    public static string apiKey = "AIzaSyARfnT3GsxeslzR5yjxcqDrlRGb88qBnUs";
+    public static string apiKey = "AIzaSyByTfnJ7zhCTOsh58l0gmaqYlliI73OPtU";
 
     public async Task<TripViewModel> GetCoordinates(TripViewModel model, CancellationToken token)
     {
