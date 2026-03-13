@@ -6,11 +6,21 @@ using TravShelNew.Components.Middleware;
 using TravShell.Infrastructure;
 using TravShell.App;
 
+using Azure.Identity;
+using Microsoft.AspNetCore.DataProtection;
+
 var builder = WebApplication.CreateBuilder(args);
 
 
 builder.Services.AddApplicationLayer();
 builder.Services.AddInfrastructureLayer();
+
+
+var keyVaultUri = builder.Configuration.AddAzureKeyVault(
+    new Uri("https://googlemapsapi.vault.azure.net/"),
+    new Azure.Identity.DefaultAzureCredential());
+
+//var secretClient = new SecretClient(new Uri(keyVaultUri),new )
 
 
 // Add services to the container.

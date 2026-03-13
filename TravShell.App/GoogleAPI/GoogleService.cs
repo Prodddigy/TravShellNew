@@ -15,6 +15,7 @@ using System.Globalization;
 using TravShell.Core.Entities;
 using TravShell.Core.Entities.ViewModels;
 using GoogleApi.Entities.Places.AutoComplete.Response;
+using Microsoft.Extensions.Configuration;
 
 namespace TravShell.App.GoogleAPI;
 public class GoogleService : IGoogleService
@@ -24,10 +25,21 @@ public class GoogleService : IGoogleService
 		"Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" ,"Sunday"};
         
 
-    public static string apiKey = "AIzaSyByTfnJ7zhCTOsh58l0gmaqYlliI73OPtU";
+     
+
+    public static string apiKey = "";
+
+    public GoogleService(IConfiguration configuration)
+    {
+        apiKey = configuration["TravShellGoogleMapsApi"];
+        Console.WriteLine(apiKey);
+    }
+
 
     public async Task<TripViewModel> GetCoordinates(TripViewModel model, CancellationToken token)
     {
+
+//        var apikey = builder.Configuration["GoogleAPIKey"];
         string placesApi = $"https://maps.googleapis.com/maps/api/place/textsearch/json?query={Uri.EscapeDataString(model.City)}&key={apiKey}";
 
         using (HttpClient client = new HttpClient())
