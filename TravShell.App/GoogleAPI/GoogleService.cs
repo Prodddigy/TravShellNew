@@ -28,10 +28,12 @@ public class GoogleService : IGoogleService
      
 
     public static string apiKey = "";
+    public static string autocompleteKey = "";
 
     public GoogleService(IConfiguration configuration)
     {
         apiKey = configuration["TravShellGoogleMapsApi"];
+        autocompleteKey = configuration["Google:BackendApiKey"];
         Console.WriteLine(apiKey);
     }
 
@@ -40,7 +42,7 @@ public class GoogleService : IGoogleService
     {
 
 //        var apikey = builder.Configuration["GoogleAPIKey"];
-        string placesApi = $"https://maps.googleapis.com/maps/api/place/textsearch/json?query={Uri.EscapeDataString(model.City)}&key={apiKey}";
+        string placesApi = $"https://maps.googleapis.com/maps/api/place/textsearch/json?query={Uri.EscapeDataString(model.City)}&key={autocompleteKey}";
 
         using (HttpClient client = new HttpClient())
         {
@@ -80,20 +82,20 @@ public class GoogleService : IGoogleService
 
         if (type == AttractionType.Attraction)
         {
-            placesApi = $"https://maps.googleapis.com/maps/api/place/nearbysearch/json?&location={coords}&radius=3000&rankby=prominence&type=tourist_attraction&key={apiKey}";
+            placesApi = $"https://maps.googleapis.com/maps/api/place/nearbysearch/json?&location={coords}&radius=3000&rankby=prominence&type=tourist_attraction&key={autocompleteKey}";
             zone = "1";
         
         }
 
         if (type == AttractionType.Restaurant)
         {
-            placesApi = $"https://maps.googleapis.com/maps/api/place/nearbysearch/json?&location={coords}&radius=3000&rankby=prominence&type=restaurant&key={apiKey}";
+            placesApi = $"https://maps.googleapis.com/maps/api/place/nearbysearch/json?&location={coords}&radius=3000&rankby=prominence&type=restaurant&key={autocompleteKey}";
             zone = "2";
         }
 
         if (type == AttractionType.Accommodation)
         {
-            placesApi = $"https://maps.googleapis.com/maps/api/place/nearbysearch/json?&location={coords}&radius=3000&rankby=prominence&type=lodging&key={apiKey}";
+            placesApi = $"https://maps.googleapis.com/maps/api/place/nearbysearch/json?&location={coords}&radius=3000&rankby=prominence&type=lodging&key={autocompleteKey}";
             zone = "3";
         }
 
@@ -154,7 +156,7 @@ public class GoogleService : IGoogleService
         }
         foreach (var attraction in list)
         {
-            string du = $"https://maps.googleapis.com/maps/api/place/details/json?fields=opening_hours%2Cwebsite&place_id={attraction.PlaceCode}&key={apiKey}";
+            string du = $"https://maps.googleapis.com/maps/api/place/details/json?fields=opening_hours%2Cwebsite&place_id={attraction.PlaceCode}&key={autocompleteKey}";
             using (HttpClient client = new HttpClient())
             {
 
@@ -231,7 +233,7 @@ public class GoogleService : IGoogleService
 
         var request = new PlacesAutoCompleteRequest
         {
-            Key = apiKey,
+            Key = autocompleteKey,
             Input = place
         };
 

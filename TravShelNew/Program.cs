@@ -12,6 +12,9 @@ using Microsoft.AspNetCore.DataProtection;
 var builder = WebApplication.CreateBuilder(args);
 
 
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+
 builder.Services.AddApplicationLayer();
 builder.Services.AddInfrastructureLayer();
 
