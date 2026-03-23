@@ -33,7 +33,7 @@ public class GoogleService : IGoogleService
     public GoogleService(IConfiguration configuration)
     {
         apiKey = configuration["TravShellGoogleMapsApi"];
-        autocompleteKey = configuration["Google:BackendApiKey"];
+        autocompleteKey = configuration["Google:BackendApiKey2"];
         Console.WriteLine(apiKey);
     }
 
